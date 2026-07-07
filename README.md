@@ -55,8 +55,9 @@ python scripts/simulate_demography.py --out-dir data/raw/trees --seed 12345
 Real-data analyses stream only the windows they need over HTTP range requests:
 
 ```
-python scripts/realdata_heliconius.py      # labelled adaptive introgression (butterflies)
-python scripts/realdata_neanderthal.py     # archaic introgression into non-Africans
+python scripts/realdata_heliconius.py       # labelled adaptive introgression (butterflies)
+python scripts/realdata_neanderthal.py      # archaic introgression into non-Africans
+python scripts/realdata_1000g_injection.py  # injected-signal recovery on real human backgrounds
 ```
 
 ## Layout
