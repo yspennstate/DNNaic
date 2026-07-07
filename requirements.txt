@@ -1,0 +1,16 @@
+# DNNaic — dependencies for reproducing the analysis.
+#
+# The allelic-rarefaction features are computed with PADZE, the companion package
+# released with this work (https://github.com/Andres42611/PADZE).
+padze>=0.1.0
+
+# Simulation and tree-sequence handling.
+msprime>=1.2
+tskit>=0.5
+
+# Feature evaluation, baselines, and figures (CPU only).
+numpy>=1.24
+pandas>=2.0
+scipy>=1.10
+scikit-learn>=1.3
+matplotlib>=3.7

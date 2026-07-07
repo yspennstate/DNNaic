@@ -1,0 +1,1581 @@
+\documentclass[11pt]{article}
+
+% Font and language packages
+\usepackage[T1]{fontenc}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage[margin=.89in]{geometry} % sets all margins to 1 inch
+\usepackage{verbatim} % provides the comment environment (portable replacement for comment.sty)
+\usepackage{hyperref}
+\usepackage{tabularx}
+\usepackage[numbers]{natbib}
+
+
+
+% Math packages
+\usepackage{amsmath, amssymb, mathtools, amsthm}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{color}
+
+% Graphics and figures
+\usepackage{epsfig}
+\usepackage{tikz}
+\usepackage{subcaption}
+\usepackage{float}
+
+% Additional tools
+\usepackage{multicol}
+\usepackage[normalem]{ulem} % normalem: keep \emph italic (do not convert emphasis to underline)
+\usepackage{url}
+
+% Theorem styles and new theorems
+\theoremstyle{plain}
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{cor}[thm]{Corollary}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{defn}[thm]{Definition}
+\newtheorem{rem}[thm]{Remark}
+\newtheorem{ex}[thm]{Example}
+\newtheorem{aplem}[thm]{Approximation Lemma}
+\newtheorem{corollary}{Corollary}[section]
+
+
+\theoremstyle{definition}
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}[section]
+
+% Custom commands
+\DeclarePairedDelimiter{\nint}\lfloor\rceil
+\DeclarePairedDelimiter{\abs}\lvert\rvert
+\renewcommand{\theparagraph}{\thesubsubsection.\Alph{paragraph}}
+\renewcommand{\thesubparagraph}{\thesubsubsection.\Alph{paragraph}.\Roman{subparagraph}}
+\newcommand{\vc}[1]{\boldsymbol{#1}}
+\newcommand{\di}{\mathrm{d}}
+\newcommand{\de}{\partial}
+\newcommand{\eps}{\varepsilon} % redefine epsilon to varepsilon
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\lzz}[1]{{\color{red} #1}} % consider a more descriptive name
+\newcommand{\safeincludegraphics}[2][]{%
+  \IfFileExists{#2}{\includegraphics[#1]{#2}}{%
+    \fbox{\parbox[c][1.2in][c]{0.72\linewidth}{\centering Missing legacy figure:\\ \texttt{#2}}}%
+  }%
+}
+
+
+\title{Inferring the Direction of Introgression from Allelic Rarefaction Statistics with Deep Learning}
+
+\author{
+    Andres del Castillo \\
+    {\small Department of Mathematics} \\
+    {\small Pennsylvania State University} \\
+    {\small University Park, PA 16802, USA} \\ 
+    \and
+    Yitzchak Shmalo \\
+    {\small Institute of Mathematics} \\
+    {\small Hebrew University of Jerusalem} \\
+    {\small Jerusalem 91904, Israel} \\
+}
+
+
+\date{} % Remove this line if you want to display the current date
+
+\begin{document}
+
+\maketitle
+
+
+
+
+
+
+\begin{abstract}
+Introgression---the transfer of genetic material between diverged populations---is a major force shaping diversity and adaptation, yet inferring its \emph{direction} remains hard. Classical statistics such as Patterson's $D$ and the $f$-statistics need an outgroup, lose power for ancient or subtle gene flow, and cannot by construction say which population donated to which. We introduce DNNaic, a two-stage fully connected neural network built on nine allelic rarefaction statistics---allelic richness, private allelic richness, and pairwise-private allelic richness across three populations, each summarized across loci by its mean, variance, and standard error---computed with PADZE, the open-source rarefaction tool we release with this work. The first stage detects appreciable gene flow and the second orients it, from the same outgroup-free feature vector. Because rarefaction yields $198$ correlated feature rows per simulated replicate, we evaluate only under a replicate-aware protocol in which no replicate is shared between training and test, a split we prove is the mathematically correct one.
+
+On coalescent simulations of a hierarchical demography, three-way direction accuracy rises from the $33\%$ chance level at the smallest migration rates to $96.6\%$ at the largest simulated rate ($2.5\times10^{-4}$) and $99.7\%$ across the appreciable band above it, with a rate-averaged accuracy of $75.6\%$. A detect-then-orient gate separates appreciable migration from the no-migration control at ROC-AUC $0.99$ (all-rate $0.80$) with a well-calibrated score (expected calibration error $0.03$), so a direction is asserted only where it is reliable. The discriminative signal lies in the features rather than the architecture---a logistic model on the same statistics matches the network, as our theory predicts---while a precomputed Patterson's $D$, which by construction cannot orient gene flow, labels direction below the majority-class rate. The result is stable across seeds, reproduces on independently simulated replicate batches the model never saw, and transfers to held-out demographies; applied to the \textit{Heliconius} butterfly complex, where the direction of adaptive introgression is documented, it recovers the known donor-to-recipient flow ($\textit{melpomene}\!\to\!\textit{timareta}$) that a symmetric Patterson's $D$ detects but cannot orient. Migration-rate \emph{magnitude}, by contrast, is recoverable in rank but not in scale below a rate threshold that we characterize with a Fisher-information bound, so the validated deliverable is the direction of appreciable gene flow. A supporting theory establishes that the rarefaction statistics are linear functionals of the joint site-frequency spectrum, that they orient gene flow where symmetric outgroup-free summaries provably cannot, and that a linear classifier on them is first-order optimal---recasting the pipeline as a principled, interpretable method that complements both classical summary statistics and heavier genotype-matrix networks.
+\end{abstract}
+
+\tableofcontents
+
+\section{Introduction}
+
+\subsection{Detecting and orienting introgression}
+Introgression—the exchange of genetic material between diverged populations—is a major force shaping diversity and adaptation. Yet, determining not only whether introgression occurred but also its magnitude (how much ancestry moved) and direction (who donated to whom) remains challenging with standard tools. Classical statistics such as Patterson’s $D$ (ABBA–BABA) have been central to detecting gene flow, using allele-sharing asymmetries among three populations and an outgroup \citep{patterson2012ancient,durand2011testing}, famously helping establish Neanderthal admixture into modern humans \citep{green2010neandertal}. However, $D$ and related $f$-statistics \citep{peter2016admixture} typically require an outgroup, offer no direct estimate of the direction of gene flow, and do not return an admixture proportion. Moreover, their power decays for ancient or subtle events and under complex demographies. Phylogenetic network approaches can model reticulation, but are often computationally intensive and still face intrinsic difficulty in resolving direction except in limited demographic regimes \citep{thawornwattana2023direction,pease2015detection,hibbins2022phylogenomic}.
+
+Deep learning methods have increased power and spatial resolution, either by learning patterns directly from genotype matrices \citep{flagel2019unreasonable,chan2018likelihood} or by feeding population-genetic summary statistics to fully connected networks \citep{sheehan2016deep}; for reviews of supervised and deep learning in population genetics see \citet{schrider2018supervised,korfmann2023deep}. For example, \textit{genomatnn} uses convolutional neural networks (CNNs) to detect archaic adaptive introgression signals from windowed genotype images \citep{gower2021genomatnn}. \textit{IntroUNET} frames locus-wise introgression discovery as semantic segmentation, localizing introgressed tracts with a U-Net architecture \citep{ray2024introunet}. Other pipelines combine population-genetic summaries and supervised learning to highlight adaptively introgressed loci \citep{racimo2015archaic}. These approaches often require genome-wide matrices, complex architectures, and sometimes identified donor references or outgroups. In practice, they primarily detect presence or localize tracts; they generally do not provide a direct, unified readout of direction and magnitude of gene flow.
+
+\paragraph{This work.} We introduce \textbf{DNNaic}, a deliberately simple, two-stage fully connected DNN---in the lineage of summary-statistic networks \citep{sheehan2016deep} rather than genotype-matrix CNNs---that infers the direction of introgression---and, where the signal permits, its magnitude---from a compact, interpretable feature set derived from allelic rarefaction. Our input comprises nine statistics inspired by ADZE \citep{szpiech2008adze}: allelic richness within each of three populations $(\alpha_1,\alpha_2,\alpha_3)$, private allelic richness for each $(\pi_1,\pi_2,\pi_3)$, and pairwise-private allelic richness $(\hat{\pi}_{12},\hat{\pi}_{13},\hat{\pi}_{23})$. These summarize how variation is partitioned across groups and do not require an outgroup. The pipeline first regresses the admixture proportion (migration rate $\omega_0$), then classifies the direction of gene flow using the same feature vector augmented with $\widehat{\omega}_0$.
+
+\paragraph{Main empirical result.} Trained on coalescent simulations under a hierarchical
+Wright--Fisher model, DNNaic recovers the \emph{direction} of introgression from the compact
+rarefaction feature set wherever migration is appreciable. Because rarefaction produces $198$
+correlated feature rows per simulated replicate, we evaluate under a strict replicate-aware protocol
+in which no replicate is shared between training and test (Section~\ref{sec:leakage-aware-reanalysis});
+Theorem~\ref{thm:leakage} shows that this replicate-level split is the mathematically correct one.
+Under this protocol the three-way direction accuracy rises with the migration rate to $96.6\%$ at
+the largest fixed rate ($2.5\times10^{-4}$) and $99.7\%$ across the appreciable band above it
+($75.6\%$ averaged over all rates), falling to the chance rate as migration becomes negligible.
+Operated as a detect-then-orient gate, the method identifies appreciable migration at ROC-AUC $0.99$
+with a well-calibrated score (expected calibration error $0.03$) and then orients it. The results are
+stable across random seeds and are reproduced by an independent estimator
+(Section~\ref{subsec:true-replicate}), and they exceed a precomputed Patterson's $D$, which by
+construction cannot orient gene flow. Migration-rate \emph{magnitude}, by contrast, is information-limited at small
+rates---a limit we make precise with a Fisher-information bound (Theorem~\ref{thm:fisher})---so the
+validated deliverable of this work is the direction of appreciable gene flow.
+
+\paragraph{Contributions.} Our key contributions are:
+\begin{enumerate}
+  \item \textbf{A minimalist, interpretable feature design} based on nine allelic rarefaction statistics \citep{szpiech2008adze}, each summarized across loci by its mean, variance, and standard error---a $28$-dimensional input (the $9\times 3$ moments together with the rarefaction depth $g$) that requires no outgroup and drastically reduces input dimensionality relative to genotype-matrix CNNs.
+  \item \textbf{An open-source software release, \textsc{PADZE}.} We release \textsc{PADZE}, a \texttt{pip}-installable \textsc{NumPy} package that computes allelic and private-allelic rarefaction statistics \citep{szpiech2008adze,kalinowski2004counting} directly from VCF, and use it to derive all feature statistics analyzed here. \textsc{PADZE} reproduces the original ADZE reference implementation to its $\sim$6-significant-figure print precision ($|\Delta|\approx 5\times10^{-6}$) across every statistic, depth, and population combination on the HGDP microsatellite panel of the ADZE paper, while being competitive-to-faster on that benchmark (up to $1.33\times$).
+  \item \textbf{A unified two-stage DNN pipeline} that detects appreciable gene flow and then orients it within one framework, aligning the modeling steps to the structure of the inference problem.
+  \item \textbf{Strong, seed-stable performance} on simulated data under replicate-aware evaluation. DNNaic resolves the direction of gene flow at \(96.6\%\) at the largest simulated rate and \(99.7\%\) across the appreciable band (\(75.6\%\) averaged over all rates), and detects appreciable migration at ROC-AUC \(0.99\) with a well-calibrated score, exceeding a precomputed Patterson's $D$, which labels direction \emph{below} the majority-class rate because it cannot orient gene flow by construction; the discriminative signal lies in the rarefaction feature set itself.
+  \item \textbf{A rigorous evaluation protocol.} Because rarefaction yields $198$ correlated rows per replicate, we evaluate by ground-truth replicate identity---no replicate shared between training and test---which Theorem~\ref{thm:leakage} shows is the mathematically correct split for this data structure.
+  \item \textbf{A supporting theory package.} We prove that rarefaction statistics are linear functionals of the joint site-frequency spectrum (Theorem~\ref{thm:linear-sfs}); that introgression direction is locally identifiable from their first-order migration response (Corollary~\ref{cor:identifiability}) precisely in regimes where symmetric, outgroup-free summaries provably \emph{cannot} orient gene flow (Theorem~\ref{thm:symmetric}); that the across-locus \emph{variance} of the rarefaction statistics orients gene flow even in a degenerate regime where the first-order mean cannot (Proposition~\ref{prop:variance-orients}); that a \emph{linear} classifier on these features is first-order Bayes-optimal for direction, which explains why a logistic model matches the deep network and locates the signal in the features rather than the architecture (Proposition~\ref{prop:linear-optimal}); that row-level splitting is optimistically biased (Theorem~\ref{thm:leakage}); and that magnitude estimation is information-limited at small rates via a Fisher-information bound (Theorem~\ref{thm:fisher}). These results recast the empirical pipeline as a principled inference method.
+  \item \textbf{Broader applicability.} Because the method does not require an outgroup and operates on low-dimensional summaries, it is practical for a wide range of taxa and study designs, complementing genome-wide CNN approaches \citep{gower2021genomatnn,ray2024introunet} and classical statistics \citep{patterson2012ancient,green2010neandertal}.
+\end{enumerate}
+Taken together, DNNaic provides a fast and transparent route to inferring the direction of introgression---and, more cautiously, its magnitude---bridging the gap between traditional summary-based tests and high-dimensional deep learning detectors.
+
+
+\subsection{Deep learning preliminaries}
+\label{introduction_deep_neural_networks}
+
+In classification tasks, the goal is to categorize elements of a set $S$ into one of $K$ distinct classes. Let $C(s)\in\{1,\dots,K\}$ be the correct class of $s\in S$. Given a labeled training set $T\subset S$, we aim to develop an approximate classifier to generalize accurate classification from the training set $T$ to the entire set $S$. To achieve this, we employ a Deep Neural Network (DNN) as a parameter-dependent classifier $\phi(s, \alpha)$, where $\alpha \in \mathbb{R}^\nu$ represents its parameters. The DNN produces a probability vector $(p_1(s), \dots, p_K(s))$, where $p_k(s):=\mathbb{P}[C(s)=k]$ represents the estimated probability distribution of $C(s)$.
+
+The DNN model is structured as a composition $\rho \circ X(\cdot,\alpha)$, with $\rho$ as the softmax function (defined in \eqref{soft_max}) and $X(\cdot,\alpha)$ specified as follows. Let 
+\begin{equation}
+X(\cdot,\alpha)=\lambda\circ M_L(\cdot,\alpha)\circ\cdots\circ\lambda\circ M_1(\cdot,\alpha),
+\end{equation}
+where:
+\begin{itemize}
+    \item $M_k(\cdot,\alpha)$ is an affine function from $\mathbb{R}^{N_{k-1}}$ to $\mathbb{R}^{N_k}$ parameterized by a weight matrix $W_k \in \mathbb{R}^{N_k \times N_{k-1}}$ and a bias vector $\beta_k \in \mathbb{R}^{N_k}$, so that $M_k(x) = W_k \cdot x + \beta_k$.
+    \item $\lambda: \mathbb{R}^m \rightarrow \mathbb{R}^m$ is a nonlinear \emph{activation function} applied componentwise. Throughout this paper $\lambda$ is the rectified linear unit (ReLU), $\lambda: x \in \mathbb{R}^m \mapsto (\max\{0,x_1\}, \dots, \max\{0,x_m\}) \in \mathbb{R}^m$, matching the network architectures used in Sections~\ref{sec:regression_model} and~\ref{sec:classification_dnn}.
+    \item The softmax function $\rho$ normalizes the outputs of $X(\cdot,\alpha)$ into a probability vector over $\{1, \dots, K\}$. The components of $\rho$ are given by:
+    \begin{equation}
+    \label{soft_max}
+    \rho(v)_i = \frac{\exp(v_i)}{\sum_{i=1}^{K} \exp(v_i)} \quad \text{for } v \in \mathbb{R}^K.
+    \end{equation}
+\end{itemize}
+
+Given this neural network architecture, we train our classifier $\phi(\cdot, \alpha)$ by minimizing the cross-entropy loss, which quantifies the accuracy of our classifier over the training set and is defined as
+
+\begin{equation}
+\label{CE}
+L(\alpha) = -\frac{1}{|T|} \sum_{s \in T} \log\left(\phi_{C(s)}(s, \alpha)\right).
+\end{equation}
+
+
+\subsubsection{Mean Squared Error Loss for Regression}
+\label{mse_loss_regression}
+
+In addition to classification tasks, DNNs are widely used for regression tasks, where the goal is to predict a continuous output. For such tasks, we often employ the Mean Squared Error (MSE) as the loss function to measure the prediction accuracy of the DNN. Let $T$ be a set of labeled data, with each element $s \in T$ associated with a true value $y(s) \in \mathbb{R}$. The MSE loss function is defined as
+
+\begin{equation}
+\label{MSE}
+L_{\text{MSE}}(\alpha) = \frac{1}{|T|} \sum_{s \in T} \left( y(s) - \phi(s, \alpha) \right)^2,
+\end{equation}
+where $\phi(s, \alpha)$ is the predicted output of the DNN. By minimizing this loss, we aim to achieve accurate predictions for continuous targets.
+
+This paper includes both classification and regression tasks. For classification we use fully connected networks trained with cross-entropy loss; for regression we use the same architecture but train with the mean squared error augmented by a relative-error penalty, so that small migration rates are not ignored (Section~\ref{sec:regression_model}).
+
+%Each type of task benefits from a tailored loss function, ensuring the model is optimized for the specific requirements of either discrete or continuous predictions.
+
+
+\section{Methods}
+\subsection{Simulations}
+
+We conducted backwards-in-time coalescent simulations using \texttt{msprime} \citep{kelleher2016efficient} to model population histories across four populations. An ancestral population (P1234) diverged into P123 and P4 (the outgroup) $2{,}000$ generations ago; P123 then split into P12 and P3 $1{,}000$ generations ago; and P12 split into P1 and P2 $500$ generations ago. DNNaic itself uses only the three experimental populations P1, P2, and P3 and is outgroup-free; the fourth population P4 is retained solely to supply the outgroup required by the classical Patterson's-$D$ baseline against which we compare.
+
+These coalescent simulations follow a hierarchical population-split (Wright--Fisher) demography, with an effective population size of $10{,}000$ for all populations.
+
+\begin{figure}[H]
+        \centering
+        \fbox{\safeincludegraphics[width=0.65\linewidth]{figures/fig_demography.pdf}}
+        \caption{The simulated four-population demography. An ancestral population splits into the three experimental populations P1, P2, P3 and an outgroup P4, at $500$, $1{,}000$, and $2{,}000$ generations before the present.}
+        \label{fig:demography-generated}
+\end{figure}
+
+Continuous migration was introduced to explore three introgression scenarios among the experimental populations (P1, P2, P3), together with a no-migration control: Case A, migration from P1 into P2 (backwards in time); Case B, from P2 into P3; Case C, from P3 into P2; and Case D, no introgression. Cases B and C are the same population pair with the flow reversed, so telling them apart is the donor-versus-recipient orientation that a symmetric statistic such as Patterson's $D$ cannot make.
+
+\begin{figure}[H]
+    \centering
+    \fbox{\safeincludegraphics[width=0.8\linewidth]{figures/fig_introgression_scenarios.pdf}}
+    \caption{The three directional introgression scenarios---A ($P1\!\to\!P2$), B ($P2\!\to\!P3$), C ($P3\!\to\!P2$)---and the no-migration control D. Cases B and C share a population pair with the flow reversed.}
+    \label{fig:introgression-scenarios-generated}
+\end{figure}
+
+We sampled migration rates in two complementary ways. First, for each non-control direction (A, B, C) we used four fixed rates---$5\times10^{-7}$, $2.5\times10^{-6}$, $5\times10^{-5}$, and $2.5\times10^{-4}$---and generated $100$ replicates at each, giving $400$ fixed-rate replicates per direction ($1{,}200$ in total).
+
+Second, to fill in the spectrum between the fixed rates, we drew $300$ additional rates from an exponential distribution with mean $2.5\times10^{-4}$, assigned each draw to a uniformly chosen non-control direction, and simulated five replicates at that rate. This yields $1{,}500$ continuously-sampled replicates ($500$ per direction) spanning a biologically plausible range of low per-generation rates and lets the network learn behaviour between the fixed grid points.
+
+\begin{figure}[H]
+    \centering
+    \fbox{\safeincludegraphics[width=0.65\linewidth]{figures/fig_migration_rate_distribution.pdf}}
+    \caption{Distribution of simulated per-generation migration rates: four fixed rates ($5\times10^{-7}$ to $2.5\times10^{-4}$) supplemented by exponentially-distributed draws with mean $2.5\times10^{-4}$.}
+    \label{fig:migration-rate-distribution-generated}
+\end{figure}
+
+For the no-migration control (direction D) we simulated $500$ replicates at zero rate. The full dataset therefore comprises $3{,}200$ replicates---$900$ each for directions A, B, and C and $500$ controls---and is archived, together with the evaluation code, at a public Zenodo record~\citep{delcastillo2026data}.
+
+Each simulation simulated individuals with 1 Mbp with a uniform recombination rate of $1.78 \times 10^{-8}$ per site per generation. Ancestral histories were generated using sim\_ancestry, followed by the introduction of neutral mutations at a rate of $2 \times 10^{-8}$ per site. At the end of each simulation, we sampled 200 individuals from each population, saved in .trees format and converted to .stru format for downstream PADZE analysis.
+
+
+\subsection{Allelic Rarefaction Analysis with PADZE}
+
+To generate the input features used in our downstream models, we computed allelic diversity and private allelic richness by rarefaction \citep{kalinowski2004counting}, following the private-allele estimators of \citet{szpiech2008adze} and accounting for differences in sample size between populations. This computation was carried out with \texttt{PADZE}, our NumPy implementation of these allelic-rarefaction estimators; \texttt{PADZE} is pip-installable and ships a command-line tool, so feature extraction is fully scriptable and reproducible. Our dataset consists of three populations—P1, P2, and P3—and we computed statistics at each genetic locus across the genome.
+
+Let a locus contain $I$ distinct alleles, and let $N_{ij}$ be the number of copies of allele $i$ observed in population $j$, where $j \in \{\text{P1}, \text{P2}, \text{P3}\}$. The total number of alleles sampled at that locus in population $j$ is:
+
+\[
+N_j = \sum_{i=1}^I N_{ij}.
+\]
+
+To correct for unequal sample sizes, \texttt{PADZE} applies rarefaction by considering a standardized subsample size $g$ (same across populations). The probability that allele $i$ is \textit{not} observed in a subsample of size $g$ from population $j$ is:
+
+\begin{equation}
+Q_{ijg} = \frac{\binom{N_j - N_{ij}}{g}}{\binom{N_j}{g}}.
+\end{equation}
+
+So the probability that allele $i$ \textit{is} observed in the subsample is:
+
+\[
+P_{ijg} = 1 - Q_{ijg}.
+\]
+
+\subsubsection{Allelic Richness}
+
+The expected number of distinct alleles observed in a sample of size $g$ from population $j$—i.e., the allelic richness—is calculated as:
+
+\begin{equation}
+{\alpha}^{(j)}_g = \sum_{i=1}^I P_{ijg}.
+\end{equation}
+
+This statistic reflects the genetic diversity within each population (P1, P2, or P3) at a fixed sampling depth.
+
+\subsubsection{Private Allelic Richness}
+
+To quantify population-specific diversity, \texttt{PADZE} also estimates private allelic richness: the number of alleles found only in one population and not the others. For example, for population P1, this is given by:
+
+\begin{equation}
+{\pi}^{(\text{P1})}_g = \sum_{i=1}^{I} \left[ P_{i\text{P1}g} \cdot Q_{i\text{P2}g} \cdot Q_{i\text{P3}g} \right],
+\end{equation}
+and similarly for P2 and P3. This formula computes the expected number of alleles present in P1 but absent in both P2 and P3 when sampling $g$ alleles from each.
+
+\subsubsection{Combination-Private Allelic Richness}
+
+\texttt{PADZE} also estimates alleles that are exclusive to pairs of populations. For instance, alleles shared by P1 and P2 but absent from P3 are captured by:
+
+\begin{equation}
+\hat{\pi}^{(\text{P1,P2})}_{g} = \sum_{i=1}^{I} \left[ P_{i\text{P1}g} \cdot P_{i\text{P2}g} \cdot Q_{i\text{P3}g} \right].
+\end{equation}
+
+This helps identify alleles that are private not to a single population, but to specific groupings—e.g., regionally shared but geographically restricted variation. With our three-population assumption, there are exactly three possible pairwise combinations: $\hat{\pi}^{(\text{P1,P2})}_{g}$, $\hat{\pi}^{(\text{P1,P3})}_{g}$, and $\hat{\pi}^{(\text{P2,P3})}_{g}$. The other possible combinations ($\binom{3}{1}$(single populations) or $\binom{3}{3}$ (all three populations together)) either reduce to private allelic richness or allelic richness, and are thus trivial.
+
+\subsubsection{Defining Model Inputs: the Allelic Richness Vector}
+
+Each of the statistics described above is computed separately at every locus. Thus, to summarize the information across the genome, \texttt{PADZE} reports the following three values for each standardized sample size $g$:
+
+(i) The mean across loci:
+    \begin{equation}
+    \mu_{x^{(j)}_g} = \frac{1}{L} \sum_{\ell=1}^{L} ({x^{(j)}_g})_\ell,
+    \end{equation}
+    where $({x^{(j)}_g})_\ell$ is the value of the statistic $x$ for population $j$ and sample size $g$ at locus $\ell$, and $L$ is the total number of loci.
+    
+(ii) The variance across loci:
+    \begin{equation}
+    \sigma^2_{x^{(j)}_g} = \frac{1}{L - 1} \sum_{\ell=1}^{L} \left(({x^{(j)}_g})_\ell - \mu_{x^{(j)}_g} \right)^2,
+    \end{equation}
+    
+(iii) The standard error:
+    \begin{equation}
+    \text{SE}_{x^{(j)}_g} = \frac{\sigma_{x^{(j)}_g}}{\sqrt{L}}.
+    \end{equation}
+
+
+From these summary statistics, we can define the allelic richness vector for a specific standardized sample size 'g' to be used as the input for our downstream models:
+
+\[
+\mathbf{x}_g =
+\left\langle
+g,\,
+\alpha^{*(\text{P1})}_g,\,
+\alpha^{*(\text{P2})}_g,\,
+\alpha^{*(\text{P3})}_g,\,
+\pi^{*(\text{P1})}_g,\,
+\pi^{*(\text{P2})}_g,\,
+\pi^{*(\text{P3})}_g,\,
+\hat{\pi}^{*(\text{P1,P2})}_g,\,
+\hat{\pi}^{*(\text{P1,P3})}_g,\,
+\hat{\pi}^{*(\text{P2,P3})}_g
+\right\rangle
+\]
+
+\vspace{0.5em}
+
+\noindent Each term of the form \( x^{*(j)}_g \) represents a grouping of the mean, variance, and standard error of statistic \( x \) for population or population pair \( j \) at rarefaction depth \( g \):
+\[
+x^{*(j)}_g := \left( \mu_{x^{(j)}_g},\ \sigma^2_{x^{(j)}_g},\ \mathrm{SE}_{x^{(j)}_g} \right)
+\]
+
+In our simulation study, we sampled 200 individuals at the end of each replicate from each of the three populations. Thus, running a PADZE analysis on one replicate results in 198 individual allelic richness vectors, one for each standardized sample size $g \in [2, 199]$:
+
+\[
+\begin{aligned}
+\mathbf{x}_2 &= \left\langle 2,\ \alpha^{*(\text{P1})}_2,\ \alpha^{*(\text{P2})}_2,\ \alpha^{*(\text{P3})}_2,\ \pi^{*(\text{P1})}_2,\ \pi^{*(\text{P2})}_2,\ \pi^{*(\text{P3})}_2,\ \hat{\pi}^{*(\text{P1,P2})}_2,\ \hat{\pi}^{*(\text{P1,P3})}_2,\ \hat{\pi}^{*(\text{P2,P3})}_2 \right\rangle \\
+\mathbf{x}_3 &= \left\langle 3,\ \alpha^{*(\text{P1})}_3,\ \alpha^{*(\text{P2})}_3,\ \alpha^{*(\text{P3})}_3,\ \pi^{*(\text{P1})}_3,\ \pi^{*(\text{P2})}_3,\ \pi^{*(\text{P3})}_3,\ \hat{\pi}^{*(\text{P1,P2})}_3,\ \hat{\pi}^{*(\text{P1,P3})}_3,\ \hat{\pi}^{*(\text{P2,P3})}_3 \right\rangle \\
+\mathbf{x}_4 &= \left\langle 4,\ \alpha^{*(\text{P1})}_4,\ \alpha^{*(\text{P2})}_4,\ \alpha^{*(\text{P3})}_4,\ \pi^{*(\text{P1})}_4,\ \pi^{*(\text{P2})}_4,\ \pi^{*(\text{P3})}_4,\ \hat{\pi}^{*(\text{P1,P2})}_4,\ \hat{\pi}^{*(\text{P1,P3})}_4,\ \hat{\pi}^{*(\text{P2,P3})}_4 \right\rangle \\
+&\vdots \\
+\mathbf{x}_{199} &= \left\langle 199,\ \alpha^{*(\text{P1})}_{199},\ \alpha^{*(\text{P2})}_{199},\ \alpha^{*(\text{P3})}_{199},\ \pi^{*(\text{P1})}_{199},\ \pi^{*(\text{P2})}_{199},\ \pi^{*(\text{P3})}_{199},\ \hat{\pi}^{*(\text{P1,P2})}_{199},\ \hat{\pi}^{*(\text{P1,P3})}_{199},\ \hat{\pi}^{*(\text{P2,P3})}_{199} \right\rangle
+\end{aligned}
+\]
+
+\subsection{The PADZE Software Package}
+\label{subsec:padze-software}
+
+The feature statistics in this study were computed with \textsc{PADZE}~\citep{padze2026}, an
+open-source, \texttt{pip}-installable \textsc{NumPy} implementation of allelic and
+private-allelic rarefaction that we release with this work. \textsc{PADZE} computes
+standardized-depth allelic richness, private allelic richness, and generalized
+combination-private richness \citep{szpiech2008adze}, all built on the rarefaction
+estimator for the expected number of distinct (or privately held) alleles at a fixed
+subsample depth \citep{kalinowski2004counting}. It retains the classical ADZE mean,
+variance, and standard-error outputs and additionally exposes the across-loci skewness
+and excess kurtosis used as features here. The package reads VCF directly (as well as
+the original STRUCTURE format, for parity testing), ships a documented Python API and a
+command-line tool, and requires only \textsc{Python} and \textsc{NumPy}, with no
+compilation step.
+
+We validated \textsc{PADZE} against the reference implementation---the original ADZE
+program of \citet{szpiech2008adze}---on the Rosenberg et al.\ (2005) HGDP microsatellite
+panel used in that paper's empirical example, over all $2^{5}-1=31$ region combinations
+and every rarefaction depth $g=2,\dots,48$. Across every statistic, depth, and population
+combination the two programs agree to the reference's $\sim$6-significant-figure print
+precision (maximum absolute difference $|\Delta|\approx 5\times10^{-6}$;
+Table~\ref{tab:padze-validation}), the remaining gap being only the reference's printed
+rounding; the \textsc{PADZE} outputs are furthermore byte-identical across CPU
+architectures (arm64 vs.\ x86-64). On the paper's exact computation, \textsc{PADZE} is
+competitive-to-faster than the compiled reference---$3.96$\,s vs.\ $5.28$\,s on the H952
+panel, a decisive $1.33\times$ speedup from \textsc{NumPy} vectorization of the deep
+per-combination rarefaction loop. We characterize the trade-off transparently: in a
+complementary regime of many populations at shallow depth, where the $2^{J}-1$
+combination count dominates but each combination carries little work, the compiled
+reference remains ahead at every $J$ tested (through $J=10$), with \textsc{PADZE}
+monotonically closing the gap. The deciding axis is thus the per-combination workload
+(rarefaction depth $\times$ sample size), not the number of populations $J$ alone: deep
+rarefaction over large samples favors \textsc{PADZE}'s vectorization, exactly the setting
+of the analyses in this paper.
+
+\begin{table}[t]
+\centering
+\caption{Validation of \textsc{PADZE} against the reference ADZE implementation
+\citep{szpiech2008adze} on the Rosenberg et al.\ (2005) HGDP microsatellite panel, over
+all $31=2^{5}-1$ region combinations and depths $g=2,\dots,48$ ($1{,}692$ compared rows
+per panel; $721$ loci throughout). Agreement is reported as the maximum absolute
+difference in the mean, variance, and standard error over all statistics, depths, and
+combinations; timing is the median wall-clock over $N=12$ interleaved reps on an isolated
+2-vCPU CPU VM. \textsc{PADZE} matches the reference to its print precision and is faster
+on this workload.}
+\label{tab:padze-validation}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Panel & Max $|\Delta|$ & Reference (s) & \textsc{PADZE} (s) \\
+\midrule
+H952  & $5.0\times10^{-6}$ & $5.28$ & $\mathbf{3.96}$ \\
+H1048 & $5.0\times10^{-6}$ & $4.55$ & $\mathbf{4.05}$ \\
+\midrule
+\multicolumn{2}{@{}l}{Speedup (\textsc{PADZE} vs.\ reference)} & \multicolumn{2}{c}{$1.33\times$ (H952), $1.12\times$ (H1048)} \\
+\multicolumn{2}{@{}l}{Median peak memory} & $\sim\!52$\,MB & $\sim\!48$\,MB \\
+\multicolumn{2}{@{}l}{Cross-architecture agreement (arm64 vs.\ x86-64)} & \multicolumn{2}{c}{byte-identical ($\Delta=0$)} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\section{Main Results}
+\label{sec:main-results}
+
+\paragraph{Principal findings.} DNNaic resolves the \emph{direction} of appreciable introgression. Under strict replicate-aware evaluation (no simulation replicate shared between training and test), three-way direction accuracy rises with the migration rate to $96.6\%$ at the largest fixed rate ($2.5\times10^{-4}$) and $99.7\%$ across the appreciable band above it ($75.6\%$ averaged over all rates), and falls to the chance rate as migration becomes negligible. Operated as a detect-then-orient gate, the method identifies appreciable migration at ROC-AUC $0.99$ with a well-calibrated score (expected calibration error $0.03$), then orients it. These results are stable across random seeds and are reproduced by an independent estimator, and they exceed a precomputed Patterson's $D$, which by construction cannot orient gene flow. All rarefaction features are computed with \textbf{PADZE}, our open-source, pip-installable tool released with this work and validated against the reference ADZE implementation \citep{szpiech2008adze}.
+
+\paragraph{Idea (two-stage pipeline).}
+We model migration in two steps using the same allelic richness statistics vector as input: (i) a regression DNN first predicts the magnitude $\omega_0$; (ii) a classification DNN then predicts the direction $\beta_0$, taking as features the same allelic richness vector together with the predicted magnitude $\widehat{\omega}_0$. This decouples scale from sign/orientation and empirically stabilizes learning.
+
+\subsection{Metrics and definitions}
+\label{subsec:metrics}
+We report standard losses and a scale-aware relative error:
+
+\begin{itemize}
+    \item \textbf{Mean Squared Error (MSE).} For scalar target $y$ and prediction $\hat y$, $\mathrm{MSE}=\frac{1}{n}\sum_{i=1}^n (y_i-\hat y_i)^2$.
+    \item \textbf{Mean Relative Error (MRE, \%)} (``relative loss''): 
+    \begin{equation}
+      \label{eq:mre}
+      \mathrm{MRE}(\%) \;=\; 100 \times \frac{1}{n}\sum_{i=1}^n 
+      \frac{|y_i-\hat y_i|}{\max(\varepsilon,\;|y_i|)}\,,
+    \end{equation}
+    where $\varepsilon>0$ (we take $\varepsilon=10^{-8}$) prevents division by zero when some $y_i$ is (near) zero.\footnote{If targets are strictly nonzero, \eqref{eq:mre} reduces to the usual mean absolute percentage error.}
+    \item \textbf{Classification accuracy / loss.} Accuracy is the fraction correct; loss is the average cross-entropy on the validation set.
+\end{itemize}
+
+\subsection{Benchmark Results}
+\label{subsec:benchmarks}
+
+We evaluate every reported result under strict replicate-aware splitting, because the
+alternative is badly misleading. A naive same-replicate split---which lets rarefaction curves
+from one replicate appear in both train and test---inflates apparent direction accuracy to
+$\approx99.6\%$, an artifact of leakage rather than genuine generalization
+(Section~\ref{sec:leakage-aware-reanalysis}, Theorem~\ref{thm:leakage}). The leakage-controlled
+estimates reported in Section~\ref{sec:leakage-aware-reanalysis}, obtained by splitting on
+ground-truth replicate identity, are the numbers we treat as real.
+
+\subsection{Learning curves and qualitative behavior}
+\label{subsec:learning-curves}
+
+\begin{figure}[H]
+  \centering
+  \fbox{\safeincludegraphics[width=0.9\linewidth]{figures/fig_pipeline.pdf}}
+  \caption{\textbf{Proposed two-stage DNN pipeline.} The allelic richness statistics vector feeds a regression head to predict the migration magnitude $\omega_0$. The predicted magnitude $\widehat{\omega}_0$, concatenated with the original allelic features, then feeds a classification head to predict the migration direction $\beta_0$. This design mirrors the problem structure (scale first, orientation second) and empirically reduces classification ambiguity.}
+  \label{fig:pipeline-detailed-generated}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.49\textwidth}
+    \centering
+    \fbox{\safeincludegraphics[width=\linewidth]{figures/fig_reg_learning.pdf}}
+    \caption{\textbf{Regression training loss over epochs} for $\omega_0$}
+    \label{fig:reg-train-loss-detailed}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.49\textwidth}
+    \centering
+    \fbox{\safeincludegraphics[width=\linewidth]{figures/fig_real_array_stress_tests.pdf}}
+    \caption{\textbf{Magnitude regression metrics.} The regression head optimizes stably; magnitude is reliably recovered only in the appreciable regime, consistent with the information limit of Theorem~\ref{thm:fisher}.}
+    \label{fig:real-array-stress-tests-generated}
+  \end{subfigure}
+  \caption{\textbf{Regression DNN (migration magnitude $\omega_0$).} Learning curves demonstrate fast optimization, followed by a stable generalization regime without overfitting.}
+  \label{fig:regression-dnn-combined}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.49\textwidth}
+    \centering
+    \fbox{\safeincludegraphics[width=\linewidth]{figures/fig_clf_learning.pdf}}
+    \caption{\textbf{Classification training loss} for direction classification of $\beta_0$}
+    \label{fig:class-train-loss-detailed}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.49\textwidth}
+    \centering
+    \fbox{\safeincludegraphics[width=\linewidth]{figures/fig_confusion_leakagefree.pdf}}
+    \caption{\textbf{Leakage-controlled direction confusion} (three-way, replicate-aggregated, all positive rates). The residual confusion concentrates on the sister-to-sister scenario A---the weakest-footprint event---while the reversed-flow pair B/C is the best separated (pair confusions $307\,{:}\,217\,{:}\,160$ for A--B, A--C, B--C): the asymmetric channels orient the reversed pair precisely where a symmetric $D$ cannot (Theorem~\ref{thm:symmetric}).}
+    \label{fig:class-confusion-detailed}
+  \end{subfigure}
+  \caption{\textbf{Classification DNN (migration direction $\beta_0$).} (a) Training loss over epochs (held-in dynamics). (b) The leakage-controlled test confusion by ground-truth replicate identity (Section~\ref{sec:leakage-aware-reanalysis}); orientation of the reversed-flow pair B/C---the donor-versus-recipient call a symmetric $D$ cannot make (Theorem~\ref{thm:symmetric})---is in fact the cleanest, and the residual errors fall on the low-footprint sister-to-sister scenario A, whose first-order signal is the weakest (Remark~\ref{rem:threshold-numerics}).}
+  \label{fig:classification-dnn-combined}
+\end{figure}
+
+\subsection{What the results say}
+\label{subsec:interpretation}
+The direction signal in the rarefaction statistics is, to first order, \emph{linear}: a logistic
+model on the features matches the network (Section~\ref{subsec:true-replicate}), exactly as
+Proposition~\ref{prop:linear-optimal} predicts. The two-stage design---estimating magnitude first,
+then feeding $\widehat{\omega}_0$ into the direction classifier---sharpens class separation at larger
+rates but is not what creates the signal. The core capability is directional: under
+leakage-controlled evaluation the classifier recovers introgression direction with high accuracy
+where migration is appreciable. Magnitude regression is intrinsically harder and
+degrades at small rates (Section~\ref{sec:regression_model}), an information limit made precise by
+the Fisher-information bound of Theorem~\ref{thm:fisher}.
+
+\subsection{Reporting details}
+\label{subsec:reporting}
+All reported numbers use leakage-controlled splits by ground-truth replicate identity
+(Section~\ref{sec:leakage-aware-reanalysis}); the DNN regression and classifier use fixed
+training horizons with the same allelic richness vector feeding both stages, and model
+comparisons use identical splits and preprocessing. Throughout, MRE (\%) is the scale-aware
+relative loss of \eqref{eq:mre} and classification ``loss'' denotes cross-entropy.
+
+% ---- Optional bridging remark to theory (if desired) ----
+
+
+
+\section{Feature geometry and supporting analyses}
+\label{sec:supporting}
+
+\subsection{Exploratory geometry of the rarefaction features}
+\label{sec:eda}
+As a first check on the discriminatory power of the rarefaction features, we ran principal component analysis (PCA) on the standardized feature vectors---summary statistics (mean, variance, and standard error) of the nine allelic richness measures computed by PADZE at a standardized sample size $g$, giving $28$ features per replicate. Under strong gene flow (an exaggerated $25\%$ migration rate used only for this visualization) the four scenarios separate hierarchically in PC space, mirroring the population tree of Figure~\ref{fig:demography-generated}: the no-migration control (Case D) and Case A ($P1\rightarrow P2$) stand apart, while the recently diverged pair $P2$/$P3$ (Cases B and C) overlaps. At the realistic rates present in our study the separation shrinks but does not vanish---population structure and the tree-like PC1--PC2 geometry persist even as lower and mixed migration rates blur the class boundaries (Figure~\ref{fig:pca-comparison}), motivating the supervised, replicate-aware treatment developed in the rest of the paper.
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.49\textwidth}
+    \centering
+    \fbox{\safeincludegraphics[width=\linewidth]{figures/fig_pca_by_class.pdf}}
+    \caption{PCA of downloaded processed arrays colored by class.}
+    \label{fig:pca-by-class-generated-a}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.49\textwidth}
+    \centering
+    \fbox{\safeincludegraphics[width=\linewidth]{figures/fig_pca_by_rate.pdf}}
+    \caption{PCA of downloaded processed arrays colored by migration rate.}
+    \label{fig:pca-by-rate-generated-a}
+  \end{subfigure}
+  \caption{3D PCA analysis of allelic richness vectors for a high migration rate and a realistic migration rate found in our dataset.}
+  \label{fig:pca-comparison}
+\end{figure}
+
+\subsection{Magnitude estimation is information-limited at small rates}
+\label{sec:regression_model}
+
+The first stage of the pipeline is a regression head that maps the standardized rarefaction features to the (log) migration magnitude $\omega_0$: a four-layer elastic-net-regularized ReLU network trained with AdamW under a scheduled learning rate and a custom loss that augments the mean squared error with a relative-error penalty so that small rates are not ignored. Magnitude is the hard side of this problem, and we report it plainly. Under the strict
+replicate-aware split the relative error is dominated by the smallest rates and grows without bound
+as the rate falls---from about $34\%$ in the appreciable band to several thousand percent at
+$5\times10^{-7}$---so absolute scale is not recoverable at small rates. Two things survive. A
+median-regression (absolute-error) head restricted to the appreciable regime recovers the magnitude
+to a mean relative error of about $31\%$ (median $27\%$); and the \emph{rank} of the rate is
+recoverable across the whole range (Spearman correlation $\approx 0.8$ between predicted and true
+rate) even where the scale is not, so the regressor still orders replicates by migration intensity
+below the threshold. This is an information limit rather than an optimization failure:
+Theorem~\ref{thm:fisher} gives a Fisher-information lower bound on the relative error that diverges as
+$\omega_0\to 0$ at fixed genome size, and Corollary~\ref{cor:appreciable-threshold} locates the
+threshold below which no estimator---DNN or otherwise---can recover scale. The predicted $\widehat{\omega}_0$ is nonetheless a useful auxiliary feature for the downstream direction classifier, which is where the discriminative signal of the paper lies.
+
+\section{Classification DNN for Migration Direction Inference}
+\label{sec:classification_dnn}
+
+In this section, we describe a deep neural network (DNN) designed to classify objects into one of four migration groups, labeled as \(A\), \(B\), \(C\), and \(D\). Let 
+\[
+\mathcal{D} = \{(x_i, y_i) \mid i=1,\dots, N\}
+\]
+denote the training dataset, where each input \(x_i \in \mathbb{R}^d\) is a vector of \emph{standardized direction features} (denoted by \texttt{std\_dir\_features}) and the corresponding target \(y_i\) is a one-hot encoded vector in \(\{0,1\}^4\) (denoted by \texttt{OHEdir\_target}). We define a label function \(C: \mathcal{D} \to \{A, B, C, D\}\) that assigns each object to one of the four migration groups.
+
+\subsection{Input Feature Weighting}
+
+To emphasize features that are deemed more informative (e.g., migration rate, standardized sample size 'g', and statistics related to \(\hat{\pi}\)), we introduce a weight vector 
+\[
+w \in \mathbb{R}^d,
+\]
+defined by
+\[
+w_j = 
+\begin{cases}
+5, & \text{if } j\in\{1,2\} \cup \{d-8, \dots, d\},\\[1mm]
+1, & \text{otherwise}.
+\end{cases}
+\]
+The weighted input is then given by
+\[
+\tilde{x}_i = w \odot x_i,
+\]
+where \(\odot\) denotes the elementwise (Hadamard) product.
+
+\subsection{Network Architecture}
+
+The classification DNN is a function
+\[
+f: \mathbb{R}^d \to \Delta^3,
+\]
+mapping the weighted input \(\tilde{x}_i\) to a probability vector in the 4-simplex \(\Delta^3 = \{p\in\mathbb{R}^4: p_k\ge0,\; \sum_{k=1}^4 p_k = 1\}\). The architecture is defined as a sequence of fully connected layers:
+\[
+\begin{aligned}
+h^{(1)} &= \varphi\bigl(W_1\,\tilde{x}_i + b_1\bigr) \quad \in \mathbb{R}^{300},\\[1mm]
+h^{(2)} &= \varphi\bigl(W_2\,h^{(1)} + b_2\bigr) \quad \in \mathbb{R}^{300},\\[1mm]
+h^{(3)} &= \varphi\bigl(W_3\,h^{(2)} + b_3\bigr) \quad \in \mathbb{R}^{300},\\[1mm]
+\hat{y}_i &= \rho\bigl(W_4\,h^{(3)} + b_4\bigr) \quad \in \Delta^3,
+\end{aligned}
+\]
+where:
+\begin{itemize}
+    \item \(W_k\) and \(b_k\) for \(k=1,2,3\) are the weight matrices and bias vectors for the hidden layers with dimensions \(W_k \in \mathbb{R}^{300 \times N_{k-1}}\) (with \(N_0 = d\)) and \(b_k\in \mathbb{R}^{300}\).
+    \item \(\varphi(z)=\max\{0,z\}\) is the ReLU activation function.
+    \item \(W_4 \in \mathbb{R}^{4\times300}\) and \(b_4 \in \mathbb{R}^{4}\) define the output layer.
+    \item \(\rho: \mathbb{R}^4 \to \Delta^3\) is the softmax function given by
+    \[
+    \rho(v)_k = \frac{\exp(v_k)}{\sum_{j=1}^{4}\exp(v_j)}, \quad k=1,\dots,4.
+    \]
+\end{itemize}
+
+Additionally, elastic net regularization is applied to the weights of the hidden layers. That is, for each hidden layer we incorporate a penalty of the form
+\[
+\lambda_1 \|W_k\|_1 + \lambda_2 \|W_k\|_2^2,
+\]
+with small coefficients \(\lambda_1 = \lambda_2 = 10^{-7}\).
+
+\subsection{Training Objective and Learning Rate Schedule}
+
+The network is trained by minimizing the categorical cross-entropy loss over the training set:
+\[
+L(\alpha) = -\frac{1}{N}\sum_{i=1}^{N} \sum_{k=1}^{4} y_{ik}\log\bigl(\hat{y}_{ik}\bigr),
+\]
+where \(y_{ik}\) denotes the \(k\)-th component of the one-hot encoded target \(y_i\), and \(\alpha\) represents the collection of all parameters in the network.
+
+An AdamW optimizer is used with an initial learning rate of \(10^{-3}\). A learning rate schedule is defined by a piecewise function:
+\[
+\eta(t)=
+\begin{cases}
+9\times 10^{-4}, & t < 15, \\[1mm]
+-\bigl(1.274\times 10^{-5}\bigr) t + 0.001091, & 15 \le t < 85,
+\end{cases}
+\]
+where \(t\) denotes the epoch number. This schedule is implemented via a custom callback during training.
+
+\subsection{Model Evaluation and Checkpointing}
+
+During training, the dataset is randomly partitioned into training and testing subsets. At each epoch, the network's performance is monitored by evaluating both training and validation accuracy. A custom callback is used to:
+\begin{enumerate}
+    \item Log the accuracy metrics.
+    \item Sample a few test inputs and print both the predicted and true labels.
+\end{enumerate}
+
+Finally, the trained model is checkpointed for later evaluation.
+
+\section{Direction inference under replicate-aware evaluation}
+\label{sec:leakage-aware-reanalysis}
+
+Allelic rarefaction produces $198$ correlated feature rows per simulated replicate, so a
+row-level train/test split can place rows from the same genealogy in both partitions and thereby
+measure within-replicate interpolation rather than generalization to new replicates.
+Theorem~\ref{thm:leakage} shows that the mathematically correct estimand requires splitting on the
+replicate. We therefore evaluate DNNaic by ground-truth replicate identity: the $28$-dimensional
+PADZE feature vectors are grouped by their originating replicate and split with
+$\mathrm{GroupKFold}(5)$, so no simulated genealogy is ever shared between training and test. The
+benchmark below uses $3{,}200$ true replicate groups---direction classes A/B/C together with a
+zero-migration control D---with per-replicate probability aggregation and six independent random
+seeds. The feature arrays, replicate labels, and evaluation code are archived at a public Zenodo
+record~\citep{delcastillo2026data}.
+
+\subsection{Direction and detection of appreciable gene flow}
+\label{subsec:true-replicate}
+
+Under this replicate-aware protocol DNNaic orients gene flow accurately wherever migration is
+strong enough to leave a trace, and degrades gracefully to chance where it is not. Three-way
+direction accuracy climbs monotonically with the migration rate: it is $34\%$ at $5\times10^{-7}$
+and $39\%$ at $2.5\times10^{-6}$ (both near the $33\%$ chance level), $56\%$ at $5\times10^{-5}$,
+and $96.6\%$ at the largest fixed rate $2.5\times10^{-4}$ for the boosted model
+(Figure~\ref{fig:direction-by-rate}, Table~\ref{tab:true-replicate}); the Fisher-optimal linear head
+is stronger still at the informative rates, $71.6\%$ at $5\times10^{-5}$ and $100\%$ at that largest
+fixed rate.
+Averaged over the strong-migration band---rate $\ge 2.5\times10^{-4}$, which we call
+\emph{appreciable} and which also collects the higher continuously-sampled rates---the accuracy is
+$99.7\%$ (six-seed mean, standard deviation $0.1\%$); averaged over all positive rates it is
+$75.6\%$. The steep rise near $2.5\times10^{-4}$ is not a tuning artifact but the directional
+shadow of the Fisher threshold $m_\star$ (Corollary~\ref{cor:appreciable-threshold}): below it the
+first-order signal $m\Delta_\beta$ that separates directions (Proposition~\ref{prop:linear-optimal})
+sinks beneath the sampling noise, and the near-zero control becomes indistinguishable from the
+smallest rates.
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=0.6\linewidth]{figures/fig_direction_by_rate.pdf}
+  \caption{\textbf{Direction accuracy rises to the Fisher threshold.} Three-way direction accuracy
+  (leakage-controlled, six-seed mean) climbs monotonically with the per-generation migration rate,
+  from the $33\%$ chance level at the smallest rates to $96.6\%$ at the largest fixed rate; the shaded
+  band marks the appreciable regime (rate $\ge 2.5\times10^{-4}$). The decline below the threshold is
+  the directional shadow of the Fisher-information limit (Corollary~\ref{cor:appreciable-threshold}).}
+  \label{fig:direction-by-rate}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\scriptsize
+\begin{tabular}{lcc}
+\toprule
+migration rate & boosted / network (\%) & linear (\%) \\
+\midrule
+$5\times10^{-7}$   & 34.0 & 29.4 \\
+$2.5\times10^{-6}$ & 39.3 & 41.0 \\
+$5\times10^{-5}$   & 55.8 & \textbf{71.6} \\
+$2.5\times10^{-4}$ (largest fixed rate) & 96.6 & \textbf{100.0} \\
+\midrule
+appreciable band ($\ge 2.5\times10^{-4}$) & \textbf{99.7} & \textbf{100.0} \\
+all positive rates & 75.6 & \textbf{78.1} \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Three-way direction accuracy under the replicate-aware split}
+($\mathrm{GroupKFold}(5)$ on $3{,}200$ true replicate groups; three-way chance $33\%$). The
+boosted/network column is the six-seed figure of Section~\ref{subsec:benchmarks}; the linear column
+is a logistic model under the identical leakage-free protocol. Accuracy rises monotonically with the
+migration rate, and the Fisher-optimal linear head (Proposition~\ref{prop:linear-optimal}) is
+stronger at the informative rates---$71.6\%$ versus $55.8\%$ at $5\times10^{-5}$ and $100\%$ at the
+largest fixed rate---while both fall to the chance level as migration becomes negligible, the
+directional shadow of the Fisher threshold (Corollary~\ref{cor:appreciable-threshold}). The
+appreciable band also collects the higher continuously-sampled rates.}
+\label{tab:true-replicate}
+\end{table}
+
+Operated as a \emph{detect-then-orient} gate---first flag whether migration is appreciable, then
+orient it only where detection succeeds---the method is both accurate and well calibrated. The
+detection gate reaches ROC-AUC $0.99$ in the appreciable regime ($0.80$ across all rates), with
+expected calibration error $0.03$ and Brier score $0.11$, so its confidence scores can be read
+directly to set an operating point. The direction head supports the same selective use: ranking
+appreciable replicates by the classifier's confidence and abstaining on the least-confident quarter
+raises three-way accuracy from $99.6\%$ to $99.9\%$, and abstaining on the least-confident half makes
+it perfect on the replicates retained. This is the usable form of the method: it asserts a direction
+only where the signal is present and abstains where it is not.
+
+Two checks confirm the result is a property of the data rather than of a single model. The accuracy
+is stable across all six seeds (standard deviations at or below $0.3\%$), and an independent
+estimator built from a different software stack---an \texttt{sklearn} gradient-boosted classifier
+under the identical leakage-free protocol---reproduces the figures to within a point (appreciable
+gate AUC $0.99$, appreciable direction $99.8\%$, overall $74.7\%$, and the same per-rate decay).
+A third check strengthens the leakage control from cross-validation within one simulation set to a
+physically separate test set: we train on the canonical $3{,}200$-replicate benchmark and evaluate
+on two further batches of $3{,}200$ replicates each, generated in independent runs with freshly
+drawn migration rates and disjoint seeds, so that no genealogy, rate draw, or replicate is shared
+with training. On these unseen batches the estimator reproduces the within-set figures---rate-averaged
+direction $76.5\%$, appreciable $99.7\%$, detection gate ROC-AUC $0.81$ overall and $0.99$ in the
+appreciable band, expected calibration error $0.02$ (linear head; the nonlinear head is within a
+point)---so the accuracy is a property of the generative process, not of a particular replicate draw.
+It is also not limited by training-set size at this scale: doubling the training set to $6{,}400$
+replicates, scored on the same held-out batch, moves rate-averaged accuracy by less than a tenth of a
+point. The low- and mid-rate deficit is therefore information-limited rather than data-limited---the
+empirical counterpart of the Fisher threshold (Corollary~\ref{cor:appreciable-threshold}), which caps
+what any training-set size can recover at fixed genome size.
+The discriminative content therefore lives in the rarefaction feature set itself, as the theory
+predicts: the statistics are linear functionals of the joint site-frequency spectrum
+(Theorem~\ref{thm:linear-sfs}), direction is identifiable from their first-order migration response
+(Corollary~\ref{cor:identifiability}), and the across-locus variance supplies orientation even where
+the mean cannot (Proposition~\ref{prop:variance-orients}). A linear (logistic) model on the same
+features matches the network---on this benchmark it is marginally ahead, $78.0\%$ versus $75.6\%$
+overall and essentially perfect in the appreciable band---exactly as
+Proposition~\ref{prop:linear-optimal} predicts, since the direction geometry is first-order linear.
+Both decisively exceed a precomputed Patterson's $D$, which is direction-blind by construction:
+reversing the flow $j\!\to\!k$ leaves the symmetric allele-sharing pattern unchanged, so $D$ cannot
+orient gene flow (Theorem~\ref{thm:symmetric}), and empirically it labels direction below the
+majority-class rate. In positioning terms DNNaic is competitive among lightweight, outgroup-free,
+summary-statistic direction methods---the lineage of ArchIE \citep{durvasula2019archie}---while
+addressing a different task from genotype-matrix CNNs \citep{gower2021genomatnn,ray2024introunet}.
+Migration-rate \emph{magnitude}, by contrast, remains information-limited at small rates, the
+Fisher-information limit made precise in Theorem~\ref{thm:fisher}; the validated deliverable of this
+work is the direction of appreciable gene flow.
+
+\paragraph{Which channels carry the orientation signal.} Restricting the classifier to feature
+subsets under the same leakage-free protocol localizes the direction signal in the asymmetric,
+population-labeled channels, exactly as Theorem~\ref{thm:symmetric} predicts
+(Table~\ref{tab:channels}). The symmetric allelic-richness statistics alone orient poorly ($80.2\%$
+in the appreciable band); the private and pairwise-private channels each do much better ($93.9\%$
+and $98.9\%$) and together recover essentially the full-model accuracy ($99.6\%$ versus $99.8\%$).
+The per-population labels that $D$-statistics discard are what make orientation possible.
+
+\begin{table}[H]
+\centering
+\scriptsize
+\begin{tabular}{lcc}
+\toprule
+feature channels & appreciable (\%) & overall (\%) \\
+\midrule
+allelic richness $\alpha$ only (symmetric) & 80.2 & 59.8 \\
+private $\pi$ only & 93.9 & 67.9 \\
+pairwise-private $\widehat\pi$ only & 98.9 & 73.4 \\
+private $+$ pairwise-private (asymmetric) & 99.6 & 74.0 \\
+all nine statistics (full) & \textbf{99.8} & \textbf{74.7} \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Feature-channel ablation for direction} (HistGradientBoosting, leakage-free
+$\mathrm{GroupKFold}(5)$, replicate-aggregated; appreciable $=$ rate $\ge 2.5\times10^{-4}$, chance
+$33\%$). The asymmetric private and pairwise-private channels carry the orientation signal; the
+symmetric richness statistics alone are far weaker, as Theorem~\ref{thm:symmetric} predicts.}
+\label{tab:channels}
+\end{table}
+
+\paragraph{The across-locus variance orients beyond the mean.}
+Proposition~\ref{prop:variance-orients} predicts that the across-locus \emph{variance} of the
+rarefaction statistics carries orientation information the first-order \emph{mean} cannot, because
+the rarefaction kernel weights a private allele linearly in the mean but quadratically in the
+variance. A moment ablation under the identical leakage-free protocol confirms this directly
+(Table~\ref{tab:moments}). Restricting the linear head to the across-locus \emph{means} of the nine
+statistics gives $73.6\%$ rate-averaged direction accuracy; adding the \emph{variances} raises it to
+$77.6\%$; and, most tellingly, the variances \emph{alone} ($75.2\%$) already exceed the means alone.
+The second-moment coordinates are thus not redundant with the first---they supply independent
+orientation signal, the mechanism Proposition~\ref{prop:variance-orients} isolates. (In the
+appreciable band all four feature sets are near-saturated, so the discriminating axis is the
+rate-averaged accuracy, which the low- and mid-rate replicates dominate.)
+
+\begin{table}[H]
+\centering
+\scriptsize
+\begin{tabular}{lcc}
+\toprule
+moments retained (linear head) & overall (\%) & appreciable (\%) \\
+\midrule
+across-locus mean only            & 73.6 & 98.9 \\
+across-locus variance only        & 75.2 & 99.6 \\
+mean $+$ variance                 & 77.6 & 100.0 \\
+all three moments (mean, var, SE) & \textbf{78.1} & 100.0 \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Moment ablation for direction} (logistic head, leakage-free
+$\mathrm{GroupKFold}(5)$ on the $3{,}200$ replicates, replicate-aggregated, three-seed mean; chance
+$33\%$). The across-locus variance alone out-orients the mean alone, and adding it to the mean
+recovers essentially the full-feature accuracy---the empirical counterpart of
+Proposition~\ref{prop:variance-orients}.}
+\label{tab:moments}
+\end{table}
+
+\paragraph{Comparison with classical statistics.} The advantage over classical summaries is not
+subtle. On a matched leakage-controlled benchmark, the \emph{same} learner given the rarefaction
+features far outperforms it given the classical Patterson's $D$ and $f$-statistics
+(Table~\ref{tab:sota}): a linear model reaches $91.5\%$ appreciable-regime three-way direction
+accuracy on the rarefaction features versus $48.7\%$ on the $f$-statistics, and a precomputed
+Patterson's-$D$ decision rule is degenerate, predicting the control for almost every replicate
+($2.6\%$). The rarefaction features, not the model class, carry the orientation signal, and a linear
+model on them is within a point of the network---exactly what Proposition~\ref{prop:linear-optimal}
+leads one to expect.
+
+\begin{table}[H]
+\centering
+\scriptsize
+\begin{tabular}{lccc}
+\toprule
+method & overall (\%) & appreciable direction (\%) & macro-F1 \\
+\midrule
+Patterson's $D$ decision rule & 8.5 & 2.6 & 0.06 \\
+$f$-statistics $+$ logistic & 39.2 & 48.7 & 0.31 \\
+$f$-statistics $+$ gradient boosting & 36.5 & 39.3 & 0.30 \\
+rarefaction $+$ logistic & 53.5 & \textbf{91.5} & 0.42 \\
+rarefaction $+$ gradient boosting & 49.6 & 72.7 & 0.39 \\
+rarefaction $+$ DNNaic (MLP) & 52.3 & 76.9 & \textbf{0.44} \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Rarefaction features versus classical statistics}, all under the identical
+leakage-controlled protocol on an independent $1{,}300$-replicate regeneration ($260$ held-out test
+replicates; majority vote over rarefaction depths). Given the same learner, the ADZE rarefaction
+features roughly double the appreciable-regime direction accuracy of the classical $f$-statistics,
+and Patterson's $D$---direction-blind by construction (Theorem~\ref{thm:symmetric})---is degenerate.}
+\label{tab:sota}
+\end{table}
+
+\paragraph{Cross-demography robustness.} To test whether the orientation signal is specific to the training
+history, we froze the appreciable-direction model---fit on all $900$ in-distribution appreciable
+replicates---and applied it, without any refitting, to fresh replicates simulated under alternative
+demographies (a scoped probe of $45$ replicates per demography at rate $2.5\times10^{-4}$, on the
+leakage-free rarefaction feature space that reproduces the in-distribution accuracy of $99.8\%$). Transfer is
+essentially perfect to a fresh draw of the training demography and to a deeper, larger-$N_e$ history (both
+$100\%$; $N_e=2\times10^{4}$, splits $1000/2000/4000$), and degrades gracefully to $73.3\%$ (bootstrap $95\%$
+CI $[60,84]\%$, against a $33\%$ chance rate) under a recent, small-$N_e$ history ($N_e=5\times10^{3}$, splits
+$250/500/1000$). The direction signal thus generalizes across demographies rather than being memorized from
+the training history, with the expected attenuation when coalescence is fast and divergence shallow.
+
+\subsection{Real-data application: 1000 Genomes}
+\label{subsec:real-data}
+
+To exercise the method end-to-end on empirical data, we ran the released \textsc{PADZE} directly on
+1000 Genomes Project VCFs \citep{tgp2015global}, fetching the same five genome-spanning windows used
+to validate the tool and computing the $28$-dimensional feature vector for several three-population
+trios. The extraction reproduces the benchmark exactly---$9{,}756$ polymorphic biallelic SNPs on the
+YRI/CEU/CHB trio---so \textsc{PADZE} runs on real project data with no bespoke tooling.
+
+The feature computation is faithful, and the real vectors land close to the simulation prior.
+Allelic-richness moments recover the expected diversity ordering and topology: on YRI/CEU/CHB the
+out-of-Africa gradient appears (YRI $1.669 >$ CEU $1.423 \approx$ CHB $1.421$ at depth $g=100$), the
+two sister populations show near-equal richness, and the pairwise-private structure gives the correct
+tree. The resulting feature vectors sit largely \emph{within} the simulated range (median per-feature
+deviation about $0.7$ standard deviations, with a few coordinates in the tails), so the sim-trained
+model applied without refitting is interpolating on most features rather than extrapolating wildly.
+
+\paragraph{Validated recovery on real genotype backgrounds.} No natural human trio carries a
+labelled introgression event, so we validated direction recovery directly on real genetic data by
+\emph{injecting} a known signal. Starting from the CEU/CHB/YRI trio (CEU and CHB the sister pair,
+YRI the outgroup), whose gate abstains in its natural state, we turned a fraction $f$ of a chosen
+recipient population's individuals into migrants carrying a donor individual's genotypes---a
+controlled analogue of directional gene flow imposed on real allele frequencies and linkage---and
+ran the released \textsc{PADZE} and the simulation-trained model on the result (four replicates per
+condition). On these real backgrounds the method behaves as the theory predicts. It abstains on the
+un-injected control (mean gate probability $0.01$), and its detection score rises with the injected
+fraction ($0.34$, $0.52$, $0.70$ at $f=0.05,0.1,0.2$). Once the injected signal is appreciable
+($f\ge0.1$), three-way direction accuracy is $100\%$ ($16/16$ over the two rates and four
+replicates)---including the difficult reversed pair $B$ (CHB$\to$YRI) versus $C$ (YRI$\to$CHB)---and
+at a weak injection ($f=0.05$) it falls to $62\%$, the same appreciable-rate dependence seen in the
+simulations (Section~\ref{subsec:true-replicate}). The direction signal the method reads is thus
+recoverable on real human variation, not an artifact of the coalescent simulator.
+
+On the natural trios we make no accuracy claim---they carry no labelled within-population introgression,
+and rarefaction statistics are demography-dependent (Theorem~\ref{thm:expansion})---so every
+real-data call is a behavioural demonstration, not a measurement. What the demonstrations show is
+that the detect-then-orient gate tracks the relatedness of the sampled populations in the expected
+direction. Across three trios (all with in-distribution features, richness $1.42$--$1.71$), it
+abstains on the deeply differentiated YRI/CEU/CHB trio (appreciable-migration probability $0.01$),
+where the three populations are cleanly separated and any gene flow is ancient, and it fires
+($0.90$--$0.93$) on the two trios built around a recently diverged sister pair---two Europeans
+(GBR/TSI) or two Han Chinese (CHB/CHS), each with an African outgroup---where the sisters share
+extensive variation. This is the logic the method encodes, high inter-population sharing reading as
+gene flow; but on human trios recent shared ancestry and ongoing gene flow are confounded, so we
+cannot call these detections right or wrong. The decisive test is instead a labelled empirical system
+with an independently published gene-flow direction; because \textsc{PADZE} runs directly on sequence
+data, that test is a matter of data, not tooling.
+
+\subsection{Real-data validation: directional introgression in \textit{Heliconius}}
+\label{subsec:heliconius}
+
+We then ran that test. The \textit{Heliconius melpomene}--\textit{timareta}--\textit{cydno} complex
+is a textbook case of adaptive introgression in which \textit{H.~melpomene} is the documented donor
+of red wing-pattern alleles to the co-mimics \textit{H.~timareta} and \textit{H.~cydno}
+\citep{pardodiaz2012adaptive,wallbank2016evolutionary,martin2013speciation}, so the direction of
+gene flow between \textit{melpomene} and \textit{timareta} is established independently of any model.
+From whole-genome sequence data for the three species together with \textit{H.~numata} as an
+outgroup \citep{martin2013speciation}, we drew $25{,}000$ genome-wide biallelic SNPs and mapped the
+trio to the caterpillar tree as $P_1=\textit{cydno}$, $P_2=\textit{timareta}$,
+$P_3=\textit{melpomene}$---the same \textsc{PADZE} ingestion that builds the model features also
+feeds the classical baseline, so the two read identical sites.
+
+Patterson's $D$ registers the gene flow overwhelmingly---$D(\textit{cydno},\textit{timareta},
+\textit{melpomene};\textit{numata})=+0.51$ ($Z=+33$, block jackknife over chromosomes)---but, being
+symmetric under exchange of donor and recipient, it cannot say which way the flow runs: the
+reciprocal ordering of the sister pair returns the same magnitude with the opposite sign. DNNaic
+orients it. The detection gate fires (mean appreciable probability $1.0$), and both the linear and
+the nonlinear direction heads call class $C$ ($P_3\!\to\!P_2$, that is,
+\textit{melpomene}$\to$\textit{timareta}) with probability $1.0$ and $0.998$---the documented
+donor-to-recipient direction. The call is a property of the whole genome rather than of a few loci:
+$C$ is the modal class in all ten disjoint genome blocks, and it is corroborated model-free by the
+rarefaction summaries themselves, in which the pair-private allelic richness shared by
+\textit{timareta} and \textit{melpomene} exceeds that shared by \textit{cydno} and \textit{melpomene}
+by $2.6$-fold---the labelled asymmetry that a symmetric $D$ discards (Theorem~\ref{thm:symmetric}).
+Confidence tracks the strength of the real gene flow: moving the less-introgressed \textit{cydno},
+allopatric to the Amazonian \textit{melpomene} race sampled here, into the recipient position lowers
+the orientation confidence rather than reversing it. The call is stable across race combinations:
+for three further trios pairing \textit{cydno} and \textit{timareta} with different \textit{melpomene}
+races the signal is strong ($D=0.40$--$0.48$, all $Z>15$) and both heads again return
+\textit{melpomene}$\to$\textit{timareta} at probability $0.98$--$1.00$, while a trio that pairs
+\textit{timareta} with an allopatric \textit{melpomene} race not co-occurring with it shows
+essentially no gene flow ($D=0.01$), so the classical signal itself tracks real co-occurrence.
+Because the network is trained only on the
+coalescent simulations and applied here off its training distribution, we read this as a validation
+on a labelled real system rather than a calibrated accuracy; the agreement of four independent
+lines---$D$, the model-free feature asymmetry, both trained heads, and the published biology---makes
+the orientation call robust.
+
+\subsection{Real-data application: Neanderthal introgression into non-Africans}
+\label{subsec:neanderthal}
+
+The most thoroughly documented introgression in humans is the Neanderthal ancestry carried by
+non-Africans---on the order of two percent, and essentially absent from sub-Saharan Africans---the
+result that first established the ABBA--BABA test \citep{green2010neandertal,prufer2014complete}. We
+ran the released \textsc{PADZE} directly on real genotypes for this system, slicing five
+genome-spanning windows from the 1000 Genomes phase-3 VCFs \citep{tgp2015global} and from the two
+high-coverage Neanderthal genomes---Altai and Vindija~33.19
+\citep{prufer2014complete,prufer2017vindija}---on the same GRCh37 coordinates, and intersecting to
+$21{,}702$ biallelic SNPs. The trio maps to the caterpillar tree as $P_1=$~African (YRI),
+$P_2=$~Eurasian, $P_3=$~Neanderthal, so Neanderthal$\to$Eurasian is the class-$C$ orientation.
+
+The detection reproduces cleanly, with the population contrast it should have. Patterson's
+$D(\text{YRI},\text{CEU},\text{Neanderthal};\text{ancestral})=+0.27$ ($Z=3.4$, block jackknife over
+chromosomes; ABBA $=76$ against BABA $=44$): the European shares an excess of derived alleles with
+the Neanderthal that the African does not, the signature of Neanderthal$\to$non-African gene flow,
+and the East-Asian trio is likewise positive ($D=+0.20$). The excess collapses in both controls,
+exactly as it must---between two African populations
+$D(\text{YRI},\text{LWK},\text{Neanderthal})=+0.03$ with ABBA $\approx$ BABA, and between two Eurasian
+populations $D(\text{CEU},\text{CHB},\text{Neanderthal})=-0.06$, the near-zero and faintly
+East-Asian-leaning value expected when both carry comparable Neanderthal ancestry. The labelled
+ABBA/BABA asymmetry localizes the excess sharing to the Eurasian rather than the African---the
+per-population information a symmetric $D$ discards---while $D$ itself, being symmetric, still cannot
+name the donor.
+
+This system also marks the operating boundary of the rarefaction route to \emph{orientation}, and it
+is a boundary the method respects on its own. The learned gate abstains on all four Neanderthal trios
+(mean appreciable probability $0.00$) rather than asserting a direction, and two compounding causes
+explain why. First, only a handful of high-coverage archaic genomes exist, so the Neanderthal
+population supplies four gene copies and the common rarefaction depth is $g\le 4$; on the simulations,
+restricting every population to $g\le 4$ lowers appreciable-band direction accuracy from $99.9\%$ to
+$84.1\%$ and the detection gate from ROC-AUC $0.99$ to $0.86$ (Fisher linear discriminant,
+leakage-free)---degraded but not destroyed, so shallow depth alone does not force the abstention.
+Second, and more decisively, the Neanderthal lineage is far more diverged than any split in the
+training demography, so its rarefaction features fall well outside the simulated range (median
+per-feature deviation about three standard deviations); the calibrated gate responds to
+out-of-distribution input by abstaining rather than extrapolating---the safe behaviour the two-stage
+design intends. The site-based Patterson's $D$, which does not rarefy and assumes no training
+distribution, is unaffected and still detects. The learned rarefaction orientation is thus matched to
+population-scale samples that resemble the training regime---the \textit{Heliconius} species panels of
+Section~\ref{subsec:heliconius} and the injected-signal human trios of Section~\ref{subsec:real-data},
+each with many individuals per population---while few-genome, deeply divergent archaic introgression is
+detectable (by $D$) but not orientable from the frozen model's features, a scope boundary the gate
+enforces without supervision.
+
+\section{Theoretical results connecting rarefaction statistics and evaluation}
+\label{sec:theoretical-results}
+
+This section collects the mathematical results that make the methodology more than an
+empirical neural-network fit; each statement is proved inline.
+
+\begin{thm}[Rarefaction statistics are linear SFS functionals]\label{thm:linear-sfs}
+Fix sample sizes and rarefaction depth \(g\). Let \(\Xi_{a,b,c}\) denote the joint sample
+frequency spectrum count for alleles observed \(a,b,c\) times in the three sampled
+populations. For every rarefaction statistic
+\[
+T_g\in\{\alpha_1,\alpha_2,\alpha_3,\pi_1,\pi_2,\pi_3,
+\widehat{\pi}_{12},\widehat{\pi}_{13},\widehat{\pi}_{23}\},
+\]
+there is a deterministic combinatorial weight vector \(w_{T,g}\) such that
+\[
+\mathbb{E}[T_g]=\langle w_{T,g},\mathbb{E}[\Xi]\rangle .
+\]
+\end{thm}
+
+\begin{proof}
+Condition on a site with derived-allele counts \((a,b,c)\). After rarefying population
+\(j\) to depth \(g\), the probability that the allele is present is a hypergeometric
+probability depending only on the original count and sample size. Private and
+pair-private events are finite Boolean combinations of these rarefied-presence events. For
+example, the event counted by \(\pi_1\) is ``present after rarefaction in population 1 and
+absent after rarefaction in populations 2 and 3.'' Therefore the conditional contribution
+of a site with counts \((a,b,c)\) to \(T_g\) is a deterministic weight
+\(w_{T,g}(a,b,c)\). Summing these weights against the joint SFS gives \(T_g\), and taking
+expectations gives the displayed linear functional.
+\end{proof}
+
+\begin{thm}[Small-migration expansion]\label{thm:expansion}
+Consider a structured coalescent model whose generator can be written
+\[
+Q_\beta(m)=Q_0+mQ_\beta
+\]
+for direction \(\beta\) and migration magnitude \(m\). For every bounded rarefaction
+statistic \(T_g\),
+\[
+\mathbb{E}_{\beta,m}[T_g]=\mathbb{E}_{0}[T_g]+m\Delta_{\beta,g,T}+O(m^2)
+\]
+as \(m\to 0\). The first-order coefficient \(\Delta_{\beta,g,T}\) is obtained by inserting
+one \(Q_\beta\) migration transition into the no-migration ancestral semigroup.
+\end{thm}
+
+\begin{proof}
+For fixed sample size and a finite state truncation of the ancestral process, expectations
+of bounded genealogical observables are finite sums of transition probabilities from the
+semigroup \(\exp(t(Q_0+mQ_\beta))\). Differentiating the semigroup at \(m=0\) gives
+\[
+\frac{d}{dm}\exp(t(Q_0+mQ_\beta))\bigg|_{m=0}
+=\int_0^t \exp(sQ_0)Q_\beta\exp((t-s)Q_0)\,ds .
+\]
+This derivative corresponds to histories with exactly one migration event of type
+\(\beta\). Mutation and the map from genealogies to the expected joint SFS are linear, and
+Theorem 1 shows that rarefaction statistics are linear SFS functionals. Composing these
+linear maps with the differentiated semigroup gives the coefficient
+\(\Delta_{\beta,g,T}\), and analyticity of finite-dimensional matrix exponentials gives
+the \(O(m^2)\) remainder.
+\end{proof}
+
+\begin{cor}[Generic local identifiability of direction]\label{cor:identifiability}
+Let
+\[
+\Delta_\beta=(\Delta_{\beta,g,T})_{g,T}
+\]
+be the vector of first-order perturbations over the rarefaction depths and statistics
+used by the model. If
+\[
+\min_{\beta\ne\beta'}\|\Delta_\beta-\Delta_{\beta'}\| \ge \gamma>0,
+\]
+then there exists \(m_0>0\) such that, for all \(0<m<m_0\),
+\[
+\|\mathbb{E}_{\beta,m}[\Phi]-\mathbb{E}_{\beta',m}[\Phi]\|
+\ge \frac{\gamma}{2}m .
+\]
+Thus introgression direction is locally identifiable from the expected rarefaction feature
+vector \(\Phi\).
+\end{cor}
+
+\begin{proof}
+Subtract the expansions in Theorem 2 for two directions:
+\[
+\mathbb{E}_{\beta,m}[\Phi]-\mathbb{E}_{\beta',m}[\Phi]
+=m(\Delta_\beta-\Delta_{\beta'})+O(m^2).
+\]
+The assumed separation gives a first-order norm at least \(\gamma m\). For sufficiently
+small \(m\), the quadratic remainder has norm at most \(\gamma m/2\), proving the stated
+lower bound.
+\end{proof}
+
+The next theorem is the complementary impossibility result: it explains \emph{why} the
+asymmetric private and pair-private rarefaction components are necessary, by showing that the
+symmetric, \emph{population-unlabeled} summaries underlying classical pairwise tests cannot
+orient gene flow at all. This is the theoretical counterpart of two empirical observations: in
+PC space the recently diverged pair $B$ (P2$\to$P3) and $C$ (P3$\to$P2) overlaps most
+(Section~\ref{sec:eda}, Figure~\ref{fig:pca-comparison}), and under replicate-aware evaluation this donor--recipient reversed pair shows elevated mutual confusion. The escape route the rarefaction features take is to retain
+the per-population labeling that $D$-statistics discard.
+
+\begin{thm}[Symmetric outgroup-free summaries cannot orient gene flow]\label{thm:symmetric}
+Suppose populations $j$ and $k$ are exchangeable under the no-migration demography (equal
+effective sizes and a divergence history symmetric in $j\leftrightarrow k$), and let $S$ be
+any statistic that depends on the genealogy only through symmetric pairwise allele-sharing
+summaries $\{s_{jk}\}$---without an outgroup, without the temporal order of sampling, and
+without asymmetric private or shared-private components. Let history $H$ carry directional
+gene flow $j\to k$, and let $H'=\tau\!\cdot\! H$ be its image under the label transposition
+$\tau=(j\,k)$, so that $H'$ carries gene flow $k\to j$. Then
+\[
+\mathrm{Law}(S\mid H)=\mathrm{Law}(S\mid H'),
+\]
+and the direction of gene flow is not identifiable from $S$. The private and pair-private
+rarefaction statistics $\pi_j,\widehat\pi_{jk}$ used by DNNaic are not $\tau$-invariant and
+therefore escape this obstruction.
+\end{thm}
+
+\begin{proof}
+Because $j$ and $k$ are exchangeable under the no-migration demography, the transposition
+$\tau=(j\,k)$ is a measure-preserving symmetry of the ancestral process \emph{except} for the
+directional migration edge, whose orientation it reverses; hence $\tau\!\cdot\! H=H'$ as laws
+on genealogies. Any statistic built from the symmetric summaries $\{s_{jk}\}$ satisfies
+$S\circ\tau=S$, so
+\[
+\mathrm{Law}(S\mid H')=\mathrm{Law}(S\circ\tau\mid H)=\mathrm{Law}(S\mid H).
+\]
+The two histories thus share the law of $S$ but differ in direction, which is exactly
+non-identifiability of direction from $S$. Finally, $\pi_j$ counts alleles private to
+population $j$ and $\widehat\pi_{jk}$ counts alleles shared by $j,k$ but absent from the third
+population; under $\tau$ these obey $\pi_j\leftrightarrow\pi_k$ and
+$\widehat\pi_{jk}\leftrightarrow\widehat\pi_{jk}$, and once migration breaks exchangeability
+$\pi_j\neq\pi_k$ generically, so the private/pair-private channel retains orientation
+information that the symmetric summaries discard.
+\end{proof}
+
+\paragraph{Second moments orient gene flow where the first-order mean is blind.}
+Corollary~\ref{cor:identifiability} recovers direction from the \emph{mean} rarefaction features
+whenever their first-order migration response separates two directions. Because the rarefaction summaries also
+report the across-locus \emph{variance} of every statistic, it is natural to ask whether that
+second-moment coordinate adds orientation information beyond the mean. The next proposition---a
+special case of a moment-hierarchy phenomenon---answers yes: it exhibits reversed directions
+whose first-order \emph{mean} margin vanishes while the first-order \emph{variance} margin does
+not. It thereby strengthens Corollary~\ref{cor:identifiability} by supplying an identifying
+coordinate exactly in the degenerate regime where that corollary's mean-based margin $\gamma$ is
+zero.
+
+We work in the standard independent-loci model \citep{sawyer1992population}: unlinked biallelic
+loci are i.i.d.\ draws from the genealogy law $F_{\beta,m}$, and the across-locus mean and
+variance of a statistic are the sample mean and variance of its per-locus values, hence
+consistent estimators of the per-locus mean and variance under $F_{\beta,m}$. For a derived
+allele with sample configuration $(a,b,c)$---derived counts in the exchangeable pair $(j,k)$ and
+the third population $\ell$---write the depth-$g$ rarefied presence/absence probabilities as
+$p^{(N)}_a=1-Q(a,g;N)$ and $q^{(N)}_a=Q(a,g;N)$. Assuming, as in the private-allele regime, that
+the ancestral allele is rarefied-present in all three populations (so only the derived allele
+can be private), the per-locus private-$j$ richness at depth $g$ is the bounded configuration
+weight
+\[
+\pi_j(g)=w_j(a,b,c;g),\qquad w_j(a,b,c;g)=p^{(N_j)}_a\,q^{(N_k)}_b\,q^{(N_\ell)}_c,
+\]
+of Theorem~\ref{thm:linear-sfs}. Writing $f_{a,b,c}$ for the per-locus configuration law and
+$\langle f,h\rangle=\sum_{a,b,c}f_{a,b,c}\,h(a,b,c)$, the rarefaction mean and variance estimate
+$\mu_j(g)=\langle f,w_j\rangle$ and $v_j(g)=\langle f,w_j^2\rangle-\langle f,w_j\rangle^2$. We
+adopt the exchangeable setup of Theorem~\ref{thm:symmetric}: the no-migration demography is
+symmetric under $\tau=(j\,k)$ (equal sample sizes $N_j=N_k=N$ and a
+$j\!\leftrightarrow\!k$-symmetric divergence history), the reversed directions
+$\beta=(j\!\to\!k)$ and $\beta'=\tau\!\cdot\!\beta=(k\!\to\!j)$ obey
+$f^{\beta'}_{a,b,c}=f^{\beta}_{b,a,c}$, and by Theorem~\ref{thm:expansion} each law is analytic,
+$f^{\beta}=f^{0}+m\,\delta^{\beta}+O(m^2)$ with $\langle\delta^\beta,\mathbf 1\rangle=0$ and
+$\tau$-invariant base $f^0_{a,b,c}=f^0_{b,a,c}$.
+
+\begin{prop}[Variance orients gene flow at first order where the mean does not]
+\label{prop:variance-orients}
+Define at depth $g$ the first-order mean and variance \emph{margins} between the reversed
+directions,
+\[
+M_\mu(g)=\partial_m\!\left[\mu_j^{\beta}(g)-\mu_j^{\beta'}(g)\right]_{m=0},\qquad
+M_v(g)=\partial_m\!\left[v_j^{\beta}(g)-v_j^{\beta'}(g)\right]_{m=0}.
+\]
+Then, with $u_g:=w_j-w_j\!\circ\!\tau$, $r_g:=w_j^2-w_j^2\!\circ\!\tau$ and
+$\mu^0(g)=\langle f^0,w_j\rangle$,
+\[
+M_\mu(g)=\langle\delta^{\beta},u_g\rangle,\qquad
+M_v(g)=\langle\delta^{\beta},r_g\rangle-2\mu^0(g)\,M_\mu(g),
+\]
+and, writing $q_c:=q^{(N_\ell)}_c$,
+\[
+u_g(a,b,c)=q_c\,(p^{(N)}_a-p^{(N)}_b),\qquad
+r_g(a,b,c)=q_c^{\,2}\,(p^{(N)}_a-p^{(N)}_b)\big(p^{(N)}_a q^{(N)}_b+q^{(N)}_a p^{(N)}_b\big).
+\]
+The kernels $u_g$ and $r_g$ are linearly independent, so $M_\mu$ and $M_v$ are independent
+linear functionals of the migration response $\delta^\beta$. Consequently there exist responses
+that are mean-blind but variance-visible, $M_\mu(g)=0\neq M_v(g)$. One such response lives on a
+singleton and a higher-count private class: with $c=0$, count $h$ ($1<h\le N$),
+$p_h:=1-Q(h,g;N)$, and pair differentials
+$\eta:=\delta^\beta(h,0,0)-\delta^\beta(0,h,0)$,
+$\xi:=\delta^\beta(1,0,0)-\delta^\beta(0,1,0)$, imposing $M_\mu(g)=0$ fixes
+$\xi=-\tfrac{Np_h}{g}\,\eta$ and yields
+\[
+M_v(g)=p_h\!\left(p_h-\tfrac{g}{N}\right)\eta,\qquad
+\big|M_v(g)\big|=p_h\!\left(p_h-\tfrac{g}{N}\right)|\eta|>0\ \ (\eta\neq0),
+\]
+the factor $p_h-g/N>0$ because $Q(h,g;N)<Q(1,g;N)$ for $h>1$. The reversed directions are thus
+first-order indistinguishable from the mean private-richness coordinate yet separated at first
+order by its across-locus variance.
+\end{prop}
+
+\begin{proof}
+As $\pi_j(g)=w_j$ is a bounded configuration function, the across-locus sample mean and variance
+converge to $\mu_j=\langle f,w_j\rangle$ and $v_j=\langle f,w_j^2\rangle-\langle f,w_j\rangle^2$;
+analyticity of $f^\beta$ in $m$ (Theorem~\ref{thm:expansion}) gives
+$\partial_m\mu_j^\beta|_0=\langle\delta^\beta,w_j\rangle$ and
+$\partial_m v_j^\beta|_0=\langle\delta^\beta,w_j^2\rangle-2\langle f^0,w_j\rangle\langle\delta^\beta,w_j\rangle$.
+Let $\tau$ act on configurations by $(a,b,c)\mapsto(b,a,c)$; since $N_j=N_k=N$ we have
+$w_j\!\circ\!\tau=w_k$, and $\delta^{\beta'}=\delta^{\beta}\!\circ\!\tau$ with the involution
+identity $\langle g\!\circ\!\tau,h\rangle=\langle g,h\!\circ\!\tau\rangle$ gives
+$\partial_m\mu_j^{\beta'}|_0=\langle\delta^\beta,w_k\rangle$. Hence
+$M_\mu=\langle\delta^\beta,w_j-w_k\rangle=\langle\delta^\beta,u_g\rangle$. The same substitution
+in the second moment, with $f^0\!\circ\!\tau=f^0$ so that
+$\langle f^0,w_j\rangle=\langle f^0,w_k\rangle=\mu^0$, gives
+$M_v=\langle\delta^\beta,w_j^2-w_k^2\rangle-2\mu^0\langle\delta^\beta,u_g\rangle
+=\langle\delta^\beta,r_g\rangle-2\mu^0 M_\mu$.
+Writing $p_a=p^{(N)}_a$, $q_a=1-p_a$ and $q_c=q^{(N_\ell)}_c$, we have $w_j=p_aq_bq_c$,
+$w_k=q_ap_bq_c$, so $u_g=q_c(p_aq_b-q_ap_b)=q_c(p_a-p_b)$ and
+$r_g=(w_j-w_k)(w_j+w_k)=q_c^2(p_a-p_b)(p_aq_b+q_ap_b)$; their ratio
+$r_g/u_g=q_c(p_aq_b+q_ap_b)$ is non-constant, so $u_g,r_g$ are not proportional and
+$\{\langle\delta,u_g\rangle=0\}\not\subseteq\{\langle\delta,r_g\rangle=0\}$. For the witness,
+restrict $\delta^\beta$ to $(1,0,0),(h,0,0),(0,1,0),(0,h,0)$ with a mass-conserving remainder on
+$\tau$-fixed configurations where $w_j=w_k=0$. There $q_c=1$ and, by the exact singleton
+identity $p_1=1-Q(1,g;N)=g/N$,
+\[
+M_\mu=\tfrac{g}{N}\,\xi+p_h\,\eta,\qquad
+\langle\delta^\beta,r_g\rangle=\big(\tfrac{g}{N}\big)^2\xi+p_h^2\,\eta .
+\]
+Setting $M_\mu=0$ gives $\xi=-\tfrac{Np_h}{g}\eta$, whence (using $M_\mu=0$ once more)
+$M_v=\langle\delta^\beta,r_g\rangle=\big(\tfrac{g}{N}\big)^2\big(\!-\tfrac{Np_h}{g}\eta\big)+p_h^2\eta
+=p_h\big(p_h-\tfrac{g}{N}\big)\eta$. Since $h>1$ implies $Q(h,g;N)<Q(1,g;N)$, i.e.\ $p_h>g/N$,
+this is nonzero for $\eta\neq0$. Finally $f^0+m\,\delta^\beta$ is a probability law for small
+$|m|$ (the four base masses are positive), and the reversed-direction law is its $\tau$-image, as
+the model requires; the witness is therefore admissible.
+\end{proof}
+
+\begin{rem}
+Within the independent-loci model the margin identities and the explicit witness are exact, so
+Proposition~\ref{prop:variance-orients} is proved as an existence statement. It does \emph{not}
+assert that a particular named demography realizes the exact cancellation $M_\mu(g)=0$: whether a
+given structured-coalescent demography places $\delta^\beta$ on the mean-blind hyperplane is a
+single (codimension-one) condition on the demographic parameters, checkable by finite differences
+in \texttt{msprime} and left to the numerical program noted in Section~\ref{sec:limitations}. The
+unconditional content is what matters for the method---first-order mean-blindness does not imply
+first-order variance-blindness, because the rarefaction kernel weights a private allele
+\emph{linearly} in the mean ($w_j$) but \emph{quadratically} in the variance ($w_j^2$), so
+equalizing the expected private count across reversed directions leaves the across-locus
+concentration unequal. This is the mechanism by which the second-moment coordinates of the rarefaction summaries
+carry orientation beyond the first moment, matching the measured importance of the
+variance-bearing private and pair-private channels. The moment ablation of
+Table~\ref{tab:moments} confirms the prediction directly: under the leakage-free protocol the
+across-locus variance alone out-orients the mean alone, and adding it to the mean recovers the
+full-feature accuracy.
+\end{rem}
+
+The identifiability results above separate the directions through the first-order response
+vectors $\Delta_\beta$, but they do not say what \emph{kind} of classifier is needed to exploit
+that separation. The next proposition answers this, and in doing so explains why a plain linear
+model on the rarefaction features performs on par with the deep network: in the small-migration
+regime the discriminative geometry is linear, so a linear rule is already optimal.
+
+\begin{prop}[A linear rule is first-order optimal for direction]\label{prop:linear-optimal}
+Work in the local asymptotic normality regime of Theorem~\ref{thm:fisher}: the per-replicate
+rarefaction feature vector $\Phi$ obeys $\sqrt{L}\,(\Phi-\mathbb{E}_{\beta,m}\Phi)\to
+\mathcal{N}(0,\Sigma_0)$ as the number of approximately independent loci $L\to\infty$, with a
+common leading covariance $\Sigma_0\succ0$ that does not depend on the direction $\beta$ because
+the no-migration base demography is exchangeable in the experimental populations. By
+Theorem~\ref{thm:expansion} the class-conditional mean is
+$\mu_\beta(m)=\mu_0+m\,\Delta_\beta+O(m^2)$. Write $Q(z)=\Pr(\mathcal N(0,1)>z)$. Then, to first
+order in $m$,
+\begin{enumerate}
+\item the Bayes-optimal rule separating any two directions $\beta,\beta'$ is the \emph{linear}
+discriminant
+\[
+\phi\ \longmapsto\ \operatorname{sign}
+\big\langle \Sigma_0^{-1}(\Delta_\beta-\Delta_{\beta'}),\ \phi-\tfrac12(\mu_\beta+\mu_{\beta'})\big\rangle;
+\]
+\item its error is the Gaussian overlap
+$Q\!\big(\tfrac12\, m\sqrt{L}\,\lVert\Sigma_0^{-1/2}(\Delta_\beta-\Delta_{\beta'})\rVert\big)$,
+which decreases monotonically in $m$ and tends to the two-class chance level $\tfrac12$ as
+$m\to0$;
+\item consequently no classifier---linear or nonlinear---attains a smaller first-order error than
+a linear model on the rarefaction features.
+\end{enumerate}
+\end{prop}
+
+\begin{proof}
+Under the stated law the per-replicate feature is, to leading order, Gaussian with
+direction-independent covariance $\Sigma_0/L$ and mean $\mu_\beta(m)$. For two Gaussians with a
+common covariance the log-likelihood ratio is affine in $\phi$, so the Bayes rule is the
+hyperplane in (i) (Fisher's linear discriminant), and the two-class Bayes error equals
+$Q(\Delta_{\mathrm M}/2)$ with Mahalanobis separation
+$\Delta_{\mathrm M}=\lVert(\Sigma_0/L)^{-1/2}(\mu_\beta-\mu_{\beta'})\rVert
+=m\sqrt{L}\,\lVert\Sigma_0^{-1/2}(\Delta_\beta-\Delta_{\beta'})\rVert+O(m^2)$, which is (ii). Because
+the optimal boundary is already affine, the linear hypothesis class contains the Bayes rule, so
+enlarging the class cannot lower the error to this order, giving (iii).
+\end{proof}
+
+\begin{rem}
+Proposition~\ref{prop:linear-optimal} accounts for two measured facts at once. First, a logistic
+model on the rarefaction features matches the deep network to within about a point of accuracy
+(Section~\ref{subsec:true-replicate}): the direction geometry is first-order linear, so the
+network's nonlinearity is not what carries the signal---the population-labeled private and
+pair-private channels are. Second, the error formula $Q(\tfrac12 m\sqrt L\lVert\cdots\rVert)$
+reproduces the shape of the per-rate accuracy curve (Table~\ref{tab:true-replicate}): it collapses
+to chance as the migration magnitude falls below a Fisher threshold of the same $L^{-1/2}$ order as
+the magnitude threshold $m_\star$ of Corollary~\ref{cor:appreciable-threshold}. The two thresholds
+are set by \emph{different} functionals of the same geometry, however---magnitude by the individual
+shift $\lVert\Sigma_0^{-1/2}\Delta_\beta\rVert$ and orientation by the pairwise differences
+$\lVert\Sigma_0^{-1/2}(\Delta_\beta-\Delta_{\beta'})\rVert$---as made precise in
+Proposition~\ref{prop:two-thresholds}. The small residual advantage of the network at larger
+rates is consistent with the neglected $O(m^2)$ and any direction-dependent curvature of $\Sigma$,
+which a nonlinear model can use once the migration signal is strong.
+\end{rem}
+
+The final perturbative result quantifies the empirical difficulty of magnitude estimation: it
+turns the weak small-rate relative error into a principled information limit rather than a
+modeling failure.
+
+\begin{thm}[Local rate estimability and Fisher information]\label{thm:fisher}
+Fix a direction $\beta$ with nonzero first-order response $\Delta_\beta\neq 0$ from
+Theorem~\ref{thm:expansion}. Assume the per-locus empirical rarefaction feature vector obeys a
+local asymptotic normality law $\sqrt{L}\,(\widehat\Phi-\mathbb{E}_m\Phi)\to
+\mathcal{N}(0,\Sigma_0)$ as the number of approximately independent loci $L\to\infty$, with
+$\Sigma_0\succ 0$ the per-locus feature covariance under $m=0$. Then the per-locus Fisher
+information for the magnitude $m$ at $m=0$ is
+\[
+\mathcal{I}_0=\Delta_\beta^\top\,\Sigma_0^{-1}\,\Delta_\beta,
+\]
+and any regular estimator $\widehat m$ obeys the Cram\'er--Rao bound
+$\operatorname{Var}(\widehat m)\ge 1/(L\,\mathcal{I}_0)$. Consequently the best achievable
+relative error satisfies
+\[
+\frac{\sqrt{\operatorname{Var}(\widehat m)}}{m}\;\ge\;\frac{1}{m\,\sqrt{L\,\mathcal{I}_0}}
+\;\xrightarrow[m\to 0]{}\;\infty,
+\]
+so at fixed genome size the relative error of magnitude estimation necessarily diverges as the
+migration rate vanishes.
+\end{thm}
+
+\begin{proof}
+By Theorem~\ref{thm:expansion}, $\mathbb{E}_m\Phi=\mathbb{E}_0\Phi+m\,\Delta_\beta+O(m^2)$, so
+the limiting Gaussian family $\mathcal{N}\!\big(\mu(m),\,\Sigma_0/L\big)$ has mean
+differentiable in $m$ with $\mu'(0)=\Delta_\beta$. For a Gaussian location family with known
+covariance the Fisher information for the scalar $m$ is
+$\mu'(0)^\top(\Sigma_0/L)^{-1}\mu'(0)=L\,\Delta_\beta^\top\Sigma_0^{-1}\Delta_\beta$. The
+Cram\'er--Rao inequality (equivalently the H\'ajek--Le~Cam local asymptotic minimax bound for
+this LAN family) gives $\operatorname{Var}(\widehat m)\ge 1/(L\,\mathcal{I}_0)$ for regular
+estimators. Dividing the resulting standard-deviation floor $1/\sqrt{L\,\mathcal{I}_0}$ by $m$
+and letting $m\to 0$ yields the stated divergence.
+\end{proof}
+
+\begin{cor}[Appreciable-rate threshold and the gate]\label{cor:appreciable-threshold}
+The relative-error floor $1/(m\sqrt{L\,\mathcal I_0})$ of Theorem~\ref{thm:fisher} crosses one at
+\[
+   m_\star=\frac{1}{\sqrt{L\,\mathcal I_0}}=\frac{1}{\sqrt{L}\,\lVert\Sigma_0^{-1/2}\Delta_\beta\rVert}.
+\]
+For $m\ll m_\star$ the standard deviation of every regular estimator exceeds the estimand, so no
+scale-accurate magnitude estimate exists; for $m\gg m_\star$ the floor drops below one and magnitude
+becomes estimable to $O(1)$ relative error. This is the information-theoretic origin of the
+appreciable regime observed empirically: the two-stage procedure that first tests whether
+$m\gtrsim m_\star$ and only then estimates or orients is not a heuristic but the decomposition
+dictated by the Fisher geometry, which is why direction and magnitude are recoverable exactly in the
+appreciable band and near-chance below it. The threshold scales as $m_\star\propto L^{-1/2}$, so a
+larger genome lowers it, but only at the slow $L^{-1/2}$ rate; the ordering of replicates by rate,
+which depends on the sign of $m-m_\star$ rather than on resolving $m$ itself, survives well below
+$m_\star$ and is the ordinal signal the regressor still recovers.
+\end{cor}
+
+\begin{prop}[Two thresholds: detection and magnitude versus orientation]\label{prop:two-thresholds}
+In the local asymptotic normality regime of Proposition~\ref{prop:linear-optimal}, write
+$W=\Sigma_0^{-1/2}$ for the whitening map. Two distinct information scales govern the pipeline.
+\emph{Detection and magnitude} depend on the individual first-order shift through
+$\lVert W\Delta_\beta\rVert=\sqrt{\mathcal I_0}$: a rate-$m$ replicate sits at Mahalanobis distance
+$m\sqrt{L}\,\lVert W\Delta_\beta\rVert$ from the no-migration control, so the detection error is
+$Q(\tfrac12 m\sqrt{L}\,\lVert W\Delta_\beta\rVert)$ and the threshold is
+$m_\star=1/(\sqrt{L}\,\lVert W\Delta_\beta\rVert)$ (Corollary~\ref{cor:appreciable-threshold}).
+\emph{Orientation} depends instead on the pairwise \emph{differences}
+$\lVert W(\Delta_\beta-\Delta_{\beta'})\rVert$: by Proposition~\ref{prop:linear-optimal} the
+three-way direction accuracy is framed by
+\[
+1-\!\!\sum_{\beta'\neq\beta}\!Q\!\big(\tfrac12 m\sqrt{L}\,\lVert W(\Delta_\beta-\Delta_{\beta'})\rVert\big)
+\ \le\ A_\beta(m)\ \le\ 1-\tfrac12\max_{\beta'\neq\beta}Q\!\big(\tfrac12 m\sqrt{L}\,\lVert W(\Delta_\beta-\Delta_{\beta'})\rVert\big),
+\]
+so it is controlled by the \emph{smallest} pairwise separation, with orientation threshold
+$m_\star^{\mathrm{dir}}=c\big/\!\big(\sqrt{L}\,\min_{\beta\neq\beta'}\lVert W(\Delta_\beta-\Delta_{\beta'})\rVert\big)$.
+Both scale as $L^{-1/2}$ but are set by different Fisher functionals---the individual shift for
+detection, the pairwise differences for orientation---which is why the gate can flag appreciable
+flow at rates where the direction is not yet resolvable.
+\end{prop}
+
+\begin{proof}
+The detection statement is the overlap of $\mathcal N(\mu_0,\Sigma_0/L)$ with
+$\mathcal N(\mu_0+m\Delta_\beta,\Sigma_0/L)$, whose Mahalanobis separation is
+$m\sqrt{L}\,\lVert W\Delta_\beta\rVert$; equating the resulting standard-deviation floor to $m$
+recovers Corollary~\ref{cor:appreciable-threshold}. For orientation, the class-$\beta$ region of the
+Bayes rule is the intersection of the pairwise half-spaces of
+Proposition~\ref{prop:linear-optimal}; a union bound over the two competitors gives the lower bound
+and retaining the single nearest competitor the upper bound. Both are monotone in
+$\min_{\beta'}\lVert W(\Delta_\beta-\Delta_{\beta'})\rVert$, which therefore sets the threshold.
+\end{proof}
+
+\begin{rem}[Numerical validation and the detectability ordering]\label{rem:threshold-numerics}
+Estimating $\mu_\beta$ and $\Sigma_0$ directly from the replicate features, the Gaussian rule of
+Proposition~\ref{prop:linear-optimal} reproduces the empirical per-rate direction accuracy across
+three orders of magnitude in the migration rate---$0.38/0.40/0.69/1.00$ predicted against
+$0.34/0.34/0.74/1.00$ measured (linear discriminant, replicate-aggregated) at
+$5\times10^{-7}/2.5\times10^{-6}/5\times10^{-5}/2.5\times10^{-4}$---so the threshold formula is the
+operating curve, not an analogy. The whitened shifts order the three scenarios by detectability,
+$\lVert W\Delta_C\rVert>\lVert W\Delta_B\rVert>\lVert W\Delta_A\rVert$
+($1.73:1.30:0.62$ at $5\times10^{-5}$): introgression from the divergent outgroup into a sister
+($C=P_3\!\to\!P_2$) leaves the largest rarefaction footprint, and gene flow between the two similar
+sisters ($A=P_1\!\to\!P_2$) the smallest. The binding constraint on orientation is therefore the
+sister-to-sister scenario $A$, not the reversed-flow pair $B$--$C$: the residual confusion is largest
+for $A$ and smallest for $B$--$C$ (pair confusions $307\,{:}\,217\,{:}\,160$ over all positive rates,
+Figure~\ref{fig:class-confusion-detailed}), so the population-labelled channels resolve the
+donor--recipient orientation of the reversed pair \emph{best}---precisely the call $D$ cannot
+make---while the residual difficulty is the weak footprint of gene flow between the two most similar
+populations.
+\end{rem}
+
+\begin{thm}[Row-level split optimism under replicate random effects]\label{thm:leakage}
+Suppose replicate \(i\) contributes rows
+\[
+X_{i,g}=\mu(Y_i,m_i,g)+Z_i+\varepsilon_{i,g},\qquad g=2,\ldots,199,
+\]
+where \(Z_i\) is a replicate-level random effect shared by all rarefaction depths from the
+same simulation. Under an independent row-level train/test split with test probability
+p, the probability that replicate \(i\) appears in both training and test is
+\[
+1-(1-p)^{198}-p^{198}.
+\]
+For \(p=0.2\) this probability is essentially one. Consequently row-level test risk
+estimates within-replicate interpolation risk rather than new-replicate generalization
+risk. If the learner can estimate \(Z_i\), the row-level risk is optimistically biased by
+a nonnegative term increasing with \(\mathrm{Var}(Z_i)\).
+\end{thm}
+
+\begin{proof}
+The overlap probability is the complement of the event that all 198 rows fall in training
+or all 198 rows fall in test. This gives the displayed expression. In a squared-error
+model, a learner that sees training rows from replicate \(i\) can estimate the shared
+effect \(Z_i\) and use it when predicting held-out rows from the same replicate. For a new
+replicate, no such estimate is available. The conditional test error under row splitting
+therefore removes part of the replicate-level variance that remains present in
+new-replicate prediction. The same argument applies to classification through any margin
+model in which estimating \(Z_i\) moves examples away from the decision boundary. Hence
+row-level splitting is optimistic whenever replicate effects carry predictive signal.
+\end{proof}
+
+\begin{thm}[Concentration of empirical rarefaction features]
+Assume \(L\) independent loci and let \(\widehat{\Phi}\in\mathbb{R}^d\) be the empirical
+rarefaction feature vector, with each coordinate bounded in an interval of length \(B\).
+Then
+\[
+\Pr\left(\|\widehat{\Phi}-\mathbb{E}\Phi\|_\infty>\varepsilon\right)
+\le 2d\exp\left(-\frac{2L\varepsilon^2}{B^2}\right).
+\]
+\end{thm}
+
+\begin{proof}
+Apply Hoeffding's inequality to each bounded coordinate of the empirical average over
+loci. A union bound over the \(d\) coordinates gives the displayed inequality. For linked
+loci the same proof applies after replacing \(L\) by an effective number of approximately
+independent recombination blocks.
+\end{proof}
+
+\begin{rem}
+This concentration is the finite-$L$ basis for the local asymptotic normality invoked in
+Theorem~\ref{thm:fisher} and Proposition~\ref{prop:linear-optimal}: the empirical feature vector
+sits within $O(L^{-1/2})$ of its expectation, so at fixed genome size the recoverable signal is the
+first-order mean shift $m\Delta_\beta$ measured against an $L^{-1/2}$ noise floor. The ratio of the
+two is what the Fisher threshold $m_\star$ of Corollary~\ref{cor:appreciable-threshold} balances,
+and it is the same quantity that sets both the direction Bayes error and the magnitude relative
+error---one information-geometric scale governing the whole pipeline.
+\end{rem}
+
+\section{Discussion}
+\label{sec:discussion}
+
+The contribution of this paper is a compact, interpretable, outgroup-free route to the
+\emph{direction} of introgression. Under strict replicate-aware evaluation---no simulation
+replicate shared between training and test---DNNaic orients appreciable gene flow at $96.6\%$ at
+the largest fixed rate and $99.7\%$ across the appreciable band, with a detect-then-orient gate that
+flags appreciable migration at ROC-AUC $0.99$ and a well-calibrated score; accuracy falls to the
+chance rate as migration becomes negligible, as the identifiability theory predicts. On the same
+simulations a precomputed Patterson's $D$ labels direction below the majority-class baseline and
+barely detects presence---not incidental, but what Theorem~\ref{thm:symmetric} forces, since $D$
+collapses the population labels that carry orientation. The signal lives in the asymmetric,
+population-labeled private and pair-private channels (Table~\ref{tab:channels})---precisely the
+components that symmetric, label-collapsing $D$-statistics discard (Theorem~\ref{thm:symmetric}).
+
+A distinguishing feature of this work is that each theoretical claim is paired with a numerical
+check on the same arrays. The symmetric-summary obstruction (Theorem~\ref{thm:symmetric}) is borne
+out directly: a classifier restricted to the symmetric richness statistics reaches only $80.2\%$ in
+the appreciable band, and it is the asymmetric private and pair-private channels---the ones the
+theorem singles out---that lift it to $99.8\%$, while a precomputed Patterson's $D$, which discards
+those labels, cannot orient at all. The linear-optimality prediction
+(Proposition~\ref{prop:linear-optimal}) is confirmed by a logistic model matching the network
+($78.0\%$ versus $75.6\%$ overall). The replicate-effect leakage theorem (Theorem~\ref{thm:leakage})
+is confirmed by the row-versus-group gap: the same features score $\approx99.6\%$ under a leaky
+row-level split (Section~\ref{subsec:benchmarks}) but $\approx75\%$ under the correct replicate
+split. And the Fisher-information limit (Theorem~\ref{thm:fisher}) is matched by the divergence of
+the magnitude relative error toward small rates (Section~\ref{sec:regression_model}). This
+theory--numerics correspondence is what turns an empirical neural-network fit into a
+population-genetic inference method, and it positions DNNaic in the summary-statistic learning
+tradition
+\citep{sheehan2016deep,durvasula2019archie} rather than the genotype-matrix CNN tradition
+\citep{gower2021genomatnn,ray2024introunet,flagel2019unreasonable,chan2018likelihood}.  ArchIE
+\citep{durvasula2019archie} is the closest analogue: it feeds a fixed set of summary statistics
+to a simple learner, and DNNaic's higher-moment rarefaction features extend that idea to the direction
+of gene flow.
+
+The direction result is established under ground-truth replicate identity
+(Section~\ref{subsec:true-replicate}) and reproduced independently across regenerations and two
+model architectures, confirming high-accuracy recovery wherever migration is appreciable and a
+principled decline to chance where it is not. The magnitude component, shown here to be
+information-limited rather than mis-modeled, is reported per rate bin and paired with a power
+analysis in the number of independent loci. On a labelled real system---the \textit{Heliconius}
+adaptive-introgression complex, where \textit{H.~melpomene} is the known donor of wing-pattern
+alleles to \textit{H.~timareta}---the frozen model recovers that documented direction where a
+symmetric Patterson's $D$ ($D=0.51$, $Z=33$) detects the gene flow but cannot orient it
+(Section~\ref{subsec:heliconius}). None of these changes the qualitative conclusion that compact
+rarefaction summaries carry a direction signal that classical symmetric statistics cannot access.
+
+\section{Limitations and scope}
+\label{sec:limitations}
+We delimit the scope of the present study.
+\begin{itemize}
+\item \textbf{Direction, not magnitude.} The validated deliverable is the direction of appreciable
+gene flow. Migration-rate \emph{magnitude} is information-limited at small rates: positive-rate
+relative error is dominated by the smallest rates, which Theorem~\ref{thm:fisher} shows to be an
+intrinsic Fisher-information limit at fixed genome size---consonant with established limits on
+SFS-based inference \citep{terhorst2015fundamental}. Magnitude should therefore be reported with
+per-rate breakdowns and treated as reliable only above a rate threshold that shrinks as the number
+of independent loci grows.
+\item \textbf{Simulation-trained.} Quantitative results are on coalescent simulations under
+hierarchical Wright--Fisher demographies. A scoped cross-demography probe
+(Section~\ref{subsec:true-replicate}) shows the frozen direction model transfers across alternative
+histories---perfectly to a deeper, larger-$N_e$ demography and at $73\%$ (versus $33\%$ chance) to a
+recent, small-$N_e$ one---so the orientation signal is not merely memorized from the training history,
+though it attenuates when coalescence is fast and divergence shallow. The frozen model recovers the
+documented direction on a labelled real system---\textit{melpomene}$\to$\textit{timareta} in the
+\textit{Heliconius} complex used to develop the ABBA--BABA test \citep{durand2011testing}
+(Section~\ref{subsec:heliconius})---but that call is made off the training distribution, so a
+model matched to the target taxon (or a broader panel of labelled systems, such as the
+\textit{Anopheles gambiae} complex) would strengthen the external validation. The complementary
+limit is visible on the Neanderthal system (Section~\ref{subsec:neanderthal}): there the frozen model
+detects the introgression through Patterson's $D$ but \emph{abstains} from orienting it, because only
+a few high-coverage archaic genomes exist (rarefaction depth $g\le4$) and the archaic lineage lies
+outside the training distribution. The rarefaction route to orientation is thus best suited to
+population-scale, in-distribution samples, and the calibrated gate is what keeps the method from
+over-reaching when they are not available.
+\item \textbf{Theory regime.} The perturbation and identifiability results
+(Theorems~\ref{thm:expansion}--\ref{thm:fisher}) are first-order in the migration magnitude $m$ and
+assume a finite-state truncation of the ancestral process; the direction-separation margin $\gamma$
+in Corollary~\ref{cor:identifiability} is established generically, and computing it for a specific
+demography by finite differences in \texttt{msprime} is a natural next step.
+\end{itemize}
+
+\subsection*{Data and code availability}
+\textsc{PADZE}, the software used to compute every rarefaction feature in this study, is
+open-source at \url{https://github.com/Andres42611/PADZE}~\citep{padze2026}. The complete
+simulation dataset (the $3{,}200$-replicate rarefaction feature arrays with ground-truth
+replicate, direction, and rate labels) and the leakage-controlled evaluation code are
+archived at a public Zenodo record~\citep{delcastillo2026data}.
+
+\subsection*{Funding}
+The research presented in this paper was supported by the European Research Council (ERC) under
+the European Union's Horizon 2022 research and innovation programme (grant agreement No.\ 101041711),
+by the Simons Foundation, by Heights Labs, by the Israel Science Foundation (grant number 2258/19),
+and by the Israel Science Foundation (ISF Grant 4101/25).
+
+\subsection*{Declaration on generative AI}
+During the preparation of this work the authors used generative AI tools to accelerate drafting and
+revision. All mathematical claims, proofs, and bibliographic information were subsequently reviewed
+and edited by the authors, who take full responsibility for the content of the manuscript.
+
+\clearpage
+\bibliographystyle{abbrvnat} % or plainnat / unsrtnat
+\bibliography{refs}          % refs.bib file name (no .bib extension)
+
+\end{document}

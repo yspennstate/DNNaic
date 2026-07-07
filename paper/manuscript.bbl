@@ -1,0 +1,230 @@
+\begin{thebibliography}{29}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Chan et~al.(2018)Chan, Perrone, Spence, Jenkins, Mathieson, and
+  Song]{chan2018likelihood}
+J.~Chan, V.~Perrone, J.~P. Spence, P.~A. Jenkins, S.~Mathieson, and Y.~S. Song.
+\newblock A likelihood-free inference framework for population genetic data
+  using exchangeable neural networks.
+\newblock In \emph{Advances in Neural Information Processing Systems
+  (NeurIPS)}, volume~31, 2018.
+
+\bibitem[del Castillo and Shmalo(2026{\natexlab{a}})]{delcastillo2026data}
+A.~del Castillo and Y.~Shmalo.
+\newblock {DNNaic} simulation dataset for allelic-rarefaction introgression
+  inference.
+\newblock Zenodo, \url{https://doi.org/10.5281/zenodo.21233067},
+  2026{\natexlab{a}}.
+\newblock Dataset, CC~BY~4.0; DOI: 10.5281/zenodo.21233067.
+
+\bibitem[del Castillo and Shmalo(2026{\natexlab{b}})]{padze2026}
+A.~del Castillo and Y.~Shmalo.
+\newblock {PADZE}: {Pythonic} allelic diversity analyzer.
+\newblock \url{https://github.com/Andres42611/PADZE}, 2026{\natexlab{b}}.
+\newblock Python software package (version 0.1.0, MIT license); a NumPy
+  successor to ADZE.
+
+\bibitem[Durand et~al.(2011)Durand, Patterson, Reich, and
+  Slatkin]{durand2011testing}
+E.~Y. Durand, N.~Patterson, D.~Reich, and M.~Slatkin.
+\newblock Testing for ancient admixture between closely related populations.
+\newblock \emph{Molecular Biology and Evolution}, 28\penalty0 (8):\penalty0
+  2239--2252, 2011.
+\newblock \doi{10.1093/molbev/msr048}.
+
+\bibitem[Durvasula and Sankararaman(2019)]{durvasula2019archie}
+A.~Durvasula and S.~Sankararaman.
+\newblock A statistical model for reference-free inference of archaic local
+  ancestry.
+\newblock \emph{PLoS Genetics}, 15\penalty0 (5):\penalty0 e1008175, 2019.
+
+\bibitem[Flagel et~al.(2019)Flagel, Brandvain, and
+  Schrider]{flagel2019unreasonable}
+L.~Flagel, Y.~Brandvain, and D.~R. Schrider.
+\newblock The unreasonable effectiveness of convolutional neural networks in
+  population genetic inference.
+\newblock \emph{Molecular Biology and Evolution}, 36\penalty0 (2):\penalty0
+  220--238, 2019.
+\newblock \doi{10.1093/molbev/msy224}.
+
+\bibitem[Gower et~al.(2021)Gower, Picazo, Fumagalli, and
+  Racimo]{gower2021genomatnn}
+G.~Gower, P.~I. Picazo, M.~Fumagalli, and F.~Racimo.
+\newblock Detecting adaptive introgression in human evolution using
+  convolutional neural networks.
+\newblock \emph{eLife}, 10:\penalty0 e64669, 2021.
+
+\bibitem[Green et~al.(2010)Green, Krause, Briggs, Maricic, Stenzel, Kircher,
+  Patterson, et~al.]{green2010neandertal}
+R.~E. Green, J.~Krause, A.~W. Briggs, T.~Maricic, U.~Stenzel, M.~Kircher,
+  N.~Patterson, et~al.
+\newblock A draft sequence of the neandertal genome.
+\newblock \emph{Science}, 328\penalty0 (5979):\penalty0 710--722, 2010.
+\newblock \doi{10.1126/science.1188021}.
+
+\bibitem[Hibbins and Hahn(2022)]{hibbins2022phylogenomic}
+M.~S. Hibbins and M.~W. Hahn.
+\newblock Phylogenomic approaches to detecting and characterizing
+  introgression.
+\newblock \emph{Genetics}, 220\penalty0 (2):\penalty0 iyab173, 2022.
+\newblock \doi{10.1093/genetics/iyab173}.
+
+\bibitem[Kalinowski(2004)]{kalinowski2004counting}
+S.~T. Kalinowski.
+\newblock Counting alleles with rarefaction: Private alleles and hierarchical
+  sampling designs.
+\newblock \emph{Conservation Genetics}, 5\penalty0 (4):\penalty0 539--543,
+  2004.
+\newblock \doi{10.1023/B:COGE.0000041021.91777.1a}.
+
+\bibitem[Kelleher et~al.(2016)Kelleher, Etheridge, and
+  McVean]{kelleher2016efficient}
+J.~Kelleher, A.~M. Etheridge, and G.~McVean.
+\newblock Efficient coalescent simulation and genealogical analysis for large
+  sample sizes.
+\newblock \emph{PLOS Computational Biology}, 12\penalty0 (5):\penalty0
+  e1004842, 2016.
+\newblock \doi{10.1371/journal.pcbi.1004842}.
+
+\bibitem[Korfmann et~al.(2023)Korfmann, Gaggiotti, and
+  Fumagalli]{korfmann2023deep}
+K.~Korfmann, O.~E. Gaggiotti, and M.~Fumagalli.
+\newblock Deep learning in population genetics.
+\newblock \emph{Genome Biology and Evolution}, 15\penalty0 (2):\penalty0
+  evad008, 2023.
+\newblock \doi{10.1093/gbe/evad008}.
+
+\bibitem[Martin et~al.(2013)Martin, Dasmahapatra, Nadeau, Salazar, Walters,
+  Simpson, Blaxter, Manica, Mallet, and Jiggins]{martin2013speciation}
+S.~H. Martin, K.~K. Dasmahapatra, N.~J. Nadeau, C.~Salazar, J.~R. Walters,
+  F.~Simpson, M.~Blaxter, A.~Manica, J.~Mallet, and C.~D. Jiggins.
+\newblock Genome-wide evidence for speciation with gene flow in {Heliconius}
+  butterflies.
+\newblock \emph{Genome Research}, 23\penalty0 (11):\penalty0 1817--1828, 2013.
+
+\bibitem[Pardo-Diaz et~al.(2012)Pardo-Diaz, Salazar, Baxter, M{\'e}rot,
+  Figueiredo-Ready, Joron, McMillan, and Jiggins]{pardodiaz2012adaptive}
+C.~Pardo-Diaz, C.~Salazar, S.~W. Baxter, C.~M{\'e}rot, W.~Figueiredo-Ready,
+  M.~Joron, W.~O. McMillan, and C.~D. Jiggins.
+\newblock Adaptive introgression across species boundaries in {Heliconius}
+  butterflies.
+\newblock \emph{PLoS Genetics}, 8\penalty0 (6):\penalty0 e1002752, 2012.
+
+\bibitem[Patterson et~al.(2012)Patterson, Moorjani, Luo, Mallick, Rohland,
+  Zhan, Genschoreck, Webster, and Reich]{patterson2012ancient}
+N.~Patterson, P.~Moorjani, Y.~Luo, S.~Mallick, N.~Rohland, Y.~Zhan,
+  T.~Genschoreck, T.~Webster, and D.~Reich.
+\newblock Ancient admixture in human history.
+\newblock \emph{Genetics}, 192\penalty0 (3):\penalty0 1065--1093, 2012.
+\newblock \doi{10.1534/genetics.112.145037}.
+
+\bibitem[Pease and Hahn(2015)]{pease2015detection}
+J.~B. Pease and M.~W. Hahn.
+\newblock Detection and polarization of introgression in a five-taxon
+  phylogeny.
+\newblock \emph{Systematic Biology}, 64\penalty0 (4):\penalty0 651--662, 2015.
+\newblock \doi{10.1093/sysbio/syv023}.
+
+\bibitem[Peter(2016)]{peter2016admixture}
+B.~M. Peter.
+\newblock Admixture, population structure, and {F}-statistics.
+\newblock \emph{Genetics}, 202\penalty0 (4):\penalty0 1485--1501, 2016.
+\newblock \doi{10.1534/genetics.115.183913}.
+
+\bibitem[Pr{\"u}fer et~al.(2014)Pr{\"u}fer, Racimo, Patterson, Jay,
+  Sankararaman, Sawyer, et~al.]{prufer2014complete}
+K.~Pr{\"u}fer, F.~Racimo, N.~Patterson, F.~Jay, S.~Sankararaman, S.~Sawyer,
+  et~al.
+\newblock The complete genome sequence of a {Neanderthal} from the {Altai}
+  mountains.
+\newblock \emph{Nature}, 505\penalty0 (7481):\penalty0 43--49, 2014.
+\newblock \doi{10.1038/nature12886}.
+
+\bibitem[Pr{\"u}fer et~al.(2017)Pr{\"u}fer, de~Filippo, Grote, Mafessoni,
+  Korlevi{\'c}, Hajdinjak, et~al.]{prufer2017vindija}
+K.~Pr{\"u}fer, C.~de~Filippo, S.~Grote, F.~Mafessoni, P.~Korlevi{\'c},
+  M.~Hajdinjak, et~al.
+\newblock A high-coverage {Neanderthal} genome from {Vindija} cave in
+  {Croatia}.
+\newblock \emph{Science}, 358\penalty0 (6363):\penalty0 655--658, 2017.
+\newblock \doi{10.1126/science.aao1887}.
+
+\bibitem[Racimo et~al.(2015)Racimo, Sankararaman, Nielsen, and
+  Huerta-S{\'a}nchez]{racimo2015archaic}
+F.~Racimo, S.~Sankararaman, R.~Nielsen, and E.~Huerta-S{\'a}nchez.
+\newblock Evidence for archaic adaptive introgression in humans.
+\newblock \emph{Nature Reviews Genetics}, 16\penalty0 (6):\penalty0 359--371,
+  2015.
+\newblock \doi{10.1038/nrg3936}.
+
+\bibitem[Ray et~al.(2024)Ray, Flagel, and Schrider]{ray2024introunet}
+D.~D. Ray, L.~Flagel, and D.~R. Schrider.
+\newblock {IntroUNET}: Identifying introgressed alleles via semantic
+  segmentation.
+\newblock \emph{PLOS Genetics}, 20\penalty0 (2):\penalty0 e1010657, 2024.
+\newblock \doi{10.1371/journal.pgen.1010657}.
+
+\bibitem[Sawyer and Hartl(1992)]{sawyer1992population}
+S.~A. Sawyer and D.~L. Hartl.
+\newblock Population genetics of polymorphism and divergence.
+\newblock \emph{Genetics}, 132\penalty0 (4):\penalty0 1161--1176, 1992.
+\newblock \doi{10.1093/genetics/132.4.1161}.
+
+\bibitem[Schrider and Kern(2018)]{schrider2018supervised}
+D.~R. Schrider and A.~D. Kern.
+\newblock Supervised machine learning for population genetics: A new paradigm.
+\newblock \emph{Trends in Genetics}, 34\penalty0 (4):\penalty0 301--312, 2018.
+\newblock \doi{10.1016/j.tig.2017.12.005}.
+
+\bibitem[Sheehan and Song(2016)]{sheehan2016deep}
+S.~Sheehan and Y.~S. Song.
+\newblock Deep learning for population genetic inference.
+\newblock \emph{PLOS Computational Biology}, 12\penalty0 (3):\penalty0
+  e1004845, 2016.
+\newblock \doi{10.1371/journal.pcbi.1004845}.
+
+\bibitem[Szpiech et~al.(2008)Szpiech, Jakobsson, and
+  Rosenberg]{szpiech2008adze}
+Z.~A. Szpiech, M.~Jakobsson, and N.~A. Rosenberg.
+\newblock {ADZE}: A rarefaction approach for counting alleles private to
+  combinations of populations.
+\newblock \emph{Bioinformatics}, 24\penalty0 (21):\penalty0 2498--2504, 2008.
+\newblock \doi{10.1093/bioinformatics/btn478}.
+
+\bibitem[Terhorst and Song(2015)]{terhorst2015fundamental}
+J.~Terhorst and Y.~S. Song.
+\newblock Fundamental limits on the accuracy of demographic inference based on
+  the sample frequency spectrum.
+\newblock \emph{Proceedings of the National Academy of Sciences}, 112\penalty0
+  (25):\penalty0 7677--7682, 2015.
+\newblock \doi{10.1073/pnas.1503717112}.
+
+\bibitem[Thawornwattana et~al.(2023)Thawornwattana, Huang, Flouri, Mallet, and
+  Yang]{thawornwattana2023direction}
+Y.~Thawornwattana, J.~Huang, T.~Flouri, J.~Mallet, and Z.~Yang.
+\newblock Inferring the direction of introgression using genomic sequence data.
+\newblock \emph{Molecular Biology and Evolution}, 40\penalty0 (8):\penalty0
+  msad178, 2023.
+\newblock \doi{10.1093/molbev/msad178}.
+
+\bibitem[{The 1000 Genomes Project Consortium}(2015)]{tgp2015global}
+{The 1000 Genomes Project Consortium}.
+\newblock A global reference for human genetic variation.
+\newblock \emph{Nature}, 526\penalty0 (7571):\penalty0 68--74, 2015.
+\newblock \doi{10.1038/nature15393}.
+
+\bibitem[Wallbank et~al.(2016)Wallbank, Baxter, Pardo-Diaz, Hanly, Martin,
+  Mallet, Dasmahapatra, Salazar, Joron, Nadeau, McMillan, and
+  Jiggins]{wallbank2016evolutionary}
+R.~W.~R. Wallbank, S.~W. Baxter, C.~Pardo-Diaz, J.~J. Hanly, S.~H. Martin,
+  J.~Mallet, K.~K. Dasmahapatra, C.~Salazar, M.~Joron, N.~Nadeau, W.~O.
+  McMillan, and C.~D. Jiggins.
+\newblock Evolutionary novelty in a butterfly wing pattern through enhancer
+  shuffling.
+\newblock \emph{PLoS Biology}, 14\penalty0 (1):\penalty0 e1002353, 2016.
+
+\end{thebibliography}

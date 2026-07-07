@@ -1,0 +1,27 @@
+# Data (fetched from Zenodo / public archives, not committed — see data/DATA_SOURCES.md)
+data/simulation_data/
+data/real/
+data/raw/
+*.vcf
+*.vcf.gz
+*.vcf.gz.tbi
+*.trees
+*.stru
+*.geno.gz
+*.npy
+*.npz
+
+# Build / cache
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+*.egg-info/
+
+# LaTeX build artifacts
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.toc
+paper/*.blg
+paper/*.synctex.gz
