@@ -727,7 +727,10 @@ drawn migration rates and disjoint seeds, so that no genealogy, rate draw, or re
 with training. On these unseen batches the estimator reproduces the within-set figures---rate-averaged
 direction $76.5\%$, appreciable $99.7\%$, detection gate ROC-AUC $0.81$ overall and $0.99$ in the
 appreciable band, expected calibration error $0.02$ (linear head; the nonlinear head is within a
-point)---so the accuracy is a property of the generative process, not of a particular replicate draw.
+point), and pooling the two batches into a single $6{,}400$-replicate held-out test set reproduces
+the same appreciable-band direction accuracy $99.8\%$ at detection-gate ROC-AUC $0.99$ and
+calibration error $0.03$---so the accuracy is a property of the generative process, not of a
+particular replicate draw.
 It is also not limited by training-set size at this scale: doubling the training set to $6{,}400$
 replicates, scored on the same held-out batch, moves rate-averaged accuracy by less than a tenth of a
 point. The low- and mid-rate deficit is therefore information-limited rather than data-limited---the
