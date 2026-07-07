@@ -22,6 +22,13 @@ detect-then-orient gate flags appreciable migration at ROC-AUC 0.99 with a well-
 A logistic model on the same features matches the network, as the theory predicts, so the signal
 lives in the features rather than the architecture.
 
+On real data the frozen model recovers the documented *melpomene*→*timareta* direction in the
+*Heliconius* butterfly complex, where a symmetric *D* detects the gene flow but cannot orient it.
+On the Neanderthal system it reproduces the classic excess sharing between non-Africans and the
+archaic genome, but there the gate abstains rather than orienting: with only a couple of
+high-coverage archaic genomes the rarefaction depth is far shallower than the method needs, and the
+paper is explicit about that boundary.
+
 ## Install
 
 ```
@@ -69,6 +76,16 @@ scripts/     runnable analysis and figure code
 data/        data methods and dataset pointers (bulk data is fetched, not committed)
 tests/       feature-contract test
 ```
+
+## Citing this work
+
+If you use this code or the rarefaction-feature approach, please cite the paper:
+
+> A. del Castillo and Y. Shmalo. Inferring the Direction of Introgression from Allelic Rarefaction
+> Statistics with Deep Learning.
+
+The simulated dataset has its own archive (DOI [10.5281/zenodo.21233067](https://doi.org/10.5281/zenodo.21233067)),
+and the feature engine is [PADZE](https://github.com/Andres42611/PADZE).
 
 ## License
 
