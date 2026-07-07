@@ -1,18 +1,11 @@
 #!/usr/bin/env python3
-"""classical_fstats.py  --  Classical introgression statistics (Patterson's D / f3 / f4)
-to benchmark against DNNaic on the SAME simulations.
+"""Classical introgression statistics -- Patterson's D, f3, f4 -- as the baseline for DNNaic.
 
-WHY THIS EXISTS
----------------
-The manuscript's whole motivation is that classical statistics (ABBA-BABA D, f-statistics,
-phylogenetic methods) detect *presence* of gene flow but (a) need an outgroup, (b) give no
-*direction*, and (c) give no *magnitude/admixture proportion*. Yet the draft never actually
-runs them. A reviewer will ask "show me." This module computes D, f3, f4 (with block
-jackknife significance) so we can demonstrate, on our own msprime data, exactly what the
-classical methods can and cannot recover -- and thereby justify DNNaic.
-
-Note: D/f4 require the OUTGROUP P4. `simulate_main_study.py` on this branch samples P4 for
-this reason. The three experimental populations map to (P1,P2,P3); P4 is the outgroup.
+The premise of the paper is that these statistics detect the presence of gene flow but not its
+direction: D and f4 are symmetric under exchange of the donor and recipient, and all three require
+an outgroup. This module computes them with a weighted block jackknife for significance, so the
+same msprime simulations can be scored the classical way and those columns of the results tables
+filled in directly. The three experimental populations map to (P1, P2, P3); P4 is the outgroup.
 
 Definitions (derived-allele frequencies p_i in population i; P4 = outgroup):
     ABBA = (1-p1) * p2 * p3 * (1-p4)
@@ -21,17 +14,12 @@ Definitions (derived-allele frequencies p_i in population i; P4 = outgroup):
     f4(P1,P2 ; P3,P4) = mean[(p1 - p2) * (p3 - p4)]
     f3(PC ; PA,PB)    = mean[(pC - pA) * (pC - pB)]     # significantly negative => PC admixed
 
-Significance: weighted block jackknife over genomic blocks -> Z = D / SE(D).
+Significance is a weighted delete-m block jackknife over genomic blocks, Z = D / SE(D). Import the
+estimators as a library, or run this file directly for a small self-test:
 
-USAGE (as a library)
---------------------
-    from classical_fstats import patterson_d, f4_statistic, f3_statistic, allele_freqs_from_genotypes
-    p = {pop: allele_freqs_from_genotypes(G[pop]) for pop in ("P1","P2","P3","P4")}
-    res = patterson_d(p["P1"], p["P2"], p["P3"], p["P4"], block_size=... , positions=...)
+    from classical_baselines import patterson_d, f4_statistic, f3_statistic
+    res = patterson_d(p1, p2, p3, p4, positions=pos)
     print(res["D"], res["Z"])
-
-This is a correct, dependency-light scaffold (numpy only). Wiring it to the simulated VCFs
-(load per-population derived-allele frequencies per SNP) is the remaining integration step.
 """
 from __future__ import annotations
 import numpy as np
@@ -105,10 +93,9 @@ def f3_statistic(pC, pA, pB):
 
 
 def direction_note():
-    return ("D and f4 test for the PRESENCE of gene flow between an (P1/P2) pair and P3, "
-            "given outgroup P4; they do NOT, on their own, return the DIRECTION (who donated "
-            "to whom) or the MIGRATION RATE. That gap is precisely what DNNaic targets. "
-            "Use these as the 'classical baseline' columns in the results tables.")
+    return ("D and f4 test for the presence of gene flow between a (P1, P2) pair and P3, given "
+            "outgroup P4; on their own they do not return the direction (who donated to whom) or "
+            "the migration rate. That gap is what DNNaic targets.")
 
 
 def _self_test():

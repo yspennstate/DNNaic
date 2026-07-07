@@ -1,37 +1,27 @@
 #!/usr/bin/env python3
-"""simulate_main_study.py  --  Seeded msprime simulator for the 4-population,
-variable-migration-rate MAIN STUDY described in manuscript_draft.tex.
+"""Seeded msprime simulator for the four-population, variable-migration-rate study.
 
-WHY THIS EXISTS
----------------
-The committed `scripts/pipeline/simulation.py` is the *EDA* simulator only:
-  * 3 populations (A,B,C), split times 100/200 generations,
-  * migration rate HARD-CODED to 0.25 (the "extreme 25%" used for the PCA EDA),
-  * no rate argument, and it does NOT record which rate a replicate used.
-The manuscript's MAIN study instead describes:
-  * 4 populations with a hierarchical Wright-Fisher history:
-        P1234 -> P123 + P4 (outgroup)   at 2000 generations
-        P123  -> P12  + P3              at 1000 generations
-        P12   -> P1   + P2              at  500 generations
-    Ne = 10,000 for all; 200 diploid individuals sampled per population.
-  * sequence length 1 Mbp, recombination 1.78e-8/bp/gen, mutation 2e-8/bp/gen.
-  * migration CASES (backwards in time):  A: P1->P2,  B: P2->P3,  C: P3->P2,  D: control.
-  * RATES: four discrete classes {5e-7, 2.5e-6, 5e-5, 2.5e-4} x 100 replicates each,
-    PLUS 400 rates drawn from Exponential(mean = 2.5e-4) x 5 replicates each.
+Reproduces the coalescent design from the manuscript: a hierarchical divergence history
 
-This script reproduces that design WITH SEEDS and, crucially, writes a metadata CSV
-(Class, Replicate, rate, seed, source, dest) so the per-replicate migration rate is
-recorded -- which `build_dataset.py` then uses to build a leakage-free dataset.
-It samples the outgroup P4 too, so the SAME simulations support both the DNNaic
-features (P1,P2,P3 via ADZE) and classical D-statistic baselines (which need P4).
+    P1234 -> P123 + P4 (outgroup)   at 2000 generations
+    P123  -> P12  + P3              at 1000 generations
+    P12   -> P1   + P2              at  500 generations
 
-USAGE
------
-    python simulate_main_study.py --out-dir data/raw/trees --seed 12345
-    # then run datagen.sh's downstream steps (tskit vcf -> VCFtoSTRU -> ADZE -> ADZEtoCSV)
-    # then: build_dataset.py --rate-meta data/raw/trees/sim_metadata.csv ...
+with Ne = 10,000 throughout, 200 diploid individuals per population, 1 Mbp sequences, and
+recombination 1.78e-8 and mutation 2e-8 per base pair per generation. Four migration cases,
+backwards in time -- A: P1->P2, B: P2->P3, C: P3->P2, and D: no migration -- are run at four fixed
+rates {5e-7, 2.5e-6, 5e-5, 2.5e-4} (100 replicates each) plus a continuum of 400 rates drawn from
+Exponential(mean 2.5e-4), five replicates each.
 
-Requires: msprime>=1.2.  Heavy: ~1300 replicates; run on a server/cluster.
+Each replicate is written as a tree sequence alongside a metadata row (class, replicate, rate,
+seed, source, dest), so the per-replicate migration rate is recorded for a leakage-free feature
+build. The outgroup P4 is sampled as well, so the same simulations feed both the rarefaction
+features (from P1,P2,P3) and the classical D-statistic baselines (which need an outgroup).
+
+Usage:  python scripts/simulate_demography.py --out-dir data/raw/trees --seed 12345
+
+PADZE then extracts the rarefaction features from the tree sequences to build the arrays the
+loaders read (see data/README.md). Requires msprime>=1.2; the full design is ~1,300 replicates.
 """
 from __future__ import annotations
 import argparse, csv
@@ -144,10 +134,10 @@ def main():
                     print(f"  [{i}/{len(jobs)}] simulated {case}_rep_{rep} rate={rate:.3e}")
             w.writerow([case, rep, rate, seed, src or "", dst or ""])
 
-    print(f"[simulate_main_study] {'PLANNED' if args.dry_run else 'SIMULATED'} "
+    print(f"[simulate] {'planned' if args.dry_run else 'simulated'} "
           f"{len(jobs)} replicates; metadata -> {meta_path}")
-    print("[simulate_main_study] downstream: tskit vcf -> VCFtoSTRU.py -> ADZE "
-          "-> ADZEtoCSV.py -> build_dataset.py --rate-meta sim_metadata.csv")
+    print("[simulate] next: extract PADZE rarefaction features from the tree sequences "
+          "(see data/README.md)")
 
 
 if __name__ == "__main__":
