@@ -41,6 +41,7 @@ export DNNAIC_DATA=/path/to/simulation_data
 
 python scripts/direction_detection.py      # per-rate direction accuracy + detection gate
 python scripts/moment_ablation.py          # variance-vs-mean orientation ablation
+python scripts/depth_requirement.py        # how orientation degrades at shallow rarefaction depth
 python scripts/make_figures.py             # schematic and exploratory figures
 ```
 
