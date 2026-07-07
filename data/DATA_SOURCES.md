@@ -16,7 +16,7 @@ at Zenodo:
   features), `direction.npy`, `magnitude.npy`, and `groups.npy` (the replicate split unit that
   makes evaluation leakage-free).
 - Regenerate from scratch instead: `python scripts/simulate_demography.py` (msprime), then
-  `python scripts/extract_features.py` (PADZE).
+  extract the rarefaction features with PADZE (see [README.md](README.md)).
 
 ## Feature engine: PADZE
 
@@ -43,11 +43,11 @@ at Zenodo:
 
 ### Neanderthal (labelled archaic introgression, GRCh37)
 
-Three high-coverage Neanderthal genomes, pooled into one archaic population, from the Max Planck
-EVA archive (contig naming `22` etc., matching 1000 Genomes phase 3):
+The two high-coverage Neanderthal genomes Altai and Vindija 33.19, pooled into one archaic
+population, from the Max Planck EVA archive (contig naming `22` etc., matching 1000 Genomes
+phase 3):
 
 - Altai: `https://ftp.eva.mpg.de/neandertal/Vindija/VCF/Altai/chr{N}_mq25_mapab100.vcf.gz`
 - Vindija 33.19: `https://ftp.eva.mpg.de/neandertal/Vindija/VCF/Vindija33.19/chr{N}_mq25_mapab100.vcf.gz`
-- Chagyrskaya 8: `https://ftp.eva.mpg.de/neandertal/Chagyrskaya/VCF/chr{N}.noRB.vcf.gz`
 
-Source publications: Prüfer et al. (2014, 2017) and Mafessoni et al. (2020).
+Source publications: Prüfer et al. (2014, 2017).
