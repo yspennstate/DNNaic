@@ -14,6 +14,13 @@ in that region and dilutes genome-wide -- a property this script reports directl
 genome-wide window set and the Vkorc1 region. Rarefaction depth is set by M. spretus (eight genomes,
 16 gene copies); requiring all of them genotyped takes the depth to 16, near the Heliconius range.
 
+The reference sister here is M. m. musculus, whose diversity is close to the recipient's. That balance
+matters. Substituting the much more diverse M. m. castaneus (about three times the heterozygosity of
+musculus at this locus) for P1 inflates its private-allele sharing with the donor and the call reverts
+to the null class A -- the same diversity dependence that confounds the archaic-human trios, where the
+highly diverse African reference plays the castaneus role. On real data the method needs the sister
+pair roughly matched in diversity, not merely to contain a true flow.
+
 Configure via environment:
   DNNAIC_DATA   directory containing regen_full/ (the frozen-model training arrays)
   MOUSE_REGION  "vkorc1" for the chr7 introgression locus, else a genome-wide window set (default)
