@@ -51,3 +51,16 @@ phase 3):
 - Vindija 33.19: `https://ftp.eva.mpg.de/neandertal/Vindija/VCF/Vindija33.19/chr{N}_mq25_mapab100.vcf.gz`
 
 Source publications: Prüfer et al. (2014, 2017).
+
+### Mouse (labelled adaptive introgression, mm10)
+
+A second labelled system, in a mammal. The warfarin-resistance haplotype at *Vkorc1* (chromosome 7)
+introgressed from *M. spretus* into *M. m. domesticus* (Song et al. 2011). The trio maps to the
+caterpillar tree as P1 = *M. m. musculus*, P2 = *M. m. domesticus* (recipient), P3 = *M. spretus*
+(the divergent donor), so the documented spretus → domesticus flow is class C. Wild-mouse joint
+genotypes from Harr et al. (2016), read by tabix over HTTP range requests:
+
+- VCF: `https://wwwuser.gwdguser.de/~evolbio/evolgen/wildmouse/vcf/AllMouse.vcf_90_recalibrated_snps_raw_indels_reheader_PopSorted.PASS.vcf.gz`
+- Populations by sample-name prefix: `Mmm_` (musculus), `Mmd_` (domesticus), `Ms_` (spretus).
+
+Source publication: Harr et al. (2016), *Scientific Data*.
