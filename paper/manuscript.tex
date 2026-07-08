@@ -861,6 +861,39 @@ CI $[60,84]\%$, against a $33\%$ chance rate) under a recent, small-$N_e$ histor
 $250/500/1000$). The direction signal thus generalizes across demographies rather than being memorized from
 the training history, with the expected attenuation when coalescence is fast and divergence shallow.
 
+\subsection{A learned representation and a kernel correction do not beat the linear head}
+\label{subsec:deep-kernel}
+
+Proposition~\ref{prop:linear-optimal} predicts that no classifier improves on the linear head to
+first order in the migration magnitude, and the logistic-versus-network comparison of
+Section~\ref{subsec:true-replicate} bears this out. That comparison leaves open whether a more
+expressive model would do better, so we tested the strongest current recipe for extracting nonlinear
+structure from a tabular problem: a neural network that learns a representation, followed by a
+kernel-ridge correction fitted to the network's residuals on its own penultimate features. This is
+the neural-mean-plus-kernel-correction construction used to build accurate physical-model emulators,
+where the learned representation, not the kernel, is the dominant lever. Each replicate is summarized
+by its rarefaction curve---the nine statistics at eight standardized depths together with their
+across-depth mean; a four-layer residual network is trained on the training fold, and a
+Mat\'ern-$5/2$ kernel ridge is fitted to its out-of-fold residuals, all under the same
+$\mathrm{GroupKFold}(5)$ replicate split, so no replicate informs its own prediction at either stage.
+
+The added machinery does not help. On three-way direction the network reaches $73.8\%$ overall
+against the linear head's $79.0\%$, and the kernel correction leaves it essentially unchanged
+($74.0\%$, fewer than one percent of the $2{,}700$ test labels changed); correcting the linear head
+itself with the kernel holds it at $79.0\%$. On magnitude the network matches the median-regression
+baseline in the recoverable band (appreciable mean relative error $28\%$, Spearman $0.75$ with the
+true rate) and the kernel correction does not improve it. A positive control rules out an inert
+pipeline: on synthetic data whose label is a nonlinear radius-band function of a rotated
+two-dimensional subspace, the same network lifts accuracy from the linear head's $35\%$---the
+three-way chance level---to $98\%$, and the kernel correction recovers a deliberately underfit
+network's residual, from $81\%$ to $90\%$. The construction captures nonlinear structure and
+structured residuals when they are present; on the rarefaction features it finds neither, because the
+moment statistics are close to sufficient and the task sits at the Fisher-information limit of
+Theorem~\ref{thm:fisher}. With the strongest available model this closes the possibility that the
+linear head leaves accessible accuracy unused, and locates the leverage in the population-genetic
+feature design rather than in classifier capacity. The comparison is reproduced by
+\texttt{scripts/deep\_kernel\_comparison.py}.
+
 \subsection{Real-data application: 1000 Genomes}
 \label{subsec:real-data}
 

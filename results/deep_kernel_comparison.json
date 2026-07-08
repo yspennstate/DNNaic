@@ -1,0 +1,85 @@
+{
+  "dataset": "regen_full",
+  "seeds": [
+    0,
+    1
+  ],
+  "curve_dim": 243,
+  "direction": {
+    "linear": {
+      "5.0e-07": 30.6,
+      "2.5e-06": 44.1,
+      "5.0e-05": 75.3,
+      "2.5e-04": 99.8,
+      "appreciable": 99.8,
+      "overall": 79.0
+    },
+    "network": {
+      "5.0e-07": 31.9,
+      "2.5e-06": 35.4,
+      "5.0e-05": 58.1,
+      "2.5e-04": 98.5,
+      "appreciable": 99.2,
+      "overall": 73.8
+    },
+    "network+kernel": {
+      "5.0e-07": 32.6,
+      "2.5e-06": 35.1,
+      "5.0e-05": 58.0,
+      "2.5e-04": 98.5,
+      "appreciable": 99.2,
+      "overall": 74.0
+    }
+  },
+  "magnitude": {
+    "linear": {
+      "appreciable": {
+        "MRE": 0.931,
+        "medRE": 0.52,
+        "spearman": 0.661,
+        "n": 900
+      },
+      "overall": {
+        "MRE": 3.084,
+        "medRE": 0.715,
+        "spearman": 0.854,
+        "n": 2700
+      }
+    },
+    "network": {
+      "appreciable": {
+        "MRE": 0.278,
+        "medRE": 0.231,
+        "spearman": 0.754,
+        "n": 900
+      },
+      "overall": {
+        "MRE": 5.859,
+        "medRE": 0.488,
+        "spearman": 0.842,
+        "n": 2700
+      }
+    },
+    "network+kernel": {
+      "appreciable": {
+        "MRE": 0.338,
+        "medRE": 0.274,
+        "spearman": 0.732,
+        "n": 900
+      },
+      "overall": {
+        "MRE": 3.434,
+        "medRE": 0.563,
+        "spearman": 0.861,
+        "n": 2700
+      }
+    }
+  },
+  "positive_control_rings": {
+    "linear": 35.1,
+    "network": 97.6,
+    "network+kernel": 97.6,
+    "weak_network": 81.3,
+    "weak_network+kernel": 89.8
+  }
+}
