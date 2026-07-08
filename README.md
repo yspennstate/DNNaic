@@ -63,6 +63,7 @@ Real-data analyses stream only the windows they need over HTTP range requests:
 
 ```
 python scripts/realdata_heliconius.py       # labelled adaptive introgression (butterflies)
+python scripts/realdata_heliconius_robustness.py  # direction is stable across race trios and genome-wide
 python scripts/realdata_mouse.py            # second taxon: M. spretus -> M. m. domesticus (Vkorc1)
 python scripts/realdata_mouse_depth.py      # the depth-requirement curve, measured on real mouse data
 python scripts/realdata_neanderthal.py      # archaic introgression into non-Africans
