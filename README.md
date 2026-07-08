@@ -66,6 +66,7 @@ python scripts/realdata_heliconius.py       # labelled adaptive introgression (b
 python scripts/realdata_heliconius_robustness.py  # direction is stable across race trios and genome-wide
 python scripts/realdata_mouse.py            # second taxon: M. spretus -> M. m. domesticus (Vkorc1)
 python scripts/realdata_mouse_depth.py      # the depth-requirement curve, measured on real mouse data
+python scripts/realdata_mouse_diversity.py  # when it works: the diversity-balance condition (mouse)
 python scripts/realdata_neanderthal.py      # archaic introgression into non-Africans
 python scripts/realdata_1000g_injection.py  # injected-signal recovery on real human backgrounds
 ```
