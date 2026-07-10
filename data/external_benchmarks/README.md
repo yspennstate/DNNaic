@@ -15,13 +15,14 @@ topology/domain-shift test rather than a clean match to the pectinate training t
 
 ## Scarlet runner bean (large)
 
-The OSF VCF contains 237 samples. The manifest uses the authors' fixed relatedness exclusion
-list and retains 8 Cult-TMVB-Spain, 19 Mexican Cult-TMVB, and 32 Wild-TMVB samples. The primary
-orientation makes the Mexican cultivar the recipient (expected class C in the published
-wild-to-crop context). Swapping the two sister cultivar populations makes Spain the putative
-recipient and serves as a control: the paper's Spain demographic model has a bottleneck in the
-absence of gene flow from wild populations. The direction head has no no-event class, so the
-control is evaluated as a discordance/abstention diagnostic, not by demanding a null label.
+The OSF VCF contains 237 samples. Three author-metadata-derived manifests reproduce the
+published Table S4 population definitions while following the canonical relatedness-filtered
+sample set: Cult-SUR-CH / Cult-TMVB / Wild-TMVB-CDMX is the primary class-C benchmark
+(D=0.109339, f4-ratio=0.421888, z=8.37171), and replacing the donor with Wild-TMVB-Tepoz is a
+published replicate (D=0.107835, f4-ratio=0.156145, z=6.95236). A third manifest uses the
+published null Cult-SMOCC / Cult-TMVB-Spain / Cult-TMVB contrast (D=0.0008093, P=0.96497).
+The direction head has no no-event class, so the null is evaluated as a discordance/abstention
+diagnostic, not by demanding a null label.
 
 The released provenance has a one-sample inconsistency that matters for exact comparison:
 the canonical 183-sample metadata includes `FrijCol_11` and excludes `FrijCol_10`, whereas

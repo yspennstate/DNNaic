@@ -416,13 +416,19 @@ def main() -> int:
     source_audit["runner_bean"] = verify_file(runner_vcf, RUNNER_BYTES, RUNNER_SHA256)
 
     duck_manifest = MANIFEST_DIR / "andean_ducks.popmap.tsv"
-    bean_manifest = MANIFEST_DIR / "runner_bean.popmap.tsv"
+    bean_cdmx_manifest = MANIFEST_DIR / "runner_bean_cdmx.popmap.tsv"
+    bean_tepoz_manifest = MANIFEST_DIR / "runner_bean_tepoz.popmap.tsv"
+    bean_null_manifest = MANIFEST_DIR / "runner_bean_null.popmap.tsv"
     beta_vcf = cache_dir / "andean_ducks_beta.filtered.vcf"
     beta_popmap = cache_dir / "andean_ducks_beta.popmap.tsv"
     alpha_vcf = cache_dir / "andean_ducks_alpha.filtered.vcf"
     alpha_popmap = cache_dir / "andean_ducks_alpha.popmap.tsv"
-    bean_vcf = cache_dir / "runner_bean.filtered.vcf"
-    bean_popmap = cache_dir / "runner_bean.popmap.tsv"
+    bean_cdmx_vcf = cache_dir / "runner_bean_cdmx.filtered.vcf"
+    bean_cdmx_popmap = cache_dir / "runner_bean_cdmx.popmap.tsv"
+    bean_tepoz_vcf = cache_dir / "runner_bean_tepoz.filtered.vcf"
+    bean_tepoz_popmap = cache_dir / "runner_bean_tepoz.popmap.tsv"
+    bean_null_vcf = cache_dir / "runner_bean_null.filtered.vcf"
+    bean_null_popmap = cache_dir / "runner_bean_null.popmap.tsv"
 
     beta_audit = prepare_vcf(
         duck_root / DUCK_FILES["beta"]["name"],
@@ -440,13 +446,29 @@ def main() -> int:
         args.cap,
         2026071002,
     )
-    bean_audit = prepare_vcf(
+    bean_cdmx_audit = prepare_vcf(
         runner_vcf,
-        bean_manifest,
-        bean_vcf,
-        bean_popmap,
+        bean_cdmx_manifest,
+        bean_cdmx_vcf,
+        bean_cdmx_popmap,
         args.cap,
         2026071003,
+    )
+    bean_tepoz_audit = prepare_vcf(
+        runner_vcf,
+        bean_tepoz_manifest,
+        bean_tepoz_vcf,
+        bean_tepoz_popmap,
+        args.cap,
+        2026071004,
+    )
+    bean_null_audit = prepare_vcf(
+        runner_vcf,
+        bean_null_manifest,
+        bean_null_vcf,
+        bean_null_popmap,
+        args.cap,
+        2026071005,
     )
 
     scaler, model, head_audit = canonical_direction_head(data_root)
@@ -483,32 +505,53 @@ def main() -> int:
             },
         ),
         score_panel(
-            "runner_bean_wild_to_mexican_cultivar_positive",
-            bean_vcf,
-            bean_popmap,
-            ("Cult_TMV_B_Spain", "Cult_TMV_B_Mexico", "Wild_TMV_B"),
-            bean_audit,
+            "runner_bean_cdmx_wild_to_cultivar_positive",
+            bean_cdmx_vcf,
+            bean_cdmx_popmap,
+            ("Cult_SUR_CH", "Cult_TMV_B", "Wild_TMV_B_CDMX"),
+            bean_cdmx_audit,
             scaler,
             model,
             {
-                "kind": "published genome-wide positive context",
-                "expected_class_if_transferable": "C (Wild_TMV_B -> Cult_TMV_B_Mexico)",
-                "published": "wild-to-traditional-variety introgression is frequent; TMVB is an introgressed pool",
-                "direction_caveat": "individual ABBA-BABA contrasts do not alone establish direction",
+                "kind": "published positive D/f4 benchmark",
+                "expected_class_if_transferable": "C (Wild_TMV_B_CDMX -> Cult_TMV_B)",
+                "published": {"D": 0.109339, "f4_ratio": 0.421888, "z": 8.37171, "p": 0},
+                "published_scenario": "Table S4 / vcf_scenario1.4_subset.txt",
+                "replay_caveat": "canonical metadata uses FrijCol_11; the released scenario substitutes excluded FrijCol_10",
+                "direction_caveat": "D/f4 establish excess sharing, not direction by themselves; class C follows the paper's wild-to-crop interpretation",
             },
         ),
         score_panel(
-            "runner_bean_spain_recipient_control",
-            bean_vcf,
-            bean_popmap,
-            ("Cult_TMV_B_Mexico", "Cult_TMV_B_Spain", "Wild_TMV_B"),
-            bean_audit,
+            "runner_bean_tepoz_wild_to_cultivar_replicate",
+            bean_tepoz_vcf,
+            bean_tepoz_popmap,
+            ("Cult_SUR_CH", "Cult_TMV_B", "Wild_TMV_B_Tepoz"),
+            bean_tepoz_audit,
             scaler,
             model,
             {
-                "kind": "published demographic negative/control orientation",
-                "expected": "no class-C wild-to-Spain signal",
-                "published": "Cult-TMVB-Spain demographic model has a bottleneck in the absence of wild gene flow",
+                "kind": "published positive donor replicate",
+                "expected_class_if_transferable": "C (Wild_TMV_B_Tepoz -> Cult_TMV_B)",
+                "published": {"D": 0.107835, "f4_ratio": 0.156145, "z": 6.95236, "p": 0},
+                "published_scenario": "Table S4 / vcf_scenario1.5_subset.txt",
+                "replay_caveat": "canonical metadata uses FrijCol_11; the released scenario substitutes excluded FrijCol_10",
+                "direction_caveat": "D/f4 establish excess sharing, not direction by themselves; class C follows the paper's wild-to-crop interpretation",
+            },
+        ),
+        score_panel(
+            "runner_bean_published_null",
+            bean_null_vcf,
+            bean_null_popmap,
+            ("Cult_SMOCC", "Cult_TMV_B_Spain", "Cult_TMV_B"),
+            bean_null_audit,
+            scaler,
+            model,
+            {
+                "kind": "published null D/f4 benchmark",
+                "expected": "abstention / no directional evidence",
+                "published": {"D": 0.0008093, "f4_ratio": 0, "z": 0.0439146, "p": 0.96497},
+                "published_scenario": "Table S4 / vcf_scenario1.8_subset.txt",
+                "replay_caveat": "canonical metadata uses FrijCol_11; the released scenario substitutes excluded FrijCol_10",
                 "head_caveat": "the direction head has no no-event class and must emit A, B, or C",
             },
         ),
