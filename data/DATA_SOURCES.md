@@ -64,3 +64,18 @@ genotypes from Harr et al. (2016), read by tabix over HTTP range requests:
 - Populations by sample-name prefix: `Mmm_` (musculus), `Mmd_` (domesticus), `Ms_` (spretus).
 
 Source publication: Harr et al. (2016), *Scientific Data*.
+
+### Additional external OOD benchmarks (not paper validation)
+
+Two independently published systems are available through `scripts/external_benchmarks.py`.
+They are reported as exploratory simulation-to-data transfer diagnostics with positive and
+negative/control expectations, source hashes, fixed sample manifests, feature-shift metrics,
+and uncalibrated direction scores:
+
+- Andean duck beta-globin positive and alpha-globin negative control: Dryad
+  [10.5061/dryad.bnzs7h4b4](https://doi.org/10.5061/dryad.bnzs7h4b4), Graham et al.
+  [10.1038/s41437-021-00437-6](https://doi.org/10.1038/s41437-021-00437-6).
+- Scarlet runner bean genome-wide GBS VCF: [OSF h7sa5](https://osf.io/h7sa5/),
+  Guerra-Garcia et al. [10.1002/evl3.285](https://doi.org/10.1002/evl3.285).
+
+See `data/external_benchmarks/` for exact file hashes and author-derived sample manifests.

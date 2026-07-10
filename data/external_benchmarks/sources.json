@@ -1,0 +1,34 @@
+{
+  "andean_ducks": {
+    "citation_doi": "10.1038/s41437-021-00437-6",
+    "data_doi": "10.5061/dryad.bnzs7h4b4",
+    "dryad_files_api": "https://datadryad.org/api/v2/versions/249308/files",
+    "dryad_version_id": 249308,
+    "license": "CC0-1.0",
+    "download": "https://datadryad.org/api/v2/versions/249308/download",
+    "files": {
+      "ST_YBP_HBA_no_indels_tags.0.inds.missing.no.invariable.recode.vcf": {
+        "bytes": 385713,
+        "sha256": "23cf5420d4af20fa0892ba7b76815ad0ffb2a362de3715ebaf8c7b4506057922"
+      },
+      "ST_YBP_Hb_no_indels_tags.0.inds.missing.no.invariable.recode.vcf": {
+        "bytes": 1816093,
+        "sha256": "f816bc2fb2c8b9dca971a3d5bd3d9262ca75c6e307e4a62d7aae61f3d03997b6"
+      }
+    },
+    "metadata_note": "Version 249308 is the current Dryad metadata revision (2023-08-16); the data files are unchanged from the deposited release."
+  },
+  "runner_bean": {
+    "citation_doi": "10.1002/evl3.285",
+    "download": "https://osf.io/download/qjh75/",
+    "file": "coccineus.recode.vcf",
+    "bytes": 454599072,
+    "md5": "70dd7f66f66dd1865fb0e8eb7fdbafc3",
+    "sha256": "597ac8fb7fc0f74e5713a2faa34aae34f551283c02809c5ff78f450739e796ae",
+    "osf_project": "https://osf.io/h7sa5/",
+    "metadata_repository": "https://github.com/AzaleaGuerra/Wild-to-crop_introgression_Pcocci",
+    "metadata_commit": "b110d2a15d344a94132f1d40126bdae03044e8d6",
+    "sample_filter": "Cult-TMVB, Wild-TMVB, and Cult-TMVB-Spain author group files, minus Excluded_subset.txt",
+    "scenario_replay_caveat": "The canonical 183-sample metadata retains FrijCol_11 and excludes FrijCol_10. Several released Dsuite scenario maps instead substitute FrijCol_10 while retaining an n=19 label. This manifest follows the canonical included set and is not claimed as a verbatim Table S4 replay."
+  }
+}
