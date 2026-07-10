@@ -77,5 +77,11 @@ and uncalibrated direction scores:
   [10.1038/s41437-021-00437-6](https://doi.org/10.1038/s41437-021-00437-6).
 - Scarlet runner bean genome-wide GBS VCF: [OSF h7sa5](https://osf.io/h7sa5/),
   Guerra-Garcia et al. [10.1002/evl3.285](https://doi.org/10.1002/evl3.285).
+- Scrub-jay exact near-zero D control: Dryad
+  [10.5061/dryad.8sf7m0cph](https://doi.org/10.5061/dryad.8sf7m0cph),
+  DeRaad et al. [10.1093/sysbio/syac034](https://doi.org/10.1093/sysbio/syac034).
+- Lake Malawi cichlid matched positive/negative panels: Zenodo
+  [10.5281/zenodo.4134522](https://doi.org/10.5281/zenodo.4134522),
+  Malinsky et al. [10.1038/s41559-018-0717-x](https://doi.org/10.1038/s41559-018-0717-x).
 
 See `data/external_benchmarks/` for exact file hashes and author-derived sample manifests.

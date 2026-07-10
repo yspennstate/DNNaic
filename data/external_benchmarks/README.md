@@ -82,3 +82,36 @@ python scripts/additional_external_benchmarks.py \
   --giraffe-vcf /path/to/dsuite_introgression/snps.sampled.vcf \
   --brook-vcf /path/to/BT_ALL.vcf
 ```
+
+## Scrub jay (exact sampled-trio null)
+
+The pinned author VCF supplies 18 interior/western Woodhouse's scrub-jays (P1),
+15 northern-Mexico Woodhouse's scrub-jays (P2), and 10 *A. sumichrasti* (P3).
+The author Dsuite row for exactly `((iw,mw),s)` is D=0.00619049, Z=0.205384,
+P=0.418636, so this is the cleanest site-specific gate control in the bundle.
+It is not a claim of species-wide isolation; a narrow phenotypic contact zone is
+known near Mexico City. Both the normal across-trio polymorphism filter and a
+stricter within-each-population filter are reported.
+
+## Lake Malawi cichlids (matched positive and negative)
+
+One four-group callable-site intersection is used for both panels. P1 is 20
+*A. calliptera*, P2 is eight mbuna, and the alternative P3 groups are nine
+pelagic fishes (positive excess sharing) or ten deep-benthic fishes (negative
+control). The standard shared contract preserves between-population fixed
+differences; a stricter all-populations-polymorphic panel is also reported.
+Frequency-based D with `Nbrichardi` as outgroup is recomputed on each exact
+filter. The standard panel is positive for pelagics (D about 0.0855, Z about
+4.20) and null for deep benthics (D about -0.0121, Z about -0.59). Under the
+stricter filter the positive weakens to Z about 1.66, which is reported rather
+than hidden. The source evidence does not orient donor and recipient, so no
+Lake Malawi A/B/C score is counted as directional accuracy.
+
+Run these further panels with:
+
+```bash
+python scripts/further_external_benchmarks.py \
+  --data-root /path/to/simulation_data \
+  --scrub-vcf /path/to/unzipped.filtered.vcf.gz \
+  --malawi-vcf /path/to/Malinsky_et_al_2018_LakeMalawiCichlids_scaffold_0.vcf.gz
+```

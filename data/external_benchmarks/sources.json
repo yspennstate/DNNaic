@@ -83,5 +83,52 @@
       "sha256": "2efbba7336469fa8169b16c5db37504a2144c83673b30a6b06be31c592fcdfa5"
     },
     "benchmark": "Study-wide no significant captive-to-wild introgression; one UTA individual showed hatchery ancestry. AFP is non-stocked, BAK is stocked, and LFA/LFR are the two hatchery strains."
+  },
+  "scrub_jay": {
+    "citation_doi": "10.1093/sysbio/syac034",
+    "data_doi": "10.5061/dryad.8sf7m0cph",
+    "license": "CC0-1.0 on the Dryad data record; the GitHub repository has no separate license",
+    "repository": "https://github.com/DevonDeRaad/aph.rad",
+    "repository_commit": "7de8067fee4d3bdc0fce65e55f0e17b8c53f078d",
+    "vcf": {
+      "download": "https://raw.githubusercontent.com/DevonDeRaad/aph.rad/7de8067fee4d3bdc0fce65e55f0e17b8c53f078d/unzipped.filtered.vcf.gz",
+      "file": "unzipped.filtered.vcf.gz",
+      "bytes": 11132546,
+      "sha256": "04e297ecfe3b5509c9419f0e14f1f7cba16ee493caebf5f7f46a5dcf8faa431a"
+    },
+    "population_map": {
+      "download": "https://raw.githubusercontent.com/DevonDeRaad/aph.rad/7de8067fee4d3bdc0fce65e55f0e17b8c53f078d/dsuite/pops.txt",
+      "bytes": 2250,
+      "sha256": "c6deb1c92867fc512cb9747d420d27c9cdcff38298414bffde972949f847e007"
+    },
+    "dsuite_result": {
+      "download": "https://raw.githubusercontent.com/DevonDeRaad/aph.rad/7de8067fee4d3bdc0fce65e55f0e17b8c53f078d/dsuite/pops_7spec_BBAA.txt",
+      "bytes": 1426,
+      "sha256": "395bf4de612ccea1582a34fcecd28dcd82f72b87c30d2e4d9543a1e43eb079c8",
+      "row": "iw mw s D=0.00619049 Z=0.205384 p=0.418636 f4-ratio=0.00466407"
+    },
+    "benchmark": "Exact sampled-trio near-zero D control for ((iw,mw),s); not proof of species-wide isolation."
+  },
+  "lake_malawi_cichlids": {
+    "citation_doi": "10.1038/s41559-018-0717-x",
+    "data_doi": "10.5281/zenodo.4134522",
+    "record": "https://zenodo.org/records/4134522",
+    "license": "CC0-1.0",
+    "vcf": {
+      "download": "https://zenodo.org/api/records/4134522/files/Malinsky_et_al_2018_LakeMalawiCichlids_scaffold_0.vcf.gz/content",
+      "file": "Malinsky_et_al_2018_LakeMalawiCichlids_scaffold_0.vcf.gz",
+      "bytes": 49824023,
+      "md5": "fed3ca4c8d984417ee02de535f98e644",
+      "sha256": "8132246ce809f4f4efa77d174c595a469aa7534c2cb8ee9fbf5472f67202c2b7"
+    },
+    "population_map": {
+      "download": "https://zenodo.org/api/records/4134522/files/Malawi_sets.txt/content",
+      "file": "Malawi_sets.txt",
+      "bytes": 6367,
+      "md5": "3635f08856097603972e3dc0381cbb4f",
+      "sha256": "07a0b6e345150b64ffc6e8383572635b0a40663b25b4a78e5145466922accf58"
+    },
+    "supplement": "https://static-content.springer.com/esm/art%3A10.1038%2Fs41559-018-0717-x/MediaObjects/41559_2018_717_MOESM1_ESM.pdf",
+    "benchmark": "Matched shared-locus positive (A. calliptera/mbuna/pelagic) and deep-benthic negative; excess sharing is not directional truth."
   }
 }

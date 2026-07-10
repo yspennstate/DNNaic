@@ -90,11 +90,15 @@ python scripts/realdata_mouse_diversity.py  # when it works: the diversity-balan
 python scripts/realdata_neanderthal.py      # archaic introgression into non-Africans
 python scripts/realdata_1000g_injection.py  # injected-signal recovery on real human backgrounds
 python scripts/external_benchmarks.py --help # depth-matched duck/runner-bean positive-control OOD audit
+python scripts/additional_external_benchmarks.py --help # giraffe/brook-trout transfer audit
+python scripts/further_external_benchmarks.py --help # scrub-jay and matched Malawi positive/null audit
 ```
 
 The external benchmark runner records its fixed sample manifests, source/training-array hashes,
 shared-polymorphic locus contract, uncalibrated scores, OOD diagnostics, and published controls
 under `results/external_benchmarks_2026_07_10/`; these stress tests are not classifier validation.
+The additional bundles apply the same guardrails to giraffe, brook trout, scrub jay, and
+matched Lake Malawi positive/negative panels.
 
 ## Layout
 
