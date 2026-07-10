@@ -28,6 +28,7 @@
     "osf_project": "https://osf.io/h7sa5/",
     "metadata_repository": "https://github.com/AzaleaGuerra/Wild-to-crop_introgression_Pcocci",
     "metadata_commit": "b110d2a15d344a94132f1d40126bdae03044e8d6",
+    "license": "No data or code license declared on the OSF node or GitHub repository; link and cite, do not redistribute the VCF or source code without permission.",
     "sample_filter": "Canonical cocci_meta.txt rows marked Included for the exact Table S4 population definitions",
     "scenario_replay_caveat": "The canonical 183-sample metadata retains FrijCol_11 and excludes FrijCol_10. Several released Dsuite scenario maps instead substitute FrijCol_10 while retaining an n=19 label. This manifest follows the canonical included set and is not claimed as a verbatim Table S4 replay."
   }

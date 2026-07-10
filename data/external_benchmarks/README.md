@@ -24,9 +24,10 @@ published null Cult-SMOCC / Cult-TMVB-Spain / Cult-TMVB contrast (D=0.0008093, P
 The direction head has no no-event class, so the null is evaluated as a discordance/abstention
 diagnostic, not by demanding a null label.
 
-All three bean panels are selected from one six-population callable-site intersection before
-the deterministic 15,000-locus cap. Their locus identities and order are therefore identical;
-population or donor changes cannot silently change the tested sites.
+All three bean panels are selected from one six-population callable-site intersection that is
+also polymorphic in every positive/null trio before the deterministic 15,000-locus cap. Their
+locus identities and order are therefore identical; population or donor changes cannot silently
+change the tested sites.
 
 The released provenance has a one-sample inconsistency that matters for exact comparison:
 the canonical 183-sample metadata includes `FrijCol_11` and excludes `FrijCol_10`, whereas

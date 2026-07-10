@@ -35,7 +35,8 @@ def test_external_filter_is_deterministic_and_feature_compatible(tmp_path):
         "1\t20\t.\tA\tG,T\t.\tPASS\t.\tGT\t0/0\t0/1\t0/0\t0/1\t1/1\t0/1\n"
         "1\t30\t.\tA\tG\t.\tPASS\t.\tGT\t./.\t./.\t0/0\t0/1\t1/1\t0/1\n"
         "1\t40\t.\tC\tT\t.\t.\t.\tGT\t0/1\t0/1\t0/0\t0/1\t1/1\t0/1\n"
-        "1\t50\t.\tG\tA\t.\tPASS\t.\tGT\t0/0\t0/1\t0/1\t0/1\t1/1\t0/1\n",
+        "1\t50\t.\tG\tA\t.\tPASS\t.\tGT\t0/0\t0/1\t0/1\t0/1\t1/1\t0/1\n"
+        "1\t60\t.\tA\tC\t.\tPASS\t.\tGT\t0/0\t0/0\t0/0\t0/0\t0/0\t0/0\n",
         encoding="utf-8",
     )
 
@@ -47,10 +48,11 @@ def test_external_filter_is_deterministic_and_feature_compatible(tmp_path):
     second = prepare_vcf(source, manifest, second_vcf, second_map, cap=2, seed=17, min_called_copies=2)
 
     assert first["counts"] == {
-        "source_variant_rows": 5,
+        "source_variant_rows": 6,
         "eligible_before_cap": 3,
         "not_biallelic_snp": 1,
         "insufficient_called_copies": 1,
+        "not_polymorphic_in_every_panel": 1,
         "retained_after_cap": 2,
     }
     assert first["ordered_locus_sha256"] == second["ordered_locus_sha256"]
@@ -73,3 +75,47 @@ def test_external_filter_is_deterministic_and_feature_compatible(tmp_path):
     assert subset["ordered_locus_sha256"] == first["ordered_locus_sha256"]
     assert subset["counts"]["retained_after_cap"] == 2
     assert "same ordered locus intersection" in subset["comparison_locus_contract"]
+
+
+def test_shared_filter_requires_polymorphism_in_every_declared_panel(tmp_path):
+    union = tmp_path / "union.tsv"
+    union.write_text(
+        "sample\tpopulation\n"
+        "s1\tP1\n"
+        "s2\tP2\n"
+        "s3\tP3\n"
+        "s4\tP4\n",
+        encoding="utf-8",
+    )
+    panel_a = tmp_path / "panel_a.tsv"
+    panel_a.write_text("sample\tpopulation\ns1\tP1\ns2\tP2\ns3\tP3\n", encoding="utf-8")
+    panel_b = tmp_path / "panel_b.tsv"
+    panel_b.write_text("sample\tpopulation\ns1\tP1\ns2\tP2\ns4\tP4\n", encoding="utf-8")
+    source = tmp_path / "union.vcf"
+    source.write_text(
+        "##fileformat=VCFv4.2\n"
+        "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t"
+        "s1\ts2\ts3\ts4\n"
+        "1\t10\t.\tA\tG\t.\tPASS\t.\tGT\t0/0\t0/0\t1/1\t0/0\n"
+        "1\t20\t.\tA\tG\t.\tPASS\t.\tGT\t0/0\t0/0\t0/0\t1/1\n"
+        "1\t30\t.\tA\tG\t.\tPASS\t.\tGT\t0/0\t0/0\t1/1\t1/1\n"
+        "1\t40\t.\tA\tG\t.\tPASS\t.\tGT\t1/1\t0/0\t0/0\t0/0\n",
+        encoding="utf-8",
+    )
+    audit = prepare_vcf(
+        source,
+        union,
+        tmp_path / "shared.vcf",
+        tmp_path / "shared.tsv",
+        cap=10,
+        seed=1,
+        min_called_copies=2,
+        require_three_populations=False,
+        polymorphic_panel_manifests=(panel_a, panel_b),
+    )
+    assert audit["counts"] == {
+        "source_variant_rows": 4,
+        "not_polymorphic_in_every_panel": 2,
+        "eligible_before_cap": 2,
+        "retained_after_cap": 2,
+    }

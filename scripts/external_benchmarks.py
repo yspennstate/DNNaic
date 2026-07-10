@@ -6,9 +6,11 @@ larger genome-wide dataset (scarlet runner bean).  Neither is treated as an
 independent validation of the simulation-trained classifier.  The script
 verifies source hashes, uses fixed author-derived population manifests,
 filters to biallelic PASS/`.` SNPs with at least 16 called copies in every
-population, and deterministically caps eligible loci before PADZE extraction.
+population, requires polymorphism in every declared positive/null panel, and
+deterministically caps the common eligible loci before PADZE extraction.
 
-The canonical 54-D direction head is used only for uncalibrated OOD scores.
+The 54-D simulation head is refit on the external panels' identical g=2..16
+depth grid and is used only for uncalibrated OOD scores.
 Published positive and negative/control expectations are recorded alongside
 raw sharing ratios and feature-space z diagnostics so discordance is visible.
 """
@@ -32,6 +34,8 @@ from pathlib import Path
 
 import numpy as np
 import sklearn
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
 
 REPO = Path(__file__).resolve().parents[1]
 if str(REPO) not in sys.path:
@@ -40,7 +44,6 @@ if str(REPO) not in sys.path:
 from dnnaic import build_matrix
 from realdata_mouse_diversity import (
     CLASSES,
-    canonical_direction_head,
     direction_features,
     package_version,
     ratio_diagnostics,
@@ -179,6 +182,67 @@ def ordered_locus_sha256(rows: list[tuple[int, list[str]]]) -> str:
     return digest.hexdigest()
 
 
+def simulation_direction_head(data_root: Path, max_depth: int = MAX_DEPTH):
+    """Fit the simulation head on exactly the same depth grid as external panels."""
+    directory = data_root / "regen_full"
+    paths = {
+        name: directory / name
+        for name in ("X.npy", "direction.npy", "groups.npy")
+    }
+    for path in paths.values():
+        if not path.exists():
+            raise FileNotFoundError(path)
+    X = np.load(paths["X.npy"], mmap_mode="r")
+    direction = np.load(paths["direction.npy"], mmap_mode="r").astype("U2")
+    groups = np.load(paths["groups.npy"], mmap_mode="r").astype("U80")
+    unique, first, inverse = np.unique(groups, return_index=True, return_inverse=True)
+    order = np.lexsort((np.asarray(X[:, 0]), inverse))
+    per = np.bincount(inverse)
+    if per.min() != 198 or per.max() != 198:
+        raise AssertionError("regen_full curves must contain g=2..199")
+    table = np.asarray(X[order]).reshape(len(unique), 198, X.shape[1])
+    depth_grid = np.arange(2, max_depth + 1, dtype=float)
+    use = table[0, :, 0] <= max_depth
+    if not np.array_equal(table[0, use, 0], depth_grid):
+        raise AssertionError(f"simulation depth grid does not contain g=2..{max_depth}")
+    if not np.all(table[:, use, 0] == depth_grid[None, :]):
+        raise AssertionError("simulation replicates do not share one depth grid")
+    features = direction_features(table[:, use, :])
+    labels = direction[first]
+    positive = labels != "D"
+    y = np.searchsorted(CLASSES, labels[positive])
+    scaler = StandardScaler().fit(features[positive])
+    model = LogisticRegression(C=1.0, max_iter=3000, solver="lbfgs").fit(
+        scaler.transform(features[positive]), y
+    )
+    arrays = {
+        name: {
+            "bytes": path.stat().st_size,
+            "sha256": sha256_file(path),
+        }
+        for name, path in paths.items()
+    }
+    audit = {
+        "training_dataset": "regen_full",
+        "training_selection": "all positive canonical replicates at every migration rate",
+        "training_n": int(positive.sum()),
+        "training_class_counts": {
+            label: int((labels[positive] == label).sum()) for label in CLASSES
+        },
+        "depth_grid": depth_grid.astype(int).tolist(),
+        "representation": (
+            f"mean and population SD over g=2..{max_depth} for each of 27 non-depth coordinates; "
+            "identical to the external-panel depth grid"
+        ),
+        "dimension": int(features.shape[1]),
+        "model": "StandardScaler plus multinomial logistic regression (lbfgs, C=1)",
+        "score_interpretation": "uncalibrated out-of-distribution score; not a probability or posterior",
+        "fit_iterations": model.n_iter_.astype(int).tolist(),
+        "training_array_audit": arrays,
+    }
+    return scaler, model, audit
+
+
 def prepare_vcf(
     source: Path,
     manifest: Path,
@@ -188,9 +252,22 @@ def prepare_vcf(
     seed: int,
     min_called_copies: int = MIN_CALLED_COPIES,
     require_three_populations: bool = True,
+    polymorphic_panel_manifests: tuple[Path, ...] = (),
 ) -> dict:
     """Filter a source VCF and retain a deterministic reservoir of eligible loci."""
     mapping = read_manifest(manifest, require_three=require_three_populations)
+    panel_maps = []
+    if polymorphic_panel_manifests:
+        for panel_manifest in polymorphic_panel_manifests:
+            panel_mapping = read_manifest(panel_manifest)
+            absent = sorted(set(panel_mapping) - set(mapping))
+            if absent:
+                raise ValueError(
+                    f"{panel_manifest}: samples absent from shared manifest: {absent}"
+                )
+            panel_maps.append((panel_manifest, panel_mapping))
+    else:
+        panel_maps.append((manifest, mapping))
     populations = sorted(set(mapping.values()))
     population_columns: dict[str, list[int]] = defaultdict(list)
     counters: Counter[str] = Counter()
@@ -198,6 +275,7 @@ def prepare_vcf(
     rng = random.Random(seed)
     selected_samples: list[str] | None = None
     selected_source_columns: list[int] | None = None
+    polymorphic_columns: list[list[int]] | None = None
 
     with open_text(source) as handle:
         for line in handle:
@@ -213,10 +291,22 @@ def prepare_vcf(
                 selected_source_columns = [9 + source_samples.index(sample) for sample in selected_samples]
                 for output_index, sample in enumerate(selected_samples):
                     population_columns[mapping[sample]].append(9 + output_index)
+                output_column = {
+                    sample: 9 + output_index
+                    for output_index, sample in enumerate(selected_samples)
+                }
+                polymorphic_columns = [
+                    [output_column[sample] for sample in panel_mapping]
+                    for _, panel_mapping in panel_maps
+                ]
                 continue
             if line.startswith("#") or not line.strip():
                 continue
-            if selected_samples is None or selected_source_columns is None:
+            if (
+                selected_samples is None
+                or selected_source_columns is None
+                or polymorphic_columns is None
+            ):
                 raise ValueError(f"{source}: variant before #CHROM header")
             counters["source_variant_rows"] += 1
             fields = line.rstrip("\r\n").split("\t")
@@ -239,6 +329,19 @@ def prepare_vcf(
                     break
             if insufficient:
                 counters["insufficient_called_copies"] += 1
+                continue
+            if any(
+                len(
+                    {
+                        allele
+                        for index in columns
+                        for allele in called_alleles(simplified[index])
+                    }
+                )
+                < 2
+                for columns in polymorphic_columns
+            ):
+                counters["not_polymorphic_in_every_panel"] += 1
                 continue
 
             counters["eligible_before_cap"] += 1
@@ -289,6 +392,14 @@ def prepare_vcf(
             "variant": "single-base REF and single-base ALT; no multiallelic ALT",
             "filter": "PASS or dot (sources are author-filtered releases)",
             "minimum_called_copies_per_population": min_called_copies,
+            "polymorphism": "both REF and ALT must be called in every declared three-population panel",
+            "polymorphic_panel_manifests": [
+                {
+                    "path": str(path),
+                    "sha256": sha256_file(path),
+                }
+                for path, _ in panel_maps
+            ],
             "locus_cap": cap,
             "cap_method": "fixed-seed reservoir over eligible loci, restored to source order",
             "reservoir_seed": seed,
@@ -355,6 +466,14 @@ def subset_prepared_vcf(
         for sample in selected_samples:
             handle.write(f"{sample}\t{mapping[sample]}\n")
 
+    panel_locus_hash = ordered_locus_sha256(
+        [(index, fields) for index, fields in enumerate(rows)]
+    )
+    if len(rows) != shared_audit["counts"]["retained_after_cap"]:
+        raise AssertionError("panel subsetting changed the shared locus count")
+    if panel_locus_hash != shared_audit["ordered_locus_sha256"]:
+        raise AssertionError("panel subsetting changed ordered locus identities")
+
     populations = sorted(set(mapping.values()))
     population_columns = {
         population: [9 + index for index, sample in enumerate(selected_samples) if mapping[sample] == population]
@@ -377,6 +496,7 @@ def subset_prepared_vcf(
     audit["manifest"] = str(manifest)
     audit["manifest_sha256"] = sha256_file(manifest)
     audit["population_called_copy_counts"] = copy_counts
+    audit["ordered_locus_sha256"] = panel_locus_hash
     audit["comparison_locus_contract"] = (
         "same ordered locus intersection and cap as every runner-bean positive/null panel"
     )
@@ -435,13 +555,13 @@ def score_panel(
             "n_loci_kept": int(loci.metadata.n_loci_kept),
             "all_finite": True,
         },
-        "canonical_head": {
+        "simulation_head": {
             "predicted_class": prediction,
             "scores": {label: float(value) for label, value in zip(CLASSES, scores)},
             "interpretation": "uncalibrated OOD scores; not probabilities or posteriors",
         },
         "simulation_feature_shift": {
-            "reference": "StandardScaler fitted to 2,700 positive regen_full curve summaries",
+            "reference": "StandardScaler fitted to 2,700 positive regen_full summaries on the identical g=2..16 grid",
             "rms_z": float(np.sqrt(np.mean(z**2))),
             "max_abs_z": float(np.max(np.abs(z))),
             "coordinates_abs_z_gt_3": int(np.sum(np.abs(z) > 3)),
@@ -545,6 +665,11 @@ def main() -> int:
         args.cap,
         2026071003,
         require_three_populations=False,
+        polymorphic_panel_manifests=(
+            bean_cdmx_manifest,
+            bean_tepoz_manifest,
+            bean_null_manifest,
+        ),
     )
     bean_cdmx_audit = subset_prepared_vcf(
         bean_union_vcf,
@@ -568,7 +693,7 @@ def main() -> int:
         bean_union_audit,
     )
 
-    scaler, model, head_audit = canonical_direction_head(data_root)
+    scaler, model, head_audit = simulation_direction_head(data_root, MAX_DEPTH)
     panels = [
         score_panel(
             "andean_duck_beta_positive",
@@ -659,7 +784,7 @@ def main() -> int:
         "status": "exploratory external OOD diagnostics; not classifier validation",
         "source_manifest": json.loads((MANIFEST_DIR / "sources.json").read_text(encoding="utf-8")),
         "source_file_audit": source_audit,
-        "canonical_head_audit": head_audit,
+        "simulation_head_audit": head_audit,
         "panels": panels,
         "reproducibility": {
             "repository": git_revision(),
@@ -678,7 +803,7 @@ def main() -> int:
     destination.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(f"wrote {destination}")
     for panel in panels:
-        head = panel["canonical_head"]
+        head = panel["simulation_head"]
         shift = panel["simulation_feature_shift"]
         print(
             f"{panel['panel_id']}: {head['predicted_class']} {head['scores']} "
