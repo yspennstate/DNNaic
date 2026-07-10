@@ -711,9 +711,11 @@ appreciable band also collects the higher continuously-sampled rates.}
 Operated as a \emph{detect-then-orient} gate---first flag whether migration is appreciable, then
 orient it only where detection succeeds---the method is accurate and well calibrated within the
 evaluated simulation distribution. The
-detection gate reaches ROC-AUC $0.99$ in the appreciable regime ($0.80$ across all rates), with
-expected calibration error $0.03$ and Brier score $0.11$, so its confidence scores can be read
-directly to set an operating point. The direction head supports the same selective use: ranking
+detection gate reaches ROC-AUC $0.99$ separating appreciable migration from the no-migration
+control ($0.80$ across all rates), with expected calibration error $0.03$ and Brier score $0.11$,
+so its confidence scores can be read directly to set an operating point; against the more
+demanding mixture of weak-positive and control replicates it reaches $0.96$
+(\texttt{scripts/appreciable\_gate.py}). The direction head supports the same selective use: ranking
 appreciable replicates by the classifier's confidence and abstaining on the least-confident quarter
 raises three-way accuracy from $99.6\%$ to $99.9\%$, and abstaining on the least-confident half makes
 it perfect on the replicates retained. This is the usable form of the method: it asserts a direction
