@@ -1,0 +1,2 @@
+data/external_benchmarks/*.tsv text eol=lf
+data/external_benchmarks/*.json text eol=lf
