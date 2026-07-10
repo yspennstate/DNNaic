@@ -1,0 +1,1462 @@
+{
+  "schema_version": "natural-diagnostics-heliconius-v2",
+  "status": "exploratory_discordance_not_validation",
+  "interpretation": {
+    "class_mapping": {
+      "B": "timareta -> melpomene",
+      "C": "melpomene -> timareta"
+    },
+    "external_context": "Species-level full-likelihood analysis estimates predominantly class B genome-wide; class C is documented at particular adaptive loci. Exact race-panel directions are not ground truth.",
+    "independence": "Panels reuse races/individuals and linked loci; panel and chromosome checks are not independent experiments."
+  },
+  "source": {
+    "genotype_url": "https://github.com/simonhmartin/tutorials/raw/master/ABBA_BABA_whole_genome/data/hel92.DP8MP4BIMAC2HET75dist250.geno.gz",
+    "popmap_url": "https://github.com/simonhmartin/tutorials/raw/master/ABBA_BABA_whole_genome/data/hel92.pop.txt",
+    "genotype_cache": "data\\real\\heliconius\\hel.geno.gz",
+    "genotype_bytes": 22902965,
+    "genotype_sha256": "79ac9932a0480b946085c64b42d711602852b373452c7f5cdd46853f85a0ff66",
+    "popmap_cache": "data\\real\\heliconius\\hel.pop.txt",
+    "popmap_bytes": 1774,
+    "popmap_sha256": "edc3cc2a82592e544560b80d1dc8031a76e1983dd226f6b1c0508dcce029d71a",
+    "format": "Simon Martin ABBA_BABA_whole_genome tutorial .geno matrix and race map"
+  },
+  "filters": [
+    "exactly two observed A/C/G/T alleles among selected focal samples",
+    "at least 16 called gene copies in each focal population",
+    "uniform reservoir sample of at most 15000 eligible SNPs per panel",
+    "source allele bases converted once to stable 0/1 coding within each panel"
+  ],
+  "direction_head": {
+    "training_dataset": "regen_full",
+    "training_selection": "all positive canonical replicates at every migration rate",
+    "training_n": 2700,
+    "training_class_counts": {
+      "A": 900,
+      "B": 900,
+      "C": 900
+    },
+    "representation": "mean and population SD over available depths for each of 27 non-depth coordinates",
+    "dimension": 54,
+    "model": "StandardScaler plus multinomial logistic regression (lbfgs, C=1)",
+    "softmax_interpretation": "uncalibrated out-of-distribution model score; not a probability or posterior",
+    "fit_iterations": [
+      120
+    ]
+  },
+  "panels": [
+    {
+      "panel_id": "race_trio_1",
+      "kind": "geographic_trio",
+      "races": {
+        "cydno": "cyd_chi",
+        "timareta": "tim_txn",
+        "melpomene": "mel_ama"
+      },
+      "filter_and_sample_audit": {
+        "source_records_scanned": 884627,
+        "eligible_after_filters": 436907,
+        "reservoir_target": 15000,
+        "retained_records": 15000,
+        "reservoir_seed": 100,
+        "sample_ids_by_population": {
+          "cydno": [
+            "chi.CAM25091",
+            "chi.CAM25137",
+            "chi.CAM580",
+            "chi.CAM582",
+            "chi.CAM585",
+            "chi.CAM586",
+            "chi.CJ553",
+            "chi.CJ560",
+            "chi.CJ564",
+            "chi.CJ565"
+          ],
+          "timareta": [
+            "thxn.JM313",
+            "thxn.JM57",
+            "thxn.JM84",
+            "thxn.JM86",
+            "thxn.MJ12-3221",
+            "thxn.MJ12-3233",
+            "thxn.MJ12-3308",
+            "txn.MJ11-3339",
+            "txn.MJ11-3340",
+            "txn.MJ11-3460"
+          ],
+          "melpomene": [
+            "ama.JM160",
+            "ama.JM216",
+            "ama.JM293",
+            "ama.JM48",
+            "ama.MJ11-3188",
+            "ama.MJ11-3189",
+            "ama.MJ11-3202",
+            "ama.MJ12-3217",
+            "ama.MJ12-3258",
+            "ama.MJ12-3301"
+          ]
+        },
+        "individual_counts": {
+          "cydno": 10,
+          "timareta": 10,
+          "melpomene": 10
+        },
+        "gene_copies_if_complete": {
+          "cydno": 20,
+          "timareta": 20,
+          "melpomene": 20
+        },
+        "chromosome_counts": {
+          "chr1": 1031,
+          "chr2": 461,
+          "chr3": 582,
+          "chr4": 564,
+          "chr5": 543,
+          "chr6": 710,
+          "chr7": 838,
+          "chr8": 504,
+          "chr9": 483,
+          "chr10": 983,
+          "chr11": 664,
+          "chr12": 932,
+          "chr13": 1044,
+          "chr14": 527,
+          "chr15": 537,
+          "chr16": 537,
+          "chr17": 805,
+          "chr18": 920,
+          "chr19": 883,
+          "chr20": 860,
+          "chr21": 592
+        },
+        "called_gene_copies_per_retained_locus": {
+          "cydno": {
+            "minimum": 16,
+            "maximum": 20,
+            "mean": 19.522666666666666
+          },
+          "timareta": {
+            "minimum": 16,
+            "maximum": 20,
+            "mean": 19.541333333333334
+          },
+          "melpomene": {
+            "minimum": 16,
+            "maximum": 20,
+            "mean": 19.591066666666666
+          }
+        }
+      },
+      "vcf_cache": "data\\real\\heliconius\\race_trio_1.vcf",
+      "vcf_sha256": "d6c5ccf915e18309ebe889828cb756b3fdc5ae43b59c478762d0286ba11c5e7a",
+      "popmap_cache": "data\\real\\heliconius\\race_trio_1.popmap.tsv",
+      "padze_retained_loci": 15000,
+      "depths": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "direction_call": "C",
+      "uncalibrated_softmax_scores": {
+        "A": 5.593684058889533e-13,
+        "B": 8.587661879829007e-09,
+        "C": 0.9999999914117789
+      },
+      "primary_raw_ratio_g_ge_8": 2.5628518656012167,
+      "primary_normalized_ratio_g_ge_8_clip_1e-12": 3.2807399420319903,
+      "sharing_ratio_sensitivity": {
+        "definition": {
+          "raw": "mean_g(pihat_23_mean) / mean_g(pihat_13_mean)",
+          "normalized": "mean_g[pihat_23_mean/max(alpha_2_mean-1,clip)] / mean_g[pihat_13_mean/max(alpha_1_mean-1,clip)]"
+        },
+        "primary_cutoff": 8,
+        "primary_clip": 1e-12,
+        "by_minimum_depth": {
+          "2": {
+            "n_depths": 15,
+            "raw_ratio_of_depth_means": 2.389297344427144,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 2.845728730458998,
+              "1e-12": 2.845728730458998,
+              "1e-09": 2.845728730458998,
+              "1e-06": 2.845728730458998,
+              "1e-04": 2.845728730458998
+            },
+            "min_alpha1_minus_one": 0.12728325593394763,
+            "min_alpha2_minus_one": 0.10548159041394634
+          },
+          "4": {
+            "n_depths": 13,
+            "raw_ratio_of_depth_means": 2.4749489374291973,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 3.088839998849584,
+              "1e-12": 3.088839998849584,
+              "1e-09": 3.088839998849584,
+              "1e-06": 3.088839998849584,
+              "1e-04": 3.088839998849584
+            },
+            "min_alpha1_minus_one": 0.23573313696508658,
+            "min_alpha2_minus_one": 0.1938944511227736
+          },
+          "6": {
+            "n_depths": 11,
+            "raw_ratio_of_depth_means": 2.5269034148734857,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 3.2048231228948856,
+              "1e-12": 3.2048231228948856,
+              "1e-09": 3.2048231228948856,
+              "1e-06": 3.2048231228948856,
+              "1e-04": 3.2048231228948856
+            },
+            "min_alpha1_minus_one": 0.3005878282055112,
+            "min_alpha2_minus_one": 0.24293978755678713
+          },
+          "8": {
+            "n_depths": 9,
+            "raw_ratio_of_depth_means": 2.5628518656012167,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 3.2807399420319903,
+              "1e-12": 3.2807399420319903,
+              "1e-09": 3.2807399420319903,
+              "1e-06": 3.2807399420319903,
+              "1e-04": 3.2807399420319903
+            },
+            "min_alpha1_minus_one": 0.34797875466581196,
+            "min_alpha2_minus_one": 0.2769740690384048
+          },
+          "10": {
+            "n_depths": 7,
+            "raw_ratio_of_depth_means": 2.5890679466549154,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 3.3357570953532703,
+              "1e-12": 3.3357570953532703,
+              "1e-09": 3.3357570953532703,
+              "1e-06": 3.3357570953532703,
+              "1e-04": 3.3357570953532703
+            },
+            "min_alpha1_minus_one": 0.3851166844879639,
+            "min_alpha2_minus_one": 0.30272527686166106
+          },
+          "12": {
+            "n_depths": 5,
+            "raw_ratio_of_depth_means": 2.608483650011288,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 3.3773292178693106,
+              "1e-12": 3.3773292178693106,
+              "1e-09": 3.3773292178693106,
+              "1e-06": 3.3773292178693106,
+              "1e-04": 3.3773292178693106
+            },
+            "min_alpha1_minus_one": 0.4152344631185758,
+            "min_alpha2_minus_one": 0.32311172981473923
+          },
+          "14": {
+            "n_depths": 3,
+            "raw_ratio_of_depth_means": 2.6227797716439936,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 3.4092281902253236,
+              "1e-12": 3.4092281902253236,
+              "1e-09": 3.4092281902253236,
+              "1e-06": 3.4092281902253236,
+              "1e-04": 3.4092281902253236
+            },
+            "min_alpha1_minus_one": 0.44012724974200257,
+            "min_alpha2_minus_one": 0.33970160818713224
+          }
+        }
+      }
+    },
+    {
+      "panel_id": "race_trio_2",
+      "kind": "geographic_trio",
+      "races": {
+        "cydno": "cyd_zel",
+        "timareta": "tim_flo",
+        "melpomene": "mel_mel"
+      },
+      "filter_and_sample_audit": {
+        "source_records_scanned": 884627,
+        "eligible_after_filters": 395416,
+        "reservoir_target": 15000,
+        "retained_records": 15000,
+        "reservoir_seed": 101,
+        "sample_ids_by_population": {
+          "cydno": [
+            "zel.CS1",
+            "zel.CS1028",
+            "zel.CS1029",
+            "zel.CS1030",
+            "zel.CS1033",
+            "zel.CS1035",
+            "zel.CS2",
+            "zel.CS2262",
+            "zel.CS273",
+            "zel.CS30"
+          ],
+          "timareta": [
+            "flo.CS12",
+            "flo.CS13",
+            "flo.CS14",
+            "flo.CS15",
+            "flo.CS2337",
+            "flo.CS2338",
+            "flo.CS2341",
+            "flo.CS2350",
+            "flo.CS2358",
+            "flo.CS2359"
+          ],
+          "melpomene": [
+            "melG.CAM1349",
+            "melG.CAM1422",
+            "melG.CAM2035",
+            "melG.CAM8171",
+            "melG.CAM8216",
+            "melG.CAM8218",
+            "melG.CJ13435",
+            "melG.CJ9315",
+            "melG.CJ9316",
+            "melG.CJ9317"
+          ]
+        },
+        "individual_counts": {
+          "cydno": 10,
+          "timareta": 10,
+          "melpomene": 10
+        },
+        "gene_copies_if_complete": {
+          "cydno": 20,
+          "timareta": 20,
+          "melpomene": 20
+        },
+        "chromosome_counts": {
+          "chr1": 1032,
+          "chr2": 451,
+          "chr3": 546,
+          "chr4": 538,
+          "chr5": 560,
+          "chr6": 742,
+          "chr7": 781,
+          "chr8": 503,
+          "chr9": 515,
+          "chr10": 1059,
+          "chr11": 669,
+          "chr12": 941,
+          "chr13": 998,
+          "chr14": 453,
+          "chr15": 557,
+          "chr16": 566,
+          "chr17": 800,
+          "chr18": 934,
+          "chr19": 919,
+          "chr20": 875,
+          "chr21": 561
+        },
+        "called_gene_copies_per_retained_locus": {
+          "cydno": {
+            "minimum": 16,
+            "maximum": 20,
+            "mean": 19.598933333333335
+          },
+          "timareta": {
+            "minimum": 16,
+            "maximum": 20,
+            "mean": 19.6336
+          },
+          "melpomene": {
+            "minimum": 16,
+            "maximum": 20,
+            "mean": 19.3544
+          }
+        }
+      },
+      "vcf_cache": "data\\real\\heliconius\\race_trio_2.vcf",
+      "vcf_sha256": "d6f281082e50ab42919c9086bc1eec5b1c7c758219bde5bae38eb275eb1cca3d",
+      "popmap_cache": "data\\real\\heliconius\\race_trio_2.popmap.tsv",
+      "padze_retained_loci": 15000,
+      "depths": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "direction_call": "C",
+      "uncalibrated_softmax_scores": {
+        "A": 0.01782554795550323,
+        "B": 0.039018061212919446,
+        "C": 0.9431563908315774
+      },
+      "primary_raw_ratio_g_ge_8": 1.882486244342134,
+      "primary_normalized_ratio_g_ge_8_clip_1e-12": 2.4064901322757937,
+      "sharing_ratio_sensitivity": {
+        "definition": {
+          "raw": "mean_g(pihat_23_mean) / mean_g(pihat_13_mean)",
+          "normalized": "mean_g[pihat_23_mean/max(alpha_2_mean-1,clip)] / mean_g[pihat_13_mean/max(alpha_1_mean-1,clip)]"
+        },
+        "primary_cutoff": 8,
+        "primary_clip": 1e-12,
+        "by_minimum_depth": {
+          "2": {
+            "n_depths": 15,
+            "raw_ratio_of_depth_means": 1.7552331690815608,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 2.098267704585326,
+              "1e-12": 2.098267704585326,
+              "1e-09": 2.098267704585326,
+              "1e-06": 2.098267704585326,
+              "1e-04": 2.098267704585326
+            },
+            "min_alpha1_minus_one": 0.1325950561862259,
+            "min_alpha2_minus_one": 0.10937524882467997
+          },
+          "4": {
+            "n_depths": 13,
+            "raw_ratio_of_depth_means": 1.8164731650820087,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 2.264813896746858,
+              "1e-12": 2.264813896746858,
+              "1e-09": 2.264813896746858,
+              "1e-06": 2.264813896746858,
+              "1e-04": 2.264813896746858
+            },
+            "min_alpha1_minus_one": 0.24512706556486563,
+            "min_alpha2_minus_one": 0.20091090524198663
+          },
+          "6": {
+            "n_depths": 11,
+            "raw_ratio_of_depth_means": 1.8555290292715436,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 2.350126232051825,
+              "1e-12": 2.350126232051825,
+              "1e-09": 2.350126232051825,
+              "1e-06": 2.350126232051825,
+              "1e-04": 2.350126232051825
+            },
+            "min_alpha1_minus_one": 0.31129024533945304,
+            "min_alpha2_minus_one": 0.2513058776483277
+          },
+          "8": {
+            "n_depths": 9,
+            "raw_ratio_of_depth_means": 1.882486244342134,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 2.4064901322757937,
+              "1e-12": 2.4064901322757937,
+              "1e-09": 2.4064901322757937,
+              "1e-06": 2.4064901322757937,
+              "1e-04": 2.4064901322757937
+            },
+            "min_alpha1_minus_one": 0.35926107631848425,
+            "min_alpha2_minus_one": 0.28604227091106793
+          },
+          "10": {
+            "n_depths": 7,
+            "raw_ratio_of_depth_means": 1.9020947511675332,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 2.4475919334032916,
+              "1e-12": 2.4475919334032916,
+              "1e-09": 2.4475919334032916,
+              "1e-06": 2.4475919334032916,
+              "1e-04": 2.4475919334032916
+            },
+            "min_alpha1_minus_one": 0.39678134657167297,
+            "min_alpha2_minus_one": 0.3121863802892453
+          },
+          "12": {
+            "n_depths": 5,
+            "raw_ratio_of_depth_means": 1.9169650093490371,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 2.479328860565564,
+              "1e-12": 2.479328860565564,
+              "1e-09": 2.479328860565564,
+              "1e-06": 2.479328860565564,
+              "1e-04": 2.479328860565564
+            },
+            "min_alpha1_minus_one": 0.4272384454348517,
+            "min_alpha2_minus_one": 0.3328143790471625
+          },
+          "14": {
+            "n_depths": 3,
+            "raw_ratio_of_depth_means": 1.9285861503020936,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 2.504702513097305,
+              "1e-12": 2.504702513097305,
+              "1e-09": 2.504702513097305,
+              "1e-06": 2.504702513097305,
+              "1e-04": 2.504702513097305
+            },
+            "min_alpha1_minus_one": 0.45247327657378644,
+            "min_alpha2_minus_one": 0.3495666913198099
+          }
+        }
+      }
+    },
+    {
+      "panel_id": "race_trio_3",
+      "kind": "geographic_trio",
+      "races": {
+        "cydno": "cyd_chi",
+        "timareta": "tim_flo",
+        "melpomene": "mel_mal"
+      },
+      "filter_and_sample_audit": {
+        "source_records_scanned": 884627,
+        "eligible_after_filters": 437405,
+        "reservoir_target": 15000,
+        "retained_records": 15000,
+        "reservoir_seed": 102,
+        "sample_ids_by_population": {
+          "cydno": [
+            "chi.CAM25091",
+            "chi.CAM25137",
+            "chi.CAM580",
+            "chi.CAM582",
+            "chi.CAM585",
+            "chi.CAM586",
+            "chi.CJ553",
+            "chi.CJ560",
+            "chi.CJ564",
+            "chi.CJ565"
+          ],
+          "timareta": [
+            "flo.CS12",
+            "flo.CS13",
+            "flo.CS14",
+            "flo.CS15",
+            "flo.CS2337",
+            "flo.CS2338",
+            "flo.CS2341",
+            "flo.CS2350",
+            "flo.CS2358",
+            "flo.CS2359"
+          ],
+          "melpomene": [
+            "mal.CS1002",
+            "mal.CS1011",
+            "mal.CS1815",
+            "mal.CS21",
+            "mal.CS22",
+            "mal.CS24",
+            "mal.CS586",
+            "mal.CS594",
+            "mal.CS604",
+            "mal.CS615"
+          ]
+        },
+        "individual_counts": {
+          "cydno": 10,
+          "timareta": 10,
+          "melpomene": 10
+        },
+        "gene_copies_if_complete": {
+          "cydno": 20,
+          "timareta": 20,
+          "melpomene": 20
+        },
+        "chromosome_counts": {
+          "chr1": 1034,
+          "chr2": 453,
+          "chr3": 589,
+          "chr4": 520,
+          "chr5": 533,
+          "chr6": 797,
+          "chr7": 830,
+          "chr8": 468,
+          "chr9": 490,
+          "chr10": 1019,
+          "chr11": 699,
+          "chr12": 937,
+          "chr13": 993,
+          "chr14": 472,
+          "chr15": 519,
+          "chr16": 562,
+          "chr17": 820,
+          "chr18": 899,
+          "chr19": 905,
+          "chr20": 869,
+          "chr21": 592
+        },
+        "called_gene_copies_per_retained_locus": {
+          "cydno": {
+            "minimum": 16,
+            "maximum": 20,
+            "mean": 19.504133333333332
+          },
+          "timareta": {
+            "minimum": 16,
+            "maximum": 20,
+            "mean": 19.582
+          },
+          "melpomene": {
+            "minimum": 16,
+            "maximum": 20,
+            "mean": 19.4984
+          }
+        }
+      },
+      "vcf_cache": "data\\real\\heliconius\\race_trio_3.vcf",
+      "vcf_sha256": "11bc6f9029d5d3f5f295b6193a135111cd9c8a8aae13d955d85c63d5b6e9b7ac",
+      "popmap_cache": "data\\real\\heliconius\\race_trio_3.popmap.tsv",
+      "padze_retained_loci": 15000,
+      "depths": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "direction_call": "C",
+      "uncalibrated_softmax_scores": {
+        "A": 5.205925942941198e-10,
+        "B": 1.259019567849943e-08,
+        "C": 0.9999999868892118
+      },
+      "primary_raw_ratio_g_ge_8": 2.044766943445635,
+      "primary_normalized_ratio_g_ge_8_clip_1e-12": 2.64850362948973,
+      "sharing_ratio_sensitivity": {
+        "definition": {
+          "raw": "mean_g(pihat_23_mean) / mean_g(pihat_13_mean)",
+          "normalized": "mean_g[pihat_23_mean/max(alpha_2_mean-1,clip)] / mean_g[pihat_13_mean/max(alpha_1_mean-1,clip)]"
+        },
+        "primary_cutoff": 8,
+        "primary_clip": 1e-12,
+        "by_minimum_depth": {
+          "2": {
+            "n_depths": 15,
+            "raw_ratio_of_depth_means": 1.9546588763658033,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 2.3848887854862997,
+              "1e-12": 2.3848887854862997,
+              "1e-09": 2.3848887854862997,
+              "1e-06": 2.3848887854862997,
+              "1e-04": 2.3848887854862997
+            },
+            "min_alpha1_minus_one": 0.12748289817681857,
+            "min_alpha2_minus_one": 0.1050230294690988
+          },
+          "4": {
+            "n_depths": 13,
+            "raw_ratio_of_depth_means": 2.003775763548326,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 2.5383741610037847,
+              "1e-12": 2.5383741610037847,
+              "1e-09": 2.5383741610037847,
+              "1e-06": 2.5383741610037847,
+              "1e-04": 2.5383741610037847
+            },
+            "min_alpha1_minus_one": 0.23628991804548694,
+            "min_alpha2_minus_one": 0.1930446136457269
+          },
+          "6": {
+            "n_depths": 11,
+            "raw_ratio_of_depth_means": 2.029803820222501,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 2.6072547564846467,
+              "1e-12": 2.6072547564846467,
+              "1e-09": 2.6072547564846467,
+              "1e-06": 2.6072547564846467,
+              "1e-04": 2.6072547564846467
+            },
+            "min_alpha1_minus_one": 0.3018270605366429,
+            "min_alpha2_minus_one": 0.2418561857715702
+          },
+          "8": {
+            "n_depths": 9,
+            "raw_ratio_of_depth_means": 2.044766943445635,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 2.64850362948973,
+              "1e-12": 2.64850362948973,
+              "1e-09": 2.64850362948973,
+              "1e-06": 2.64850362948973,
+              "1e-04": 2.64850362948973
+            },
+            "min_alpha1_minus_one": 0.34982686615298864,
+            "min_alpha2_minus_one": 0.27573011796139313
+          },
+          "10": {
+            "n_depths": 7,
+            "raw_ratio_of_depth_means": 2.053262560392497,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 2.6754944149153252,
+              "1e-12": 2.6754944149153252,
+              "1e-09": 2.6754944149153252,
+              "1e-06": 2.6754944149153252,
+              "1e-04": 2.6754944149153252
+            },
+            "min_alpha1_minus_one": 0.3874290400918874,
+            "min_alpha2_minus_one": 0.3013788716787045
+          },
+          "12": {
+            "n_depths": 5,
+            "raw_ratio_of_depth_means": 2.057413808366144,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 2.693481360645872,
+              "1e-12": 2.693481360645872,
+              "1e-09": 2.693481360645872,
+              "1e-06": 2.693481360645872,
+              "1e-04": 2.693481360645872
+            },
+            "min_alpha1_minus_one": 0.41789418947065715,
+            "min_alpha2_minus_one": 0.3217094347860632
+          },
+          "14": {
+            "n_depths": 3,
+            "raw_ratio_of_depth_means": 2.0584086348047825,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 2.7051369408949975,
+              "1e-12": 2.7051369408949975,
+              "1e-09": 2.7051369408949975,
+              "1e-06": 2.7051369408949975,
+              "1e-04": 2.7051369408949975
+            },
+            "min_alpha1_minus_one": 0.4430522050223591,
+            "min_alpha2_minus_one": 0.3382658898062121
+          }
+        }
+      }
+    },
+    {
+      "panel_id": "race_trio_4",
+      "kind": "geographic_trio",
+      "races": {
+        "cydno": "cyd_zel",
+        "timareta": "tim_txn",
+        "melpomene": "mel_ama"
+      },
+      "filter_and_sample_audit": {
+        "source_records_scanned": 884627,
+        "eligible_after_filters": 449078,
+        "reservoir_target": 15000,
+        "retained_records": 15000,
+        "reservoir_seed": 103,
+        "sample_ids_by_population": {
+          "cydno": [
+            "zel.CS1",
+            "zel.CS1028",
+            "zel.CS1029",
+            "zel.CS1030",
+            "zel.CS1033",
+            "zel.CS1035",
+            "zel.CS2",
+            "zel.CS2262",
+            "zel.CS273",
+            "zel.CS30"
+          ],
+          "timareta": [
+            "thxn.JM313",
+            "thxn.JM57",
+            "thxn.JM84",
+            "thxn.JM86",
+            "thxn.MJ12-3221",
+            "thxn.MJ12-3233",
+            "thxn.MJ12-3308",
+            "txn.MJ11-3339",
+            "txn.MJ11-3340",
+            "txn.MJ11-3460"
+          ],
+          "melpomene": [
+            "ama.JM160",
+            "ama.JM216",
+            "ama.JM293",
+            "ama.JM48",
+            "ama.MJ11-3188",
+            "ama.MJ11-3189",
+            "ama.MJ11-3202",
+            "ama.MJ12-3217",
+            "ama.MJ12-3258",
+            "ama.MJ12-3301"
+          ]
+        },
+        "individual_counts": {
+          "cydno": 10,
+          "timareta": 10,
+          "melpomene": 10
+        },
+        "gene_copies_if_complete": {
+          "cydno": 20,
+          "timareta": 20,
+          "melpomene": 20
+        },
+        "chromosome_counts": {
+          "chr1": 1008,
+          "chr2": 469,
+          "chr3": 593,
+          "chr4": 519,
+          "chr5": 595,
+          "chr6": 806,
+          "chr7": 785,
+          "chr8": 490,
+          "chr9": 497,
+          "chr10": 1048,
+          "chr11": 677,
+          "chr12": 909,
+          "chr13": 969,
+          "chr14": 501,
+          "chr15": 534,
+          "chr16": 579,
+          "chr17": 806,
+          "chr18": 899,
+          "chr19": 901,
+          "chr20": 828,
+          "chr21": 587
+        },
+        "called_gene_copies_per_retained_locus": {
+          "cydno": {
+            "minimum": 16,
+            "maximum": 20,
+            "mean": 19.5136
+          },
+          "timareta": {
+            "minimum": 16,
+            "maximum": 20,
+            "mean": 19.49813333333333
+          },
+          "melpomene": {
+            "minimum": 16,
+            "maximum": 20,
+            "mean": 19.574933333333334
+          }
+        }
+      },
+      "vcf_cache": "data\\real\\heliconius\\race_trio_4.vcf",
+      "vcf_sha256": "035f7bd98db95e1edfa45d7cc2844abfa8d7fb6ba38ed08b5e8e4fb9dff0e6e5",
+      "popmap_cache": "data\\real\\heliconius\\race_trio_4.popmap.tsv",
+      "padze_retained_loci": 15000,
+      "depths": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "direction_call": "C",
+      "uncalibrated_softmax_scores": {
+        "A": 2.107947479276139e-12,
+        "B": 3.4097858427761346e-08,
+        "C": 0.9999999659000336
+      },
+      "primary_raw_ratio_g_ge_8": 2.4855138035282502,
+      "primary_normalized_ratio_g_ge_8_clip_1e-12": 3.2792898524968463,
+      "sharing_ratio_sensitivity": {
+        "definition": {
+          "raw": "mean_g(pihat_23_mean) / mean_g(pihat_13_mean)",
+          "normalized": "mean_g[pihat_23_mean/max(alpha_2_mean-1,clip)] / mean_g[pihat_13_mean/max(alpha_1_mean-1,clip)]"
+        },
+        "primary_cutoff": 8,
+        "primary_clip": 1e-12,
+        "by_minimum_depth": {
+          "2": {
+            "n_depths": 15,
+            "raw_ratio_of_depth_means": 2.2899950547611807,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 2.817543632741789,
+              "1e-12": 2.817543632741789,
+              "1e-09": 2.817543632741789,
+              "1e-06": 2.817543632741789,
+              "1e-04": 2.817543632741789
+            },
+            "min_alpha1_minus_one": 0.13126877995642472,
+            "min_alpha2_minus_one": 0.10417050968925734
+          },
+          "4": {
+            "n_depths": 13,
+            "raw_ratio_of_depth_means": 2.376069838975556,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 3.057469017680438,
+              "1e-12": 3.057469017680438,
+              "1e-09": 3.057469017680438,
+              "1e-06": 3.057469017680438,
+              "1e-04": 3.057469017680438
+            },
+            "min_alpha1_minus_one": 0.24295890223295413,
+            "min_alpha2_minus_one": 0.19161280215370136
+          },
+          "6": {
+            "n_depths": 11,
+            "raw_ratio_of_depth_means": 2.437476357813707,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 3.1871684097973176,
+              "1e-12": 3.1871684097973176,
+              "1e-09": 3.1871684097973176,
+              "1e-06": 3.1871684097973176,
+              "1e-04": 3.1871684097973176
+            },
+            "min_alpha1_minus_one": 0.309313133079512,
+            "min_alpha2_minus_one": 0.24044581018911404
+          },
+          "8": {
+            "n_depths": 9,
+            "raw_ratio_of_depth_means": 2.4855138035282502,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 3.2792898524968463,
+              "1e-12": 3.2792898524968463,
+              "1e-09": 3.2792898524968463,
+              "1e-06": 3.2792898524968463,
+              "1e-04": 3.2792898524968463
+            },
+            "min_alpha1_minus_one": 0.35742474294424853,
+            "min_alpha2_minus_one": 0.27441436657598195
+          },
+          "10": {
+            "n_depths": 7,
+            "raw_ratio_of_depth_means": 2.52415126272905,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 3.349815801266864,
+              "1e-12": 3.349815801266864,
+              "1e-09": 3.349815801266864,
+              "1e-06": 3.349815801266864,
+              "1e-04": 3.349815801266864
+            },
+            "min_alpha1_minus_one": 0.3947780991568919,
+            "min_alpha2_minus_one": 0.30009468827240404
+          },
+          "12": {
+            "n_depths": 5,
+            "raw_ratio_of_depth_means": 2.55563719844218,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 3.4056356683183893,
+              "1e-12": 3.4056356683183893,
+              "1e-09": 3.4056356683183893,
+              "1e-06": 3.4056356683183893,
+              "1e-04": 3.4056356683183893
+            },
+            "min_alpha1_minus_one": 0.4247520884791183,
+            "min_alpha2_minus_one": 0.3203740570506235
+          },
+          "14": {
+            "n_depths": 3,
+            "raw_ratio_of_depth_means": 2.5815611090097064,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 3.4506795849156715,
+              "1e-12": 3.4506795849156715,
+              "1e-09": 3.4506795849156715,
+              "1e-06": 3.4506795849156715,
+              "1e-04": 3.4506795849156715
+            },
+            "min_alpha1_minus_one": 0.4492396227496873,
+            "min_alpha2_minus_one": 0.33682032106408744
+          }
+        }
+      }
+    },
+    {
+      "panel_id": "allopatric_control_1",
+      "kind": "allopatric_control",
+      "races": {
+        "cydno": "cyd_zel",
+        "timareta": "tim_flo",
+        "melpomene": "mel_ros"
+      },
+      "filter_and_sample_audit": {
+        "source_records_scanned": 884627,
+        "eligible_after_filters": 394377,
+        "reservoir_target": 15000,
+        "retained_records": 15000,
+        "reservoir_seed": 104,
+        "sample_ids_by_population": {
+          "cydno": [
+            "zel.CS1",
+            "zel.CS1028",
+            "zel.CS1029",
+            "zel.CS1030",
+            "zel.CS1033",
+            "zel.CS1035",
+            "zel.CS2",
+            "zel.CS2262",
+            "zel.CS273",
+            "zel.CS30"
+          ],
+          "timareta": [
+            "flo.CS12",
+            "flo.CS13",
+            "flo.CS14",
+            "flo.CS15",
+            "flo.CS2337",
+            "flo.CS2338",
+            "flo.CS2341",
+            "flo.CS2350",
+            "flo.CS2358",
+            "flo.CS2359"
+          ],
+          "melpomene": [
+            "ros.CAM1841",
+            "ros.CAM1880",
+            "ros.CAM2045",
+            "ros.CAM2059",
+            "ros.CAM2519",
+            "ros.CAM2552",
+            "ros.CJ2071",
+            "ros.CJ531",
+            "ros.CJ533",
+            "ros.CJ546"
+          ]
+        },
+        "individual_counts": {
+          "cydno": 10,
+          "timareta": 10,
+          "melpomene": 10
+        },
+        "gene_copies_if_complete": {
+          "cydno": 20,
+          "timareta": 20,
+          "melpomene": 20
+        },
+        "chromosome_counts": {
+          "chr1": 1022,
+          "chr2": 464,
+          "chr3": 593,
+          "chr4": 527,
+          "chr5": 522,
+          "chr6": 755,
+          "chr7": 837,
+          "chr8": 479,
+          "chr9": 498,
+          "chr10": 1069,
+          "chr11": 641,
+          "chr12": 951,
+          "chr13": 1000,
+          "chr14": 491,
+          "chr15": 523,
+          "chr16": 553,
+          "chr17": 820,
+          "chr18": 941,
+          "chr19": 909,
+          "chr20": 836,
+          "chr21": 569
+        },
+        "called_gene_copies_per_retained_locus": {
+          "cydno": {
+            "minimum": 16,
+            "maximum": 20,
+            "mean": 19.5856
+          },
+          "timareta": {
+            "minimum": 16,
+            "maximum": 20,
+            "mean": 19.619733333333333
+          },
+          "melpomene": {
+            "minimum": 16,
+            "maximum": 20,
+            "mean": 19.418133333333333
+          }
+        }
+      },
+      "vcf_cache": "data\\real\\heliconius\\allopatric_control_1.vcf",
+      "vcf_sha256": "10f455f37ee63a6103ec3f4d2e28d7066d7179b4814dcc3003b3628ff0ba0ead",
+      "popmap_cache": "data\\real\\heliconius\\allopatric_control_1.popmap.tsv",
+      "padze_retained_loci": 15000,
+      "depths": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "direction_call": "C",
+      "uncalibrated_softmax_scores": {
+        "A": 0.008205993868193553,
+        "B": 8.477289098449266e-06,
+        "C": 0.991785528842708
+      },
+      "primary_raw_ratio_g_ge_8": 0.6260274779430508,
+      "primary_normalized_ratio_g_ge_8_clip_1e-12": 0.82156172628019,
+      "sharing_ratio_sensitivity": {
+        "definition": {
+          "raw": "mean_g(pihat_23_mean) / mean_g(pihat_13_mean)",
+          "normalized": "mean_g[pihat_23_mean/max(alpha_2_mean-1,clip)] / mean_g[pihat_13_mean/max(alpha_1_mean-1,clip)]"
+        },
+        "primary_cutoff": 8,
+        "primary_clip": 1e-12,
+        "by_minimum_depth": {
+          "2": {
+            "n_depths": 15,
+            "raw_ratio_of_depth_means": 0.658480909348884,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 0.8671426968546593,
+              "1e-12": 0.8671426968546593,
+              "1e-09": 0.8671426968546593,
+              "1e-06": 0.8671426968546593,
+              "1e-04": 0.8671426968546593
+            },
+            "min_alpha1_minus_one": 0.1373861397775542,
+            "min_alpha2_minus_one": 0.11142954535030469
+          },
+          "4": {
+            "n_depths": 13,
+            "raw_ratio_of_depth_means": 0.6447397857665316,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 0.8412861281052331,
+              "1e-12": 0.8412861281052331,
+              "1e-09": 0.8412861281052331,
+              "1e-06": 0.8412861281052331,
+              "1e-04": 0.8412861281052331
+            },
+            "min_alpha1_minus_one": 0.2544362072476327,
+            "min_alpha2_minus_one": 0.20474337569665835
+          },
+          "6": {
+            "n_depths": 11,
+            "raw_ratio_of_depth_means": 0.634826293843421,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 0.8303645001711528,
+              "1e-12": 0.8303645001711528,
+              "1e-09": 0.8303645001711528,
+              "1e-06": 0.8303645001711528,
+              "1e-04": 0.8303645001711528
+            },
+            "min_alpha1_minus_one": 0.3243716945696231,
+            "min_alpha2_minus_one": 0.2562848137844238
+          },
+          "8": {
+            "n_depths": 9,
+            "raw_ratio_of_depth_means": 0.6260274779430508,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 0.82156172628019,
+              "1e-12": 0.82156172628019,
+              "1e-09": 0.82156172628019,
+              "1e-06": 0.82156172628019,
+              "1e-04": 0.82156172628019
+            },
+            "min_alpha1_minus_one": 0.3752184863960768,
+            "min_alpha2_minus_one": 0.2919530756641635
+          },
+          "10": {
+            "n_depths": 7,
+            "raw_ratio_of_depth_means": 0.6181263735907598,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 0.813807069857391,
+              "1e-12": 0.813807069857391,
+              "1e-09": 0.813807069857391,
+              "1e-06": 0.813807069857391,
+              "1e-04": 0.813807069857391
+            },
+            "min_alpha1_minus_one": 0.4147308396368006,
+            "min_alpha2_minus_one": 0.3189194513060658
+          },
+          "12": {
+            "n_depths": 5,
+            "raw_ratio_of_depth_means": 0.6110578867469502,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 0.806832047887064,
+              "1e-12": 0.806832047887064,
+              "1e-09": 0.806832047887064,
+              "1e-06": 0.806832047887064,
+              "1e-04": 0.806832047887064
+            },
+            "min_alpha1_minus_one": 0.4464353369471932,
+            "min_alpha2_minus_one": 0.34028862563648565
+          },
+          "14": {
+            "n_depths": 3,
+            "raw_ratio_of_depth_means": 0.6047434466344963,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 0.8004910550710991,
+              "1e-12": 0.8004910550710991,
+              "1e-09": 0.8004910550710991,
+              "1e-06": 0.8004910550710991,
+              "1e-04": 0.8004910550710991
+            },
+            "min_alpha1_minus_one": 0.47231567710124533,
+            "min_alpha2_minus_one": 0.35770314642816947
+          }
+        }
+      }
+    }
+  ],
+  "canonical_race_trio_1_leave_one_chromosome_out": [
+    {
+      "dropped_chromosome": "chr1",
+      "input_loci": 13969,
+      "padze_retained_loci": 13969,
+      "direction_call": "C",
+      "uncalibrated_softmax_scores": {
+        "A": 4.691395490372023e-13,
+        "B": 1.0430073208059363e-08,
+        "C": 0.9999999895694577
+      }
+    },
+    {
+      "dropped_chromosome": "chr2",
+      "input_loci": 14539,
+      "padze_retained_loci": 14539,
+      "direction_call": "C",
+      "uncalibrated_softmax_scores": {
+        "A": 4.025044718322656e-13,
+        "B": 1.2132487431455507e-08,
+        "C": 0.9999999878671101
+      }
+    },
+    {
+      "dropped_chromosome": "chr3",
+      "input_loci": 14418,
+      "padze_retained_loci": 14418,
+      "direction_call": "C",
+      "uncalibrated_softmax_scores": {
+        "A": 5.422961146987776e-13,
+        "B": 1.2116597542635173e-08,
+        "C": 0.9999999878828602
+      }
+    },
+    {
+      "dropped_chromosome": "chr4",
+      "input_loci": 14436,
+      "padze_retained_loci": 14436,
+      "direction_call": "C",
+      "uncalibrated_softmax_scores": {
+        "A": 7.161548484858473e-13,
+        "B": 1.2535331707749871e-08,
+        "C": 0.9999999874639521
+      }
+    },
+    {
+      "dropped_chromosome": "chr5",
+      "input_loci": 14457,
+      "padze_retained_loci": 14457,
+      "direction_call": "C",
+      "uncalibrated_softmax_scores": {
+        "A": 9.843932342783773e-13,
+        "B": 1.3970555602038671e-08,
+        "C": 0.9999999860284601
+      }
+    },
+    {
+      "dropped_chromosome": "chr6",
+      "input_loci": 14290,
+      "padze_retained_loci": 14290,
+      "direction_call": "C",
+      "uncalibrated_softmax_scores": {
+        "A": 7.430388304669394e-13,
+        "B": 1.6818194584584723e-08,
+        "C": 0.9999999831810625
+      }
+    },
+    {
+      "dropped_chromosome": "chr7",
+      "input_loci": 14162,
+      "padze_retained_loci": 14162,
+      "direction_call": "C",
+      "uncalibrated_softmax_scores": {
+        "A": 4.0051640282257015e-13,
+        "B": 1.6521847902095454e-08,
+        "C": 0.9999999834777515
+      }
+    },
+    {
+      "dropped_chromosome": "chr8",
+      "input_loci": 14496,
+      "padze_retained_loci": 14496,
+      "direction_call": "C",
+      "uncalibrated_softmax_scores": {
+        "A": 6.307421860969823e-13,
+        "B": 1.1557750760443505e-08,
+        "C": 0.9999999884416185
+      }
+    },
+    {
+      "dropped_chromosome": "chr9",
+      "input_loci": 14517,
+      "padze_retained_loci": 14517,
+      "direction_call": "C",
+      "uncalibrated_softmax_scores": {
+        "A": 7.506203838350168e-13,
+        "B": 1.3715105866154049e-08,
+        "C": 0.9999999862841435
+      }
+    },
+    {
+      "dropped_chromosome": "chr10",
+      "input_loci": 14017,
+      "padze_retained_loci": 14017,
+      "direction_call": "C",
+      "uncalibrated_softmax_scores": {
+        "A": 7.082090596408865e-13,
+        "B": 1.1991662355604297e-08,
+        "C": 0.9999999880076295
+      }
+    },
+    {
+      "dropped_chromosome": "chr11",
+      "input_loci": 14336,
+      "padze_retained_loci": 14336,
+      "direction_call": "C",
+      "uncalibrated_softmax_scores": {
+        "A": 1.1775687170863603e-12,
+        "B": 1.494100000049346e-08,
+        "C": 0.9999999850578225
+      }
+    },
+    {
+      "dropped_chromosome": "chr12",
+      "input_loci": 14068,
+      "padze_retained_loci": 14068,
+      "direction_call": "C",
+      "uncalibrated_softmax_scores": {
+        "A": 7.293267368624625e-13,
+        "B": 1.548498803867125e-08,
+        "C": 0.9999999845142826
+      }
+    },
+    {
+      "dropped_chromosome": "chr13",
+      "input_loci": 13956,
+      "padze_retained_loci": 13956,
+      "direction_call": "C",
+      "uncalibrated_softmax_scores": {
+        "A": 5.764990167695198e-13,
+        "B": 1.828426671603487e-08,
+        "C": 0.9999999817151567
+      }
+    },
+    {
+      "dropped_chromosome": "chr14",
+      "input_loci": 14473,
+      "padze_retained_loci": 14473,
+      "direction_call": "C",
+      "uncalibrated_softmax_scores": {
+        "A": 5.747694823699353e-13,
+        "B": 9.212743767486825e-09,
+        "C": 0.9999999907866816
+      }
+    },
+    {
+      "dropped_chromosome": "chr15",
+      "input_loci": 14463,
+      "padze_retained_loci": 14463,
+      "direction_call": "C",
+      "uncalibrated_softmax_scores": {
+        "A": 1.0350551004570474e-12,
+        "B": 1.2513498558135889e-08,
+        "C": 0.9999999874854663
+      }
+    },
+    {
+      "dropped_chromosome": "chr16",
+      "input_loci": 14463,
+      "padze_retained_loci": 14463,
+      "direction_call": "C",
+      "uncalibrated_softmax_scores": {
+        "A": 9.351884555637554e-13,
+        "B": 1.2180282190131776e-08,
+        "C": 0.9999999878187825
+      }
+    },
+    {
+      "dropped_chromosome": "chr17",
+      "input_loci": 14195,
+      "padze_retained_loci": 14195,
+      "direction_call": "C",
+      "uncalibrated_softmax_scores": {
+        "A": 5.665918855390402e-13,
+        "B": 1.0103922781066368e-08,
+        "C": 0.9999999898955106
+      }
+    },
+    {
+      "dropped_chromosome": "chr18",
+      "input_loci": 14080,
+      "padze_retained_loci": 14080,
+      "direction_call": "C",
+      "uncalibrated_softmax_scores": {
+        "A": 5.924382849573606e-13,
+        "B": 1.151525721169999e-08,
+        "C": 0.9999999884841503
+      }
+    },
+    {
+      "dropped_chromosome": "chr19",
+      "input_loci": 14117,
+      "padze_retained_loci": 14117,
+      "direction_call": "C",
+      "uncalibrated_softmax_scores": {
+        "A": 2.7287665047814465e-13,
+        "B": 1.0842286713163091e-08,
+        "C": 0.9999999891574404
+      }
+    },
+    {
+      "dropped_chromosome": "chr20",
+      "input_loci": 14140,
+      "padze_retained_loci": 14140,
+      "direction_call": "C",
+      "uncalibrated_softmax_scores": {
+        "A": 5.078462999481437e-13,
+        "B": 1.316912161734821e-08,
+        "C": 0.9999999868303706
+      }
+    },
+    {
+      "dropped_chromosome": "chr21",
+      "input_loci": 14408,
+      "padze_retained_loci": 14408,
+      "direction_call": "C",
+      "uncalibrated_softmax_scores": {
+        "A": 2.1104840302817464e-13,
+        "B": 9.125726206685213e-09,
+        "C": 0.9999999908740628
+      }
+    }
+  ],
+  "software": {
+    "python": "3.14.3",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "numpy": "2.4.3",
+    "scikit_learn": "1.8.0",
+    "padze": "0.1.0"
+  },
+  "analysis_script": {
+    "path": "scripts\\realdata_heliconius_robustness.py",
+    "sha256": "8d689bc8e9340853c04a1d884142af5ec530cf94e44b929fde1167cbb0d45905"
+  }
+}

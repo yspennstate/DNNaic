@@ -1,0 +1,602 @@
+{
+  "schema_version": "natural-diagnostics-mouse-v2",
+  "status": "exploratory_not_validation",
+  "biological_context": "The chr7 window overlaps Vkorc1, where spretus-to-domesticus adaptive introgression has been documented; the Harr panel and sharing ratios are not an independent direction label.",
+  "source": {
+    "vcf_url": "https://wwwuser.gwdguser.de/~evolbio/evolgen/wildmouse/vcf/AllMouse.vcf_90_recalibrated_snps_raw_indels_reheader_PopSorted.PASS.vcf.gz",
+    "tbi_url": "https://wwwuser.gwdguser.de/~evolbio/evolgen/wildmouse/vcf/AllMouse.vcf_90_recalibrated_snps_raw_indels_reheader_PopSorted.PASS.vcf.gz.tbi",
+    "genome_build": "GRCm38/mm10 (as documented by the Harr et al. wild-mouse resource)",
+    "region_1_based_inclusive": [
+      "chr7",
+      126000000,
+      129000000
+    ],
+    "cached_header_prefix": {
+      "path": "data\\real\\mouse\\wildmouse_header_prefix.bin",
+      "bytes": 1500001,
+      "sha256": "797f828bc681b3ba0f967701ac8114c3a8028450aa375b6f647d0e9582c85993"
+    },
+    "cached_tabix_index": {
+      "path": "data\\real\\mouse\\wildmouse_source.vcf.gz.tbi",
+      "bytes": 2469561,
+      "sha256": "5e4e29298f8f3a7bc3769e0f999e0c88f48a919206f60993bf3b1aba272b7747"
+    },
+    "cached_region_lines": {
+      "path": "data\\real\\mouse\\wildmouse_chr7_126000000_129000000.lines.gz",
+      "compressed_bytes": 54493700,
+      "sha256": "87733c3faf3640a542cc94e231f52d055c4af9d3b4ce390d6af53c5a09c2ba7a",
+      "source_records": 146950,
+      "fetch_audit": {
+        "complete_to_requested_end": true,
+        "http_range_extra_bytes": 88000000,
+        "last_retained_record": [
+          "chr7",
+          "128999980"
+        ]
+      }
+    }
+  },
+  "filter": {
+    "sequence": [
+      "single-base biallelic REF/ALT",
+      "at least 16 called gene copies in every one of four populations",
+      "polymorphic in each three-population panel after either P1 is omitted",
+      "one common ordered locus list selected before the cap"
+    ],
+    "source_records": 146950,
+    "single_base_biallelic": 143387,
+    "callable_all_four": 130848,
+    "polymorphic_in_both_three_population_panels": 78788,
+    "cap_after_intersection": 15000,
+    "eligible_before_cap": 78788,
+    "cap_selection": "deterministic evenly spaced indices across the ordered full intersection",
+    "retained_identical_loci": 15000,
+    "first_locus": "chr7:126000024",
+    "last_locus": "chr7:128999980"
+  },
+  "source_population_samples": {
+    "musculus": [
+      "Mmm_AFG1_396.variant7",
+      "Mmm_AFG2_413.variant7",
+      "Mmm_AFG3_416.variant7",
+      "Mmm_AFG4_424.variant7",
+      "Mmm_AFG5_435.variant7",
+      "Mmm_AFG6_444.variant7",
+      "Mmm_CZE1_CR12.variant5",
+      "Mmm_CZE2_CR13.variant5",
+      "Mmm_CZE3_CR16.variant5",
+      "Mmm_CZE4_CR23.variant5",
+      "Mmm_CZE5_CR25.variant5",
+      "Mmm_CZE6_CR29.variant5",
+      "Mmm_CZE7_CR46.variant5",
+      "Mmm_CZE8_CR59.variant5",
+      "Mmm_KAZ1_AL1.variant6",
+      "Mmm_KAZ2_AL16.variant6",
+      "Mmm_KAZ3_AL19.variant6",
+      "Mmm_KAZ4_AL33.variant6",
+      "Mmm_KAZ5_AL38.variant6",
+      "Mmm_KAZ6_AL40.variant6",
+      "Mmm_KAZ7_AL41.variant6",
+      "Mmm_KAZ8_AL42.variant6"
+    ],
+    "castaneus": [
+      "Mmc_CAST10_H36.variant8",
+      "Mmc_CAST1_H12.variant8",
+      "Mmc_CAST2_H14.variant8",
+      "Mmc_CAST3_H15.variant8",
+      "Mmc_CAST4_H24.variant8",
+      "Mmc_CAST5_H26.variant8",
+      "Mmc_CAST6_H27.variant8",
+      "Mmc_CAST7_H28.variant8",
+      "Mmc_CAST8_H30.variant8",
+      "Mmc_CAST9_H34.variant8"
+    ],
+    "domesticus": [
+      "Mmd_FRA1_14.variant",
+      "Mmd_FRA2_15B.variant",
+      "Mmd_FRA3_16B.variant",
+      "Mmd_FRA4_18B.variant",
+      "Mmd_FRA5_B2C.variant",
+      "Mmd_FRA6_C1.variant",
+      "Mmd_FRA7_E1.variant",
+      "Mmd_FRA8_F1B.variant",
+      "Mmd_GER1_TP1.variant2",
+      "Mmd_GER2_TP121B.variant2",
+      "Mmd_GER3_TP17-2.variant2",
+      "Mmd_GER4_TP3-92.variant2",
+      "Mmd_GER5_TP4a.variant2",
+      "Mmd_GER6_TP51D.variant2",
+      "Mmd_GER7_TP7-10F1A2.variant2",
+      "Mmd_GER8_TP81B.variant2",
+      "Mmd_HEL1_HG06.variant4",
+      "Mmd_HEL2_HG08.variant4",
+      "Mmd_HEL3_HG13.variant4",
+      "Mmd_IRA1_AH15.variant3",
+      "Mmd_IRA2_AH23.variant3",
+      "Mmd_IRA3_JR11.variant3",
+      "Mmd_IRA4_JR15.variant3",
+      "Mmd_IRA5_JR2-F1C.variant3",
+      "Mmd_IRA6_JR5-F1C.variant3",
+      "Mmd_IRA7_JR7-F1C.variant3",
+      "Mmd_IRA8_JR8-F1A.variant3"
+    ],
+    "spretus": [
+      "Ms_SPRE1_SP36.variant9",
+      "Ms_SPRE2_SP39.variant9",
+      "Ms_SPRE3_SP41.variant9",
+      "Ms_SPRE4_SP51.variant9",
+      "Ms_SPRE5_SP62.variant9",
+      "Ms_SPRE6_SP68.variant9",
+      "Ms_SPRE7_SP69.variant9",
+      "Ms_SPRE8_SP70.variant9"
+    ]
+  },
+  "copy_count_audit": {
+    "musculus": {
+      "individuals_in_source": 22,
+      "diploid_gene_copies_if_complete": 44,
+      "called_gene_copies_per_retained_locus_min": 16,
+      "called_gene_copies_per_retained_locus_max": 44,
+      "called_gene_copies_per_retained_locus_mean": 43.736
+    },
+    "castaneus": {
+      "individuals_in_source": 10,
+      "diploid_gene_copies_if_complete": 20,
+      "called_gene_copies_per_retained_locus_min": 16,
+      "called_gene_copies_per_retained_locus_max": 20,
+      "called_gene_copies_per_retained_locus_mean": 19.8988
+    },
+    "domesticus": {
+      "individuals_in_source": 27,
+      "diploid_gene_copies_if_complete": 54,
+      "called_gene_copies_per_retained_locus_min": 16,
+      "called_gene_copies_per_retained_locus_max": 54,
+      "called_gene_copies_per_retained_locus_mean": 53.852
+    },
+    "spretus": {
+      "individuals_in_source": 8,
+      "diploid_gene_copies_if_complete": 16,
+      "called_gene_copies_per_retained_locus_min": 16,
+      "called_gene_copies_per_retained_locus_max": 16,
+      "called_gene_copies_per_retained_locus_mean": 16.0
+    }
+  },
+  "direction_head": {
+    "training_dataset": "regen_full",
+    "training_selection": "all positive canonical replicates at every migration rate",
+    "training_n": 2700,
+    "training_class_counts": {
+      "A": 900,
+      "B": 900,
+      "C": 900
+    },
+    "representation": "mean and population SD over available depths for each of 27 non-depth coordinates",
+    "dimension": 54,
+    "model": "StandardScaler plus multinomial logistic regression (lbfgs, C=1)",
+    "softmax_interpretation": "uncalibrated out-of-distribution model score; not a probability or posterior",
+    "fit_iterations": [
+      120
+    ]
+  },
+  "panels": [
+    {
+      "p1_reference": "musculus",
+      "population_order": [
+        "musculus",
+        "domesticus",
+        "spretus"
+      ],
+      "ordered_chrom_pos_ref_alt_sha256": "cd13b8504148daeb8329dae2cd4dc96856ac72227e96855362b4e636b7d564bd",
+      "vcf_sha256": "158407c4803ef8f4b87222cebe16345f58de55c7a2acd8dc3cb3c25767e94386",
+      "vcf_cache": "data\\real\\mouse\\mouse_vkorc1_same_loci_p1_musculus.vcf",
+      "popmap_cache": "data\\real\\mouse\\mouse_vkorc1_same_loci_p1_musculus.popmap.tsv",
+      "sample_ids": [
+        "Mmm_AFG1_396.variant7",
+        "Mmm_AFG2_413.variant7",
+        "Mmm_AFG3_416.variant7",
+        "Mmm_AFG4_424.variant7",
+        "Mmm_AFG5_435.variant7",
+        "Mmm_AFG6_444.variant7",
+        "Mmm_CZE1_CR12.variant5",
+        "Mmm_CZE2_CR13.variant5",
+        "Mmm_CZE3_CR16.variant5",
+        "Mmm_CZE4_CR23.variant5",
+        "Mmm_CZE5_CR25.variant5",
+        "Mmm_CZE6_CR29.variant5",
+        "Mmm_CZE7_CR46.variant5",
+        "Mmm_CZE8_CR59.variant5",
+        "Mmm_KAZ1_AL1.variant6",
+        "Mmm_KAZ2_AL16.variant6",
+        "Mmm_KAZ3_AL19.variant6",
+        "Mmm_KAZ4_AL33.variant6",
+        "Mmm_KAZ5_AL38.variant6",
+        "Mmm_KAZ6_AL40.variant6",
+        "Mmm_KAZ7_AL41.variant6",
+        "Mmm_KAZ8_AL42.variant6",
+        "Mmd_FRA1_14.variant",
+        "Mmd_FRA2_15B.variant",
+        "Mmd_FRA3_16B.variant",
+        "Mmd_FRA4_18B.variant",
+        "Mmd_FRA5_B2C.variant",
+        "Mmd_FRA6_C1.variant",
+        "Mmd_FRA7_E1.variant",
+        "Mmd_FRA8_F1B.variant",
+        "Mmd_GER1_TP1.variant2",
+        "Mmd_GER2_TP121B.variant2",
+        "Mmd_GER3_TP17-2.variant2",
+        "Mmd_GER4_TP3-92.variant2",
+        "Mmd_GER5_TP4a.variant2",
+        "Mmd_GER6_TP51D.variant2",
+        "Mmd_GER7_TP7-10F1A2.variant2",
+        "Mmd_GER8_TP81B.variant2",
+        "Mmd_HEL1_HG06.variant4",
+        "Mmd_HEL2_HG08.variant4",
+        "Mmd_HEL3_HG13.variant4",
+        "Mmd_IRA1_AH15.variant3",
+        "Mmd_IRA2_AH23.variant3",
+        "Mmd_IRA3_JR11.variant3",
+        "Mmd_IRA4_JR15.variant3",
+        "Mmd_IRA5_JR2-F1C.variant3",
+        "Mmd_IRA6_JR5-F1C.variant3",
+        "Mmd_IRA7_JR7-F1C.variant3",
+        "Mmd_IRA8_JR8-F1A.variant3",
+        "Ms_SPRE1_SP36.variant9",
+        "Ms_SPRE2_SP39.variant9",
+        "Ms_SPRE3_SP41.variant9",
+        "Ms_SPRE4_SP51.variant9",
+        "Ms_SPRE5_SP62.variant9",
+        "Ms_SPRE6_SP68.variant9",
+        "Ms_SPRE7_SP69.variant9",
+        "Ms_SPRE8_SP70.variant9"
+      ],
+      "individual_counts": {
+        "musculus": 22,
+        "domesticus": 27,
+        "spretus": 8
+      },
+      "gene_copies_if_complete": {
+        "musculus": 44,
+        "domesticus": 54,
+        "spretus": 16
+      },
+      "retained_loci": 15000,
+      "depths": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "direction_call": "C",
+      "uncalibrated_softmax_scores": {
+        "A": 3.429545782984602e-34,
+        "B": 5.717117524935643e-21,
+        "C": 1.0
+      },
+      "primary_raw_ratio_g_ge_8": 3.831464091799088,
+      "primary_normalized_ratio_g_ge_8_clip_1e-12": 1.2537949627719396,
+      "sharing_ratio_sensitivity": {
+        "definition": {
+          "raw": "mean_g(pihat_23_mean) / mean_g(pihat_13_mean)",
+          "normalized": "mean_g[pihat_23_mean/max(alpha_2_mean-1,clip)] / mean_g[pihat_13_mean/max(alpha_1_mean-1,clip)]"
+        },
+        "primary_cutoff": 8,
+        "primary_clip": 1e-12,
+        "by_minimum_depth": {
+          "2": {
+            "n_depths": 15,
+            "raw_ratio_of_depth_means": 2.7666791903544876,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 0.8217783208849218,
+              "1e-12": 0.8217783208849218,
+              "1e-09": 0.8217783208849218,
+              "1e-06": 0.8217783208849218,
+              "1e-04": 0.8217783208849218
+            },
+            "min_alpha1_minus_one": 0.040256102983095676,
+            "min_alpha2_minus_one": 0.10338158901068928
+          },
+          "4": {
+            "n_depths": 13,
+            "raw_ratio_of_depth_means": 3.126244640282716,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 1.0045879842288248,
+              "1e-12": 1.0045879842288248,
+              "1e-09": 1.0045879842288248,
+              "1e-06": 1.0045879842288248,
+              "1e-04": 1.0045879842288248
+            },
+            "min_alpha1_minus_one": 0.07430857833659776,
+            "min_alpha2_minus_one": 0.19406579898117582
+          },
+          "6": {
+            "n_depths": 11,
+            "raw_ratio_of_depth_means": 3.474797364139015,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 1.134913391696543,
+              "1e-12": 1.134913391696543,
+              "1e-09": 1.134913391696543,
+              "1e-06": 1.134913391696543,
+              "1e-04": 1.134913391696543
+            },
+            "min_alpha1_minus_one": 0.09406065883607928,
+            "min_alpha2_minus_one": 0.25541778219555544
+          },
+          "8": {
+            "n_depths": 9,
+            "raw_ratio_of_depth_means": 3.831464091799088,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 1.2537949627719396,
+              "1e-12": 1.2537949627719396,
+              "1e-09": 1.2537949627719396,
+              "1e-06": 1.2537949627719396,
+              "1e-04": 1.2537949627719396
+            },
+            "min_alpha1_minus_one": 0.10840074352698315,
+            "min_alpha2_minus_one": 0.3053289908944694
+          },
+          "10": {
+            "n_depths": 7,
+            "raw_ratio_of_depth_means": 4.202151852295072,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 1.3692026591426096,
+              "1e-12": 1.3692026591426096,
+              "1e-09": 1.3692026591426096,
+              "1e-06": 1.3692026591426096,
+              "1e-04": 1.3692026591426096
+            },
+            "min_alpha1_minus_one": 0.11978095686326351,
+            "min_alpha2_minus_one": 0.34868131257931956
+          },
+          "12": {
+            "n_depths": 5,
+            "raw_ratio_of_depth_means": 4.589967220633925,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 1.484295434546374,
+              "1e-12": 1.484295434546374,
+              "1e-09": 1.484295434546374,
+              "1e-06": 1.484295434546374,
+              "1e-04": 1.484295434546374
+            },
+            "min_alpha1_minus_one": 0.12925431327078973,
+            "min_alpha2_minus_one": 0.38755988806266006
+          },
+          "14": {
+            "n_depths": 3,
+            "raw_ratio_of_depth_means": 4.997073116085755,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 1.6007537228993465,
+              "1e-12": 1.6007537228993465,
+              "1e-09": 1.6007537228993465,
+              "1e-06": 1.6007537228993465,
+              "1e-04": 1.6007537228993465
+            },
+            "min_alpha1_minus_one": 0.1373779149874863,
+            "min_alpha2_minus_one": 0.4230596937223494
+          }
+        }
+      },
+      "reference_heterozygosity_on_identical_loci": 0.03932269438307272,
+      "domesticus_heterozygosity_on_identical_loci": 0.10145858868931856
+    },
+    {
+      "p1_reference": "castaneus",
+      "population_order": [
+        "castaneus",
+        "domesticus",
+        "spretus"
+      ],
+      "ordered_chrom_pos_ref_alt_sha256": "cd13b8504148daeb8329dae2cd4dc96856ac72227e96855362b4e636b7d564bd",
+      "vcf_sha256": "8f498fdb69db2be088c6ea0ad8b9517296201bd3804d14b26168c030c3ec2d5d",
+      "vcf_cache": "data\\real\\mouse\\mouse_vkorc1_same_loci_p1_castaneus.vcf",
+      "popmap_cache": "data\\real\\mouse\\mouse_vkorc1_same_loci_p1_castaneus.popmap.tsv",
+      "sample_ids": [
+        "Mmc_CAST10_H36.variant8",
+        "Mmc_CAST1_H12.variant8",
+        "Mmc_CAST2_H14.variant8",
+        "Mmc_CAST3_H15.variant8",
+        "Mmc_CAST4_H24.variant8",
+        "Mmc_CAST5_H26.variant8",
+        "Mmc_CAST6_H27.variant8",
+        "Mmc_CAST7_H28.variant8",
+        "Mmc_CAST8_H30.variant8",
+        "Mmc_CAST9_H34.variant8",
+        "Mmd_FRA1_14.variant",
+        "Mmd_FRA2_15B.variant",
+        "Mmd_FRA3_16B.variant",
+        "Mmd_FRA4_18B.variant",
+        "Mmd_FRA5_B2C.variant",
+        "Mmd_FRA6_C1.variant",
+        "Mmd_FRA7_E1.variant",
+        "Mmd_FRA8_F1B.variant",
+        "Mmd_GER1_TP1.variant2",
+        "Mmd_GER2_TP121B.variant2",
+        "Mmd_GER3_TP17-2.variant2",
+        "Mmd_GER4_TP3-92.variant2",
+        "Mmd_GER5_TP4a.variant2",
+        "Mmd_GER6_TP51D.variant2",
+        "Mmd_GER7_TP7-10F1A2.variant2",
+        "Mmd_GER8_TP81B.variant2",
+        "Mmd_HEL1_HG06.variant4",
+        "Mmd_HEL2_HG08.variant4",
+        "Mmd_HEL3_HG13.variant4",
+        "Mmd_IRA1_AH15.variant3",
+        "Mmd_IRA2_AH23.variant3",
+        "Mmd_IRA3_JR11.variant3",
+        "Mmd_IRA4_JR15.variant3",
+        "Mmd_IRA5_JR2-F1C.variant3",
+        "Mmd_IRA6_JR5-F1C.variant3",
+        "Mmd_IRA7_JR7-F1C.variant3",
+        "Mmd_IRA8_JR8-F1A.variant3",
+        "Ms_SPRE1_SP36.variant9",
+        "Ms_SPRE2_SP39.variant9",
+        "Ms_SPRE3_SP41.variant9",
+        "Ms_SPRE4_SP51.variant9",
+        "Ms_SPRE5_SP62.variant9",
+        "Ms_SPRE6_SP68.variant9",
+        "Ms_SPRE7_SP69.variant9",
+        "Ms_SPRE8_SP70.variant9"
+      ],
+      "individual_counts": {
+        "castaneus": 10,
+        "domesticus": 27,
+        "spretus": 8
+      },
+      "gene_copies_if_complete": {
+        "castaneus": 20,
+        "domesticus": 54,
+        "spretus": 16
+      },
+      "retained_loci": 15000,
+      "depths": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "direction_call": "C",
+      "uncalibrated_softmax_scores": {
+        "A": 4.9904618186730145e-18,
+        "B": 1.5901371638877372e-06,
+        "C": 0.9999984098628362
+      },
+      "primary_raw_ratio_g_ge_8": 1.4417652834238062,
+      "primary_normalized_ratio_g_ge_8_clip_1e-12": 1.1070838985543212,
+      "sharing_ratio_sensitivity": {
+        "definition": {
+          "raw": "mean_g(pihat_23_mean) / mean_g(pihat_13_mean)",
+          "normalized": "mean_g[pihat_23_mean/max(alpha_2_mean-1,clip)] / mean_g[pihat_13_mean/max(alpha_1_mean-1,clip)]"
+        },
+        "primary_cutoff": 8,
+        "primary_clip": 1e-12,
+        "by_minimum_depth": {
+          "2": {
+            "n_depths": 15,
+            "raw_ratio_of_depth_means": 1.0871625049456926,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 0.8327083895466285,
+              "1e-12": 0.8327083895466285,
+              "1e-09": 0.8327083895466285,
+              "1e-06": 0.8327083895466285,
+              "1e-04": 0.8327083895466285
+            },
+            "min_alpha1_minus_one": 0.10902171826625495,
+            "min_alpha2_minus_one": 0.10338158901068928
+          },
+          "4": {
+            "n_depths": 13,
+            "raw_ratio_of_depth_means": 1.1901786328394235,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 0.934536094760822,
+              "1e-12": 0.934536094760822,
+              "1e-09": 0.934536094760822,
+              "1e-06": 0.934536094760822,
+              "1e-04": 0.934536094760822
+            },
+            "min_alpha1_minus_one": 0.19800900176535463,
+            "min_alpha2_minus_one": 0.19406579898117582
+          },
+          "6": {
+            "n_depths": 11,
+            "raw_ratio_of_depth_means": 1.3105472816725974,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 1.0221058356570938,
+              "1e-12": 1.0221058356570938,
+              "1e-09": 1.0221058356570938,
+              "1e-06": 1.0221058356570938,
+              "1e-04": 1.0221058356570938
+            },
+            "min_alpha1_minus_one": 0.24106056530156672,
+            "min_alpha2_minus_one": 0.25541778219555544
+          },
+          "8": {
+            "n_depths": 9,
+            "raw_ratio_of_depth_means": 1.4417652834238062,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 1.1070838985543212,
+              "1e-12": 1.1070838985543212,
+              "1e-09": 1.1070838985543212,
+              "1e-06": 1.1070838985543212,
+              "1e-04": 1.1070838985543212
+            },
+            "min_alpha1_minus_one": 0.2680362100484164,
+            "min_alpha2_minus_one": 0.3053289908944694
+          },
+          "10": {
+            "n_depths": 7,
+            "raw_ratio_of_depth_means": 1.5821829268811147,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 1.1917653096350702,
+              "1e-12": 1.1917653096350702,
+              "1e-09": 1.1917653096350702,
+              "1e-06": 1.1917653096350702,
+              "1e-04": 1.1917653096350702
+            },
+            "min_alpha1_minus_one": 0.2871050233363639,
+            "min_alpha2_minus_one": 0.34868131257931956
+          },
+          "12": {
+            "n_depths": 5,
+            "raw_ratio_of_depth_means": 1.7314224806818437,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 1.2773310167536294,
+              "1e-12": 1.2773310167536294,
+              "1e-09": 1.2773310167536294,
+              "1e-06": 1.2773310167536294,
+              "1e-04": 1.2773310167536294
+            },
+            "min_alpha1_minus_one": 0.30153717238042943,
+            "min_alpha2_minus_one": 0.38755988806266006
+          },
+          "14": {
+            "n_depths": 3,
+            "raw_ratio_of_depth_means": 1.8895220488163365,
+            "normalized_ratio_of_depth_means_by_alpha_clip": {
+              "no_clip": 1.3645386383353275,
+              "1e-12": 1.3645386383353275,
+              "1e-09": 1.3645386383353275,
+              "1e-06": 1.3645386383353275,
+              "1e-04": 1.3645386383353275
+            },
+            "min_alpha1_minus_one": 0.31294548331613203,
+            "min_alpha2_minus_one": 0.4230596937223494
+          }
+        }
+      },
+      "reference_heterozygosity_on_identical_loci": 0.10352681712962965,
+      "domesticus_heterozygosity_on_identical_loci": 0.10145858868931856
+    }
+  ],
+  "software": {
+    "python": "3.14.3",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "numpy": "2.4.3",
+    "scikit_learn": "1.8.0",
+    "padze": "0.1.0"
+  },
+  "analysis_script": {
+    "path": "scripts\\realdata_mouse_diversity.py",
+    "sha256": "ed6d365e7ecd41369deee15a94b83ae1d0d18257e6a6a77cd7a3f0ae9aafc2a1"
+  }
+}

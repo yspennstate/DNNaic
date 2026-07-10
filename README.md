@@ -22,12 +22,22 @@ detect-then-orient gate flags appreciable migration at ROC-AUC 0.99 with a well-
 A logistic model on the same features matches the network, as the theory predicts, so the signal
 lives in the features rather than the architecture.
 
-On real data the frozen model recovers the documented *melpomene*→*timareta* direction in the
-*Heliconius* butterfly complex, where a symmetric *D* detects the gene flow but cannot orient it.
-On the Neanderthal system it reproduces the classic excess sharing between non-Africans and the
-archaic genome, but there the gate abstains rather than orienting: with only a couple of
-high-coverage archaic genomes the rarefaction depth is far shallower than the method needs, and the
-paper is explicit about that boundary.
+A separate four-population benchmark asks the combinatorially complete question: which of all
+12 ordered donor--recipient edges generated the data? On 240 independent baseline simulations,
+ordinary logistic regression reaches 50.0% exact accuracy and training-fold-only augmentation by
+all 24 population relabellings raises it to 62.9% (chance 8.3%). The symmetry-aware model recovers
+the unordered pair at 76.3% and orients 82.5% of correctly recovered pairs. Raw RBF, MLP,
+learned-feature RBF, and Marchenko--Pastur-whitened neural-kernel variants do not beat the linear
+rule. Frozen nuisance shifts are reported, including the failures; this is a controlled scaling
+result, not a claim of universal demographic transfer.
+
+Natural data expose an important boundary. In four selected *Heliconius* geographic trios,
+Patterson's *D* and a raw pair-private contrast support excess sharing, but an intended allopatric
+control reverses the raw contrast while the frozen direction head still calls the same class at an
+uncalibrated score of 0.992. High confidence and 21/21 leave-one-chromosome stability are therefore
+systematic simulation-to-natural extrapolation, not external validation. On the Neanderthal system
+the gate instead abstains because the available archaic sample is shallow and off distribution.
+Natural direction calls require target-demography training and independent labelled controls.
 
 ## Install
 
@@ -50,7 +60,13 @@ python scripts/direction_detection.py      # per-rate direction accuracy + detec
 python scripts/moment_ablation.py          # variance-vs-mean orientation ablation
 python scripts/depth_requirement.py        # how orientation degrades at shallow rarefaction depth
 python scripts/make_figures.py             # schematic and exploratory figures
+python scripts/twelve_direction_extension.py --workers 2  # all 12 edges; CPU-only, checkpointed
 ```
+
+The 12-edge command writes its complete seed ledger, realized migration epochs, fold-overlap
+audit, uncertainty, negative controls, nuisance-transfer results, and hashes to
+`results/twelve_direction_2026_07_10/`. The committed result uses 20 independent baseline
+replicates and 8 nuisance-shift replicates per edge (624 simulations total).
 
 To regenerate the simulations from scratch instead of downloading them:
 
@@ -62,8 +78,8 @@ python scripts/simulate_demography.py --out-dir data/raw/trees --seed 12345
 Real-data analyses stream only the windows they need over HTTP range requests:
 
 ```
-python scripts/realdata_heliconius.py       # labelled adaptive introgression (butterflies)
-python scripts/realdata_heliconius_robustness.py  # direction is stable across race trios and genome-wide
+python scripts/realdata_heliconius.py       # exploratory positive-panel analysis (butterflies)
+python scripts/realdata_heliconius_robustness.py  # fixed-protocol panel/control specificity audit
 python scripts/realdata_mouse.py            # second taxon: M. spretus -> M. m. domesticus (Vkorc1)
 python scripts/realdata_mouse_depth.py      # the depth-requirement curve, measured on real mouse data
 python scripts/realdata_mouse_diversity.py  # when it works: the diversity-balance condition (mouse)

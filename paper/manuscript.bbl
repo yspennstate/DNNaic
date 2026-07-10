@@ -1,4 +1,4 @@
-\begin{thebibliography}{29}
+\begin{thebibliography}{30}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -97,6 +97,13 @@ K.~Korfmann, O.~E. Gaggiotti, and M.~Fumagalli.
 \newblock \emph{Genome Biology and Evolution}, 15\penalty0 (2):\penalty0
   evad008, 2023.
 \newblock \doi{10.1093/gbe/evad008}.
+
+\bibitem[Marchenko and Pastur(1967)]{marchenko1967distribution}
+V.~A. Marchenko and L.~A. Pastur.
+\newblock Distribution of eigenvalues for some sets of random matrices.
+\newblock \emph{Mathematics of the USSR-Sbornik}, 1\penalty0 (4):\penalty0
+  457--483, 1967.
+\newblock \doi{10.1070/SM1967v001n04ABEH001994}.
 
 \bibitem[Martin et~al.(2013)Martin, Dasmahapatra, Nadeau, Salazar, Walters,
   Simpson, Blaxter, Manica, Mallet, and Jiggins]{martin2013speciation}

@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
-"""Labelled real-data validation on the Heliconius adaptive-introgression complex.
+"""Exploratory positive-panel application to the Heliconius introgression complex.
 
 H. melpomene is the documented donor of red wing-pattern alleles to the co-mimics H. timareta and
 H. cydno (Pardo-Diaz et al. 2012; Wallbank et al. 2016; Martin et al. 2013). The trio maps to the
-caterpillar tree ((P1,P2),P3) as P1=cydno, P2=timareta, P3=melpomene, so the documented
-melpomene->timareta flow is class C. Unlike the archaic case, each species is represented by many
-individuals, so rarefaction runs to a useful depth and DNNaic itself orients the flow.
+caterpillar tree ((P1,P2),P3) as P1=cydno, P2=timareta, P3=melpomene, so that adaptive-locus
+direction corresponds to class C. This single positive panel is not a validation of the frozen
+direction head: ``realdata_heliconius_robustness.py`` shows that the intended allopatric control is
+also called C at high uncalibrated score.
 
 Input: Simon Martin's whole-genome .geno(.gz) from the ABBA_BABA_whole_genome tutorial
 (https://github.com/simonhmartin/tutorials) with a two-column sample<TAB>race popmap. Set the paths
 below or via HEL_GENO / HEL_POP. Computes Patterson's D (detects, cannot orient), builds the DNNaic
 28-D feature matrix with PADZE, applies the frozen sim-trained model (from DNNAIC_DATA/regen_full),
-and reports the model-free pair-private asymmetry. CPU only."""
+and reports the model-free pair-private asymmetry. Treat every learned score as uncalibrated and
+off-distribution. CPU only."""
 import os, gzip, json, numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import HistGradientBoostingClassifier
@@ -127,7 +129,7 @@ def main():
                gate_mean=round(float(gp.mean()), 3),
                direction_logit=dict(zip([str(c) for c in cls], [round(float(x), 3) for x in plog])),
                direction_hgb=dict(zip([str(c) for c in cls], [round(float(x), 3) for x in phgb])))
-    print(f"[heliconius] gate={res['gate_mean']} dir(logit)={res['direction_logit']} (expect class C)", flush=True)
+    print(f"[heliconius] exploratory uncalibrated gate={res['gate_mean']} dir(logit)={res['direction_logit']}", flush=True)
     json.dump(res, open(os.path.join(OUT, "heliconius_result.json"), "w"), indent=2)
 
 
