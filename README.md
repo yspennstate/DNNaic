@@ -56,7 +56,11 @@ point the loaders at them and run:
 ```
 export DNNAIC_DATA=/path/to/simulation_data
 
-python scripts/direction_detection.py      # per-rate direction accuracy + detection gate
+python scripts/direction_detection.py      # per-rate direction accuracy; detection gate scored against the zero-migration control
+python scripts/direction_curve.py          # per-rate direction with exact fixed rates and the wider rate bands reported separately
+python scripts/appreciable_gate.py         # detection gate scored against both the weak positive rates and the control, with calibration
+python scripts/matched_exposure.py         # direction with the migration exposure m*T held equal across the three classes
+python scripts/nuisance_transfer.py        # direction under held-out demographies, the model frozen before any new replicate is scored
 python scripts/moment_ablation.py          # variance-vs-mean orientation ablation
 python scripts/depth_requirement.py        # how orientation degrades at shallow rarefaction depth
 python scripts/make_figures.py             # schematic and exploratory figures
