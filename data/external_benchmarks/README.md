@@ -46,3 +46,32 @@ python scripts/external_benchmarks.py \
   --duck-root /path/to/extracted/dryad \
   --runner-vcf /path/to/coccineus.recode.vcf
 ```
+
+## Kenyan giraffe (additional positive)
+
+The Zenodo bundle accompanying Coimbra et al. contains a 126-sample VCF, the authors'
+population map and OrientAGraph tree, and exact Dsuite outputs. The committed manifest uses
+the sister reticulated groups as P1/P2 and Nubian giraffe as P3. The supplied tree therefore
+matches `((P1,P2),P3)`, and the exact author result is D=0.211001, Z=25.4689,
+f4-ratio=0.199169. OrientAGraph and the paper's asymmetric ancestry analysis support
+Nubian P3 -> Laikipia-reticulated P2, so the expected DNNaic class is C. D itself is not
+treated as directional. This is an ancient natural event and remains out of distribution;
+the paper did not find significant contemporary migration.
+
+## Rhode Island brook trout (additional null controls)
+
+Michaelides et al. release 444 fish at 16,336 SNPs, including two hatchery strains. The
+study found no significant captive-to-wild introgression overall (with one UTA individual
+showing hatchery ancestry). The two committed panels compare non-stocked AFP (P1), stocked
+BAK (P2), and either LFA or LFR hatchery fish (P3). They are specificity stress tests: the
+depth-matched gate should abstain, while the always-three-way direction score is reported
+but has no gold-standard direction. They are not presented as site-specific D=0 benchmarks.
+
+Run both additional datasets with:
+
+```bash
+python scripts/additional_external_benchmarks.py \
+  --data-root /path/to/simulation_data \
+  --giraffe-vcf /path/to/dsuite_introgression/snps.sampled.vcf \
+  --brook-vcf /path/to/BT_ALL.vcf
+```

@@ -31,5 +31,57 @@
     "license": "No data or code license declared on the OSF node or GitHub repository; link and cite, do not redistribute the VCF or source code without permission.",
     "sample_filter": "Canonical cocci_meta.txt rows marked Included for the exact Table S4 population definitions",
     "scenario_replay_caveat": "The canonical 183-sample metadata retains FrijCol_11 and excludes FrijCol_10. Several released Dsuite scenario maps instead substitute FrijCol_10 while retaining an n=19 label. This manifest follows the canonical included set and is not claimed as a verbatim Table S4 replay."
+  },
+  "kenyan_giraffe": {
+    "citation_doi": "10.1186/s12915-023-01722-y",
+    "data_doi": "10.5281/zenodo.8381750",
+    "record": "https://zenodo.org/records/8381750",
+    "download": "https://zenodo.org/api/records/8381750/files/dsuite_introgression.tar.gz/content",
+    "license": "CC-BY-4.0",
+    "archive": {
+      "file": "dsuite_introgression.tar.gz",
+      "bytes": 169856604,
+      "md5": "cdb1089460fb7aa8ca4bd8bf525d8a37",
+      "sha256": "531533164589477edecca055b1ff77afe1041e45f393841ee11bda82eb41e30d"
+    },
+    "vcf": {
+      "member": "dsuite_introgression/snps.sampled.vcf",
+      "bytes": 1334251753,
+      "sha256": "7e7f4345df0129329f99db5f05e7cd120d86e0027d3afa1bc7df80c457fb95b1"
+    },
+    "population_map": {
+      "member": "dsuite_introgression/sample_sets.txt",
+      "sha256": "8620fe6a09f6e75ce52fb3ffa089a0055b1e97fb99559005cf64888a0a5ce5b5"
+    },
+    "tree": {
+      "member": "dsuite_introgression/orientagraph.m1.r2.rooted.nwk",
+      "sha256": "e5f30cb052ec1393578d18bae01c87c5f2e3fb9dc8c32226ff15d29a2041e22f"
+    },
+    "dsuite_result": {
+      "member": "dsuite_introgression/dsuite_orientagraph-m1_BBAA.txt",
+      "sha256": "49ff16be0003a4c118cc4b9295ca254094a8c87f503aa580763d2b005eac997b",
+      "row": "Reticulated_14-18 Reticulated_8-13 Nubian_3 D=0.211001 Z=25.4689 p=2.3e-16 f4-ratio=0.199169"
+    }
+  },
+  "rhode_island_brook_trout": {
+    "citation_doi": "10.1111/fwb.70033",
+    "data_doi": "10.6084/m9.figshare.28628804.v1",
+    "record": "https://figshare.com/articles/dataset/28628804",
+    "license": "CC-BY-4.0",
+    "vcf": {
+      "download": "https://ndownloader.figshare.com/files/53115473",
+      "file": "BT_ALL.vcf",
+      "bytes": 240467834,
+      "md5": "999484d17d08a0da16431762c002bff8",
+      "sha256": "ea3754560e62c9ae22c6d1ad988c75ce31a0d0382f7aa233217e41c1fac7b69c"
+    },
+    "population_map": {
+      "download": "https://ndownloader.figshare.com/files/53115464",
+      "file": "BT_ALL_popmap.txt",
+      "bytes": 17981,
+      "md5": "f7e9a16653b6c98154f4bda3c7cf9a30",
+      "sha256": "2efbba7336469fa8169b16c5db37504a2144c83673b30a6b06be31c592fcdfa5"
+    },
+    "benchmark": "Study-wide no significant captive-to-wild introgression; one UTA individual showed hatchery ancestry. AFP is non-stocked, BAK is stocked, and LFA/LFR are the two hatchery strains."
   }
 }
