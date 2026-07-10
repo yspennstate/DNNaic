@@ -92,6 +92,7 @@ python scripts/realdata_1000g_injection.py  # injected-signal recovery on real h
 python scripts/external_benchmarks.py --help # depth-matched duck/runner-bean positive-control OOD audit
 python scripts/additional_external_benchmarks.py --help # giraffe/brook-trout transfer audit
 python scripts/further_external_benchmarks.py --help # scrub-jay and matched Malawi positive/null audit
+python scripts/directional_external_benchmarks.py --help # Ciona direction-labelled contact-zone audit
 ```
 
 The external benchmark runner records its fixed sample manifests, source/training-array hashes,
@@ -99,6 +100,8 @@ shared-polymorphic locus contract, uncalibrated scores, OOD diagnostics, and pub
 under `results/external_benchmarks_2026_07_10/`; these stress tests are not classifier validation.
 The additional bundles apply the same guardrails to giraffe, brook trout, scrub jay, and
 matched Lake Malawi positive/negative panels.
+The directional bundle adds a purpose-ascertained Ciona positive/control pair with linked-tag
+and hotspot sensitivity; it is a mechanistic transfer test, not held-out validation.
 
 ## Layout
 

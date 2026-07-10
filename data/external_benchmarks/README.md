@@ -115,3 +115,32 @@ python scripts/further_external_benchmarks.py \
   --scrub-vcf /path/to/unzipped.filtered.vcf.gz \
   --malawi-vcf /path/to/Malinsky_et_al_2018_LakeMalawiCichlids_scaffold_0.vcf.gz
 ```
+
+## Ciona (direction-labelled contact-zone stress test)
+
+Le Moan et al. support recent introduced *C. robusta* -> native
+*C. intestinalis* introgression in Southampton. The committed positive maps
+Jersey to P1, Southampton to P2, and Atlantic *C. robusta* to P3, so the gold
+orientation is class C. Poole replaces Southampton in the site-control panel;
+Jersey and Poole are absent from both source positive-call methods. Pairwise
+FST is closely matched (Jer-Sth=0.005, Jer-Poo=0.005, Sth-Poo=0.002), although
+Jersey was sampled in 2014 and the other two in 2012.
+
+The runner reports the purpose-ascertained whole VCF, the published Table-S4
+Southampton interval (`chromosome5:661065-1174846`), and the broader Figure-3
+window (`chromosome5:500000-2000000`). Positive and control panels share the
+same ordered loci in every scope. Because linked ddRAD SNPs can overweight one
+tag, both hotspot scopes also report a one-SNP-per-RAD-tag sensitivity (40 tags
+in the exact interval and 79 in the broad window). A reference-invariant
+four-population frequency contrast is recomputed; Patterson's D is not used
+because the VCF contains no defensible outgroup or ancestral allele.
+
+This is not unbiased external validation. The authors removed *C. robusta*-private
+variants, mapped reads to a *C. robusta* reference, and selected the hotspot
+because introgression was already detected. Run it with:
+
+```bash
+python scripts/directional_external_benchmarks.py \
+  --data-root /path/to/simulation_data \
+  --ciona-vcf /path/to/Ciona_data3_introgression_mac2.vcf.gz
+```

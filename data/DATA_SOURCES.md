@@ -83,5 +83,8 @@ and uncalibrated direction scores:
 - Lake Malawi cichlid matched positive/negative panels: Zenodo
   [10.5281/zenodo.4134522](https://doi.org/10.5281/zenodo.4134522),
   Malinsky et al. [10.1038/s41559-018-0717-x](https://doi.org/10.1038/s41559-018-0717-x).
+- Ciona direction-labelled contact-zone and site-control panels: Zenodo
+  [10.5281/zenodo.5346932](https://doi.org/10.5281/zenodo.5346932),
+  Le Moan et al. [10.1111/mec.16189](https://doi.org/10.1111/mec.16189).
 
 See `data/external_benchmarks/` for exact file hashes and author-derived sample manifests.

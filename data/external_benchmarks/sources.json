@@ -130,5 +130,38 @@
     },
     "supplement": "https://static-content.springer.com/esm/art%3A10.1038%2Fs41559-018-0717-x/MediaObjects/41559_2018_717_MOESM1_ESM.pdf",
     "benchmark": "Matched shared-locus positive (A. calliptera/mbuna/pelagic) and deep-benthic negative; excess sharing is not directional truth."
+  },
+  "ciona_contact_zone": {
+    "citation_doi": "10.1111/mec.16189",
+    "preprint_doi": "10.1101/2021.08.05.455260",
+    "data_doi": "10.5281/zenodo.5346932",
+    "record": "https://zenodo.org/records/5346932",
+    "license": "CC-BY-4.0",
+    "vcf": {
+      "download": "https://zenodo.org/api/records/5346932/files/Ciona_data3_introgression_mac2.vcf.gz/content",
+      "file": "Ciona_data3_introgression_mac2.vcf.gz",
+      "bytes": 109974779,
+      "md5": "5523378c6493dd835ad639963f2ad0fa",
+      "sha256": "e0a3586c11a65f5d0419b08d14827fd6cf61d2e2705dd74340137dee310a761c"
+    },
+    "source_analysis_script": {
+      "file": "HMM_log10FST+1_3norm_introgression_hotspot.R",
+      "bytes": 12504,
+      "sha256": "25d412104a80fdb6e08f0912b814d67268ba6d1b2651cb30427f2d1ae6f6809c"
+    },
+    "benchmark": {
+      "topology": "((Jer12,Sth12),CioAB)",
+      "expected_direction": "CioAB C. robusta -> Sth12 C. intestinalis (class C)",
+      "negative_control": "Poo12 replaces Sth12 and is absent from both source positive-call methods",
+      "table_s4_interval": "chromosome5:661065-1174846",
+      "figure3_window": "chromosome5:500000-2000000"
+    },
+    "caveats": [
+      "The source removed C. robusta-private variants, directly altering private-allele features.",
+      "Reads were mapped to a C. robusta reference and mapping rates differed by species.",
+      "The 51,141 ddRAD SNPs derive from 5,599 linked RAD loci.",
+      "Jersey was sampled in 2014; Southampton and Poole in 2012.",
+      "The hotspot scopes are target-selected mechanistic stress tests, not unbiased validation."
+    ]
   }
 }
