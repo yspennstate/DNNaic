@@ -176,38 +176,50 @@ def add_gate_score(panel: dict, scaler, model) -> dict:
 def run_giraffe(vcf: Path, cache: Path, cap: int, direction_head, gate_head):
     source = verify_file(vcf, GIRAFFE["bytes"], GIRAFFE["sha256"])
     manifest = MANIFEST_DIR / "giraffe_nubian_reticulated.tsv"
-    derived_vcf = cache / "giraffe.filtered.vcf"
-    derived_popmap = cache / "giraffe.filtered.popmap.tsv"
-    audit = prepare_vcf(
-        vcf,
-        manifest,
-        derived_vcf,
-        derived_popmap,
-        cap=cap,
-        seed=20260711,
-    )
     scaler, model, _ = direction_head
-    panel = score_panel(
-        "giraffe_nubian_to_laikipia_reticulated",
-        derived_vcf,
-        derived_popmap,
-        ("Reticulated_14-18", "Reticulated_8-13", "Nubian_3"),
-        audit,
-        scaler,
-        model,
-        {
-            "expected_class": "C",
-            "expected_forward_direction": "Nubian_3 (P3) -> Reticulated_8-13 (P2)",
-            "published_D": 0.211001,
-            "published_Z": 25.4689,
-            "published_p": 2.3e-16,
-            "published_f4_ratio": 0.199169,
-            "direction_basis": "OrientAGraph migration edge and asymmetric Nubian-ancestry analysis; D alone is not directional",
-            "guardrail": "ancient natural event and OOD; contemporary migration was not significant",
-        },
-    )
     gate_scaler, gate_model, _ = gate_head
-    return add_gate_score(panel, gate_scaler, gate_model), source
+    panels = []
+    for suffix, strict in (
+        ("standard_contract", False),
+        ("within_population_polymorphism", True),
+    ):
+        derived_vcf = cache / f"giraffe.{suffix}.filtered.vcf"
+        derived_popmap = cache / f"giraffe.{suffix}.filtered.popmap.tsv"
+        audit = prepare_vcf(
+            vcf,
+            manifest,
+            derived_vcf,
+            derived_popmap,
+            cap=cap,
+            seed=20260711,
+            polymorphic_within_each_population=strict,
+        )
+        panel = score_panel(
+            f"giraffe_nubian_to_laikipia_reticulated_{suffix}",
+            derived_vcf,
+            derived_popmap,
+            ("Reticulated_14-18", "Reticulated_8-13", "Nubian_3"),
+            audit,
+            scaler,
+            model,
+            {
+                "expected_class": "C",
+                "expected_forward_direction": "Nubian_3 (P3) -> Reticulated_8-13 (P2)",
+                "published_D": 0.211001,
+                "published_Z": 25.4689,
+                "published_p": 2.3e-16,
+                "published_f4_ratio": 0.199169,
+                "direction_basis": "OrientAGraph migration edge and asymmetric Nubian-ancestry analysis; D alone is not directional",
+                "guardrail": "ancient natural event and OOD; contemporary migration was not significant",
+                "locus_filter_variant": (
+                    "stricter robustness panel: both alleles observed within each population"
+                    if strict
+                    else "standard external contract: both alleles observed across the complete trio"
+                ),
+            },
+        )
+        panels.append(add_gate_score(panel, gate_scaler, gate_model))
+    return panels, source
 
 
 def run_brook_trout(vcf: Path, cache: Path, cap: int, direction_head, gate_head):
@@ -294,10 +306,10 @@ def main() -> int:
         "panels": [],
     }
     if args.giraffe_vcf:
-        panel, source = run_giraffe(
+        panels, source = run_giraffe(
             Path(args.giraffe_vcf).resolve(), cache, args.cap, direction_head, gate_head
         )
-        result["panels"].append(panel)
+        result["panels"].extend(panels)
         result["sources"]["giraffe"] = {**GIRAFFE, "verified_file": source}
     if args.brook_vcf:
         panels, source = run_brook_trout(

@@ -58,6 +58,13 @@ Nubian P3 -> Laikipia-reticulated P2, so the expected DNNaic class is C. D itsel
 treated as directional. This is an ancient natural event and remains out of distribution;
 the paper did not find significant contemporary migration.
 
+Under the standard external-data contract, 72,759 loci have at least 16 called copies per
+population and are polymorphic across the complete trio; a fixed-seed reservoir retains
+15,000. A deliberately stricter robustness panel additionally requires both alleles within
+each population, leaving 10,588 loci. The stricter count is not the primary contract: it
+removes fixed between-population differences that are valid rarefaction input. Both are
+reported so the transfer conclusion cannot hinge on this filtering choice.
+
 ## Rhode Island brook trout (additional null controls)
 
 Michaelides et al. release 444 fish at 16,336 SNPs, including two hatchery strains. The

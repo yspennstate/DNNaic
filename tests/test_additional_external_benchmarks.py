@@ -67,3 +67,10 @@ def test_giraffe_manifest_contract():
         "Nubian_3": 11,
     }
     assert len({row[0] for row in rows}) == 42
+
+
+def test_prepare_vcf_exposes_population_polymorphism_scope():
+    import inspect
+
+    signature = inspect.signature(MODULE.prepare_vcf)
+    assert signature.parameters["polymorphic_within_each_population"].default is False

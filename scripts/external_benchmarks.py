@@ -253,6 +253,7 @@ def prepare_vcf(
     min_called_copies: int = MIN_CALLED_COPIES,
     require_three_populations: bool = True,
     polymorphic_panel_manifests: tuple[Path, ...] = (),
+    polymorphic_within_each_population: bool = False,
 ) -> dict:
     """Filter a source VCF and retain a deterministic reservoir of eligible loci."""
     mapping = read_manifest(manifest, require_three=require_three_populations)
@@ -295,10 +296,21 @@ def prepare_vcf(
                     sample: 9 + output_index
                     for output_index, sample in enumerate(selected_samples)
                 }
-                polymorphic_columns = [
-                    [output_column[sample] for sample in panel_mapping]
-                    for _, panel_mapping in panel_maps
-                ]
+                if polymorphic_within_each_population:
+                    polymorphic_columns = [
+                        [
+                            output_column[sample]
+                            for sample, population in panel_mapping.items()
+                            if population == required_population
+                        ]
+                        for _, panel_mapping in panel_maps
+                        for required_population in sorted(set(panel_mapping.values()))
+                    ]
+                else:
+                    polymorphic_columns = [
+                        [output_column[sample] for sample in panel_mapping]
+                        for _, panel_mapping in panel_maps
+                    ]
                 continue
             if line.startswith("#") or not line.strip():
                 continue
@@ -392,7 +404,16 @@ def prepare_vcf(
             "variant": "single-base REF and single-base ALT; no multiallelic ALT",
             "filter": "PASS or dot (sources are author-filtered releases)",
             "minimum_called_copies_per_population": min_called_copies,
-            "polymorphism": "both REF and ALT must be called in every declared three-population panel",
+            "polymorphism": (
+                "both REF and ALT must be called within every population of every declared panel"
+                if polymorphic_within_each_population
+                else "both REF and ALT must be called across every declared three-population panel"
+            ),
+            "polymorphism_scope": (
+                "within each population"
+                if polymorphic_within_each_population
+                else "across the complete panel"
+            ),
             "polymorphic_panel_manifests": [
                 {
                     "path": str(path),
