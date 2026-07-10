@@ -26,10 +26,8 @@ POPS = ("P1", "P2", "P3")
 
 STRONG_RATE = 2.5e-4
 DATA_ROOT = Path(
-    os.environ.get(
-        "DNNAIC_SIM_DATA",
-        r"C:\Users\owner\ADZEProjects\ADZE-IntrogressionDNNs\data\simulation_data\regen_full",
-    )
+    os.environ.get("DNNAIC_SIM_DATA")
+    or os.path.join(os.environ.get("DNNAIC_DATA", "data/simulation_data"), "regen_full")
 )
 
 

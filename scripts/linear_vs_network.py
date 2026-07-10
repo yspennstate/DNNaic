@@ -26,10 +26,8 @@ from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.model_selection import StratifiedKFold, KFold
 from scipy.stats import spearmanr
 
-DATA = os.environ.get(
-    "DNNAIC_SIM_DATA",
-    r"C:\Users\owner\ADZEProjects\ADZE-IntrogressionDNNs\data\simulation_data\regen_full",
-)
+DATA = os.environ.get("DNNAIC_SIM_DATA") or os.path.join(
+    os.environ.get("DNNAIC_DATA", "data/simulation_data"), "regen_full")
 
 
 def load_54d(root):
