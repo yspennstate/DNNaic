@@ -902,7 +902,7 @@ $\mathrm{GroupKFold}(5)$ replicate split, so no replicate informs its own predic
 The added machinery does not help. On three-way direction the network reaches $73.8\%$ overall
 against the linear head's $79.0\%$, and the kernel correction leaves it essentially unchanged
 ($74.0\%$, fewer than one percent of the $2{,}700$ test labels changed); correcting the linear head
-itself with the kernel holds it at $79.0\%$. On magnitude the network matches the median-regression
+itself with the kernel holds it at $79.0\%$. The standard remedies for an underperforming network do not recover the linear head on direction either: a residual network with an explicit linear skip warm-started from the logistic solution, a linear initialization, and heavy regularization all sit at $75$--$76\%$, short of the linear head. A linear skip guarantees the linear solution only if the nonlinear path is held at zero, but at this information limit that path has only noise to fit, and training spends its capacity on that noise at a cost to test accuracy. The robust choice for direction is therefore the linear head itself. On magnitude the network matches the median-regression
 baseline in the recoverable band (appreciable mean relative error $28\%$, Spearman $0.75$ with the
 true rate) and the kernel correction does not improve it. A positive control rules out an inert
 pipeline: on synthetic data whose label is a nonlinear radius-band function of a rotated
