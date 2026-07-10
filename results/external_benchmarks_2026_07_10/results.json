@@ -490,16 +490,16 @@
           "minimum_called_copies_per_population": 16,
           "polymorphic_panel_manifests": [
             {
-              "path": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\DNNaic_datasets2\\data\\external_benchmarks\\andean_ducks.popmap.tsv",
-              "sha256": "134da10c69872cc7acc1ae0d6657ff2ea9b022e84f51b232bfbe147f25b59fb8"
+              "path": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\dnnaic-datasets2-data\\rerun_repo_final_e5fcbc6\\data\\external_benchmarks\\andean_ducks.popmap.tsv",
+              "sha256": "f91faaa94757ce830d246d79e66d1d1487787bc03a7dff896cc226fe1aee2d84"
             }
           ],
           "polymorphism": "both REF and ALT must be called in every declared three-population panel",
           "reservoir_seed": 2026071001,
           "variant": "single-base REF and single-base ALT; no multiallelic ALT"
         },
-        "manifest": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\DNNaic_datasets2\\data\\external_benchmarks\\andean_ducks.popmap.tsv",
-        "manifest_sha256": "134da10c69872cc7acc1ae0d6657ff2ea9b022e84f51b232bfbe147f25b59fb8",
+        "manifest": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\dnnaic-datasets2-data\\rerun_repo_final_e5fcbc6\\data\\external_benchmarks\\andean_ducks.popmap.tsv",
+        "manifest_sha256": "f91faaa94757ce830d246d79e66d1d1487787bc03a7dff896cc226fe1aee2d84",
         "ordered_locus_sha256": "f93c2136fbbeecbd9a2938391ace8c739277e5298f37eb7665313197119ece66",
         "population_called_copy_counts": {
           "ST_high": {
@@ -1246,16 +1246,16 @@
           "minimum_called_copies_per_population": 16,
           "polymorphic_panel_manifests": [
             {
-              "path": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\DNNaic_datasets2\\data\\external_benchmarks\\andean_ducks.popmap.tsv",
-              "sha256": "134da10c69872cc7acc1ae0d6657ff2ea9b022e84f51b232bfbe147f25b59fb8"
+              "path": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\dnnaic-datasets2-data\\rerun_repo_final_e5fcbc6\\data\\external_benchmarks\\andean_ducks.popmap.tsv",
+              "sha256": "f91faaa94757ce830d246d79e66d1d1487787bc03a7dff896cc226fe1aee2d84"
             }
           ],
           "polymorphism": "both REF and ALT must be called in every declared three-population panel",
           "reservoir_seed": 2026071002,
           "variant": "single-base REF and single-base ALT; no multiallelic ALT"
         },
-        "manifest": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\DNNaic_datasets2\\data\\external_benchmarks\\andean_ducks.popmap.tsv",
-        "manifest_sha256": "134da10c69872cc7acc1ae0d6657ff2ea9b022e84f51b232bfbe147f25b59fb8",
+        "manifest": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\dnnaic-datasets2-data\\rerun_repo_final_e5fcbc6\\data\\external_benchmarks\\andean_ducks.popmap.tsv",
+        "manifest_sha256": "f91faaa94757ce830d246d79e66d1d1487787bc03a7dff896cc226fe1aee2d84",
         "ordered_locus_sha256": "854885c8d2eaa64b2a3d14501b55ea96d085fa46216fc4489b6827936e1b0743",
         "population_called_copy_counts": {
           "ST_high": {
@@ -2008,15 +2008,15 @@
           "minimum_called_copies_per_population": 16,
           "polymorphic_panel_manifests": [
             {
-              "path": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\DNNaic_datasets2\\data\\external_benchmarks\\runner_bean_cdmx.popmap.tsv",
+              "path": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\dnnaic-datasets2-data\\rerun_repo_final_e5fcbc6\\data\\external_benchmarks\\runner_bean_cdmx.popmap.tsv",
               "sha256": "50b826bdb203dbeb8b2cc77694ebd08f82db55c9048731c0894357fea24ecd1e"
             },
             {
-              "path": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\DNNaic_datasets2\\data\\external_benchmarks\\runner_bean_tepoz.popmap.tsv",
+              "path": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\dnnaic-datasets2-data\\rerun_repo_final_e5fcbc6\\data\\external_benchmarks\\runner_bean_tepoz.popmap.tsv",
               "sha256": "f447d4fc1c106bc9f0cf0b1752d28c77c8d7c51bca2d2b50379e30e93fdeb0d9"
             },
             {
-              "path": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\DNNaic_datasets2\\data\\external_benchmarks\\runner_bean_null.popmap.tsv",
+              "path": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\dnnaic-datasets2-data\\rerun_repo_final_e5fcbc6\\data\\external_benchmarks\\runner_bean_null.popmap.tsv",
               "sha256": "1b11f46e6a85bc8b7d5daf6ddceb455293cac3f524aca3071b34a30c713e2d0c"
             }
           ],
@@ -2024,7 +2024,7 @@
           "reservoir_seed": 2026071003,
           "variant": "single-base REF and single-base ALT; no multiallelic ALT"
         },
-        "manifest": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\DNNaic_datasets2\\data\\external_benchmarks\\runner_bean_cdmx.popmap.tsv",
+        "manifest": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\dnnaic-datasets2-data\\rerun_repo_final_e5fcbc6\\data\\external_benchmarks\\runner_bean_cdmx.popmap.tsv",
         "manifest_sha256": "50b826bdb203dbeb8b2cc77694ebd08f82db55c9048731c0894357fea24ecd1e",
         "ordered_locus_sha256": "a9b48df5d9f4d9810d90239187146898e34e3a4a75989fb42795a739758a0b94",
         "population_called_copy_counts": {
@@ -2778,15 +2778,15 @@
           "minimum_called_copies_per_population": 16,
           "polymorphic_panel_manifests": [
             {
-              "path": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\DNNaic_datasets2\\data\\external_benchmarks\\runner_bean_cdmx.popmap.tsv",
+              "path": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\dnnaic-datasets2-data\\rerun_repo_final_e5fcbc6\\data\\external_benchmarks\\runner_bean_cdmx.popmap.tsv",
               "sha256": "50b826bdb203dbeb8b2cc77694ebd08f82db55c9048731c0894357fea24ecd1e"
             },
             {
-              "path": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\DNNaic_datasets2\\data\\external_benchmarks\\runner_bean_tepoz.popmap.tsv",
+              "path": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\dnnaic-datasets2-data\\rerun_repo_final_e5fcbc6\\data\\external_benchmarks\\runner_bean_tepoz.popmap.tsv",
               "sha256": "f447d4fc1c106bc9f0cf0b1752d28c77c8d7c51bca2d2b50379e30e93fdeb0d9"
             },
             {
-              "path": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\DNNaic_datasets2\\data\\external_benchmarks\\runner_bean_null.popmap.tsv",
+              "path": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\dnnaic-datasets2-data\\rerun_repo_final_e5fcbc6\\data\\external_benchmarks\\runner_bean_null.popmap.tsv",
               "sha256": "1b11f46e6a85bc8b7d5daf6ddceb455293cac3f524aca3071b34a30c713e2d0c"
             }
           ],
@@ -2794,7 +2794,7 @@
           "reservoir_seed": 2026071003,
           "variant": "single-base REF and single-base ALT; no multiallelic ALT"
         },
-        "manifest": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\DNNaic_datasets2\\data\\external_benchmarks\\runner_bean_tepoz.popmap.tsv",
+        "manifest": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\dnnaic-datasets2-data\\rerun_repo_final_e5fcbc6\\data\\external_benchmarks\\runner_bean_tepoz.popmap.tsv",
         "manifest_sha256": "f447d4fc1c106bc9f0cf0b1752d28c77c8d7c51bca2d2b50379e30e93fdeb0d9",
         "ordered_locus_sha256": "a9b48df5d9f4d9810d90239187146898e34e3a4a75989fb42795a739758a0b94",
         "population_called_copy_counts": {
@@ -3548,15 +3548,15 @@
           "minimum_called_copies_per_population": 16,
           "polymorphic_panel_manifests": [
             {
-              "path": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\DNNaic_datasets2\\data\\external_benchmarks\\runner_bean_cdmx.popmap.tsv",
+              "path": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\dnnaic-datasets2-data\\rerun_repo_final_e5fcbc6\\data\\external_benchmarks\\runner_bean_cdmx.popmap.tsv",
               "sha256": "50b826bdb203dbeb8b2cc77694ebd08f82db55c9048731c0894357fea24ecd1e"
             },
             {
-              "path": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\DNNaic_datasets2\\data\\external_benchmarks\\runner_bean_tepoz.popmap.tsv",
+              "path": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\dnnaic-datasets2-data\\rerun_repo_final_e5fcbc6\\data\\external_benchmarks\\runner_bean_tepoz.popmap.tsv",
               "sha256": "f447d4fc1c106bc9f0cf0b1752d28c77c8d7c51bca2d2b50379e30e93fdeb0d9"
             },
             {
-              "path": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\DNNaic_datasets2\\data\\external_benchmarks\\runner_bean_null.popmap.tsv",
+              "path": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\dnnaic-datasets2-data\\rerun_repo_final_e5fcbc6\\data\\external_benchmarks\\runner_bean_null.popmap.tsv",
               "sha256": "1b11f46e6a85bc8b7d5daf6ddceb455293cac3f524aca3071b34a30c713e2d0c"
             }
           ],
@@ -3564,7 +3564,7 @@
           "reservoir_seed": 2026071003,
           "variant": "single-base REF and single-base ALT; no multiallelic ALT"
         },
-        "manifest": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\DNNaic_datasets2\\data\\external_benchmarks\\runner_bean_null.popmap.tsv",
+        "manifest": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\dnnaic-datasets2-data\\rerun_repo_final_e5fcbc6\\data\\external_benchmarks\\runner_bean_null.popmap.tsv",
         "manifest_sha256": "1b11f46e6a85bc8b7d5daf6ddceb455293cac3f524aca3071b34a30c713e2d0c",
         "ordered_locus_sha256": "a9b48df5d9f4d9810d90239187146898e34e3a4a75989fb42795a739758a0b94",
         "population_called_copy_counts": {
@@ -3836,7 +3836,7 @@
     "process_priority": "BelowNormal requested on Windows",
     "python": "3.14.3 (tags/v3.14.3:323c59a, Feb  3 2026, 16:04:56) [MSC v.1944 64 bit (AMD64)]",
     "repository": {
-      "commit": "02db718226ce78f769c4bde8dba85965efd50523",
+      "commit": "e5fcbc6da7637f089fada1f2dafaa808f75b0496",
       "dirty_at_run": false
     },
     "scikit_learn": "1.8.0"

@@ -1,2 +1,4 @@
 data/external_benchmarks/*.tsv text eol=lf
 data/external_benchmarks/*.json text eol=lf
+results/external_benchmarks_2026_07_10/*.json text eol=lf
+results/external_benchmarks_2026_07_10/*.md text eol=lf
