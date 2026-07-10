@@ -10,7 +10,7 @@ import numpy as np
 REPO = Path(__file__).parents[1]
 sys.path.insert(0, str(REPO / "scripts"))
 
-from external_benchmarks import prepare_vcf  # noqa: E402
+from external_benchmarks import prepare_vcf, subset_prepared_vcf  # noqa: E402
 from dnnaic import build_matrix  # noqa: E402
 
 
@@ -64,3 +64,12 @@ def test_external_filter_is_deterministic_and_feature_compatible(tmp_path):
     assert columns[0] == "g"
     assert np.isfinite(X).all()
     assert loci.metadata.n_loci_kept == 2
+
+    subset_vcf = tmp_path / "subset.vcf"
+    subset_map = tmp_path / "subset.tsv"
+    subset = subset_prepared_vcf(
+        first_vcf, manifest, subset_vcf, subset_map, shared_audit=first
+    )
+    assert subset["ordered_locus_sha256"] == first["ordered_locus_sha256"]
+    assert subset["counts"]["retained_after_cap"] == 2
+    assert "same ordered locus intersection" in subset["comparison_locus_contract"]

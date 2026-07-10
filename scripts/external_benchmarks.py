@@ -15,6 +15,7 @@ raw sharing ratios and feature-space z diagnostics so discordance is visible.
 from __future__ import annotations
 
 import argparse
+import copy
 import gzip
 import hashlib
 import json
@@ -143,7 +144,7 @@ def ensure_runner_vcf(path: Path, download_missing: bool) -> Path:
     return path
 
 
-def read_manifest(path: Path) -> dict[str, str]:
+def read_manifest(path: Path, require_three: bool = True) -> dict[str, str]:
     mapping: dict[str, str] = {}
     for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
         line = line.strip()
@@ -158,8 +159,10 @@ def read_manifest(path: Path) -> dict[str, str]:
         if sample in mapping:
             raise ValueError(f"{path}:{number}: duplicate sample {sample}")
         mapping[sample] = population
-    if len(set(mapping.values())) != 3:
+    if require_three and len(set(mapping.values())) != 3:
         raise ValueError(f"{path}: expected exactly three populations")
+    if len(set(mapping.values())) < 3:
+        raise ValueError(f"{path}: expected at least three populations")
     return mapping
 
 
@@ -184,9 +187,10 @@ def prepare_vcf(
     cap: int,
     seed: int,
     min_called_copies: int = MIN_CALLED_COPIES,
+    require_three_populations: bool = True,
 ) -> dict:
     """Filter a source VCF and retain a deterministic reservoir of eligible loci."""
-    mapping = read_manifest(manifest)
+    mapping = read_manifest(manifest, require_three=require_three_populations)
     populations = sorted(set(mapping.values()))
     population_columns: dict[str, list[int]] = defaultdict(list)
     counters: Counter[str] = Counter()
@@ -305,6 +309,90 @@ def prepare_vcf(
     }
 
 
+def subset_prepared_vcf(
+    source_vcf: Path,
+    manifest: Path,
+    output_vcf: Path,
+    output_popmap: Path,
+    shared_audit: dict,
+) -> dict:
+    """Subset a prepared multi-population VCF without changing its fixed loci."""
+    mapping = read_manifest(manifest)
+    selected_samples: list[str] | None = None
+    selected_columns: list[int] | None = None
+    rows: list[list[str]] = []
+    with open_text(source_vcf) as handle:
+        for line in handle:
+            if line.startswith("##"):
+                continue
+            if line.startswith("#CHROM"):
+                header = line.rstrip("\r\n").split("\t")
+                source_samples = header[9:]
+                missing = sorted(set(mapping) - set(source_samples))
+                if missing:
+                    raise ValueError(f"{source_vcf}: panel samples absent from prepared VCF: {missing}")
+                selected_samples = [sample for sample in source_samples if sample in mapping]
+                selected_columns = [9 + source_samples.index(sample) for sample in selected_samples]
+                continue
+            if line.startswith("#") or not line.strip():
+                continue
+            if selected_samples is None or selected_columns is None:
+                raise ValueError(f"{source_vcf}: variant before #CHROM header")
+            fields = line.rstrip("\r\n").split("\t")
+            rows.append(fields[:9] + [fields[index] for index in selected_columns])
+    if selected_samples is None or not rows:
+        raise ValueError(f"{source_vcf}: no prepared panel rows")
+
+    output_vcf.parent.mkdir(parents=True, exist_ok=True)
+    with output_vcf.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write("##fileformat=VCFv4.2\n")
+        handle.write('##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n')
+        handle.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t")
+        handle.write("\t".join(selected_samples) + "\n")
+        for fields in rows:
+            handle.write("\t".join(fields) + "\n")
+    with output_popmap.open("w", encoding="utf-8", newline="\n") as handle:
+        for sample in selected_samples:
+            handle.write(f"{sample}\t{mapping[sample]}\n")
+
+    populations = sorted(set(mapping.values()))
+    population_columns = {
+        population: [9 + index for index, sample in enumerate(selected_samples) if mapping[sample] == population]
+        for population in populations
+    }
+    copy_counts = {}
+    for population in populations:
+        values = [
+            sum(len(called_alleles(fields[index])) for index in population_columns[population])
+            for fields in rows
+        ]
+        copy_counts[population] = {
+            "individuals": len(population_columns[population]),
+            "minimum": min(values),
+            "maximum": max(values),
+            "mean": float(np.mean(values)),
+        }
+
+    audit = copy.deepcopy(shared_audit)
+    audit["manifest"] = str(manifest)
+    audit["manifest_sha256"] = sha256_file(manifest)
+    audit["population_called_copy_counts"] = copy_counts
+    audit["comparison_locus_contract"] = (
+        "same ordered locus intersection and cap as every runner-bean positive/null panel"
+    )
+    audit["derived_vcf"] = {
+        "path": str(output_vcf),
+        "bytes": output_vcf.stat().st_size,
+        "sha256": sha256_file(output_vcf),
+    }
+    audit["derived_popmap"] = {
+        "path": str(output_popmap),
+        "bytes": output_popmap.stat().st_size,
+        "sha256": sha256_file(output_popmap),
+    }
+    return audit
+
+
 def score_panel(
     panel_id: str,
     vcf: Path,
@@ -416,6 +504,7 @@ def main() -> int:
     source_audit["runner_bean"] = verify_file(runner_vcf, RUNNER_BYTES, RUNNER_SHA256)
 
     duck_manifest = MANIFEST_DIR / "andean_ducks.popmap.tsv"
+    bean_union_manifest = MANIFEST_DIR / "runner_bean_union.popmap.tsv"
     bean_cdmx_manifest = MANIFEST_DIR / "runner_bean_cdmx.popmap.tsv"
     bean_tepoz_manifest = MANIFEST_DIR / "runner_bean_tepoz.popmap.tsv"
     bean_null_manifest = MANIFEST_DIR / "runner_bean_null.popmap.tsv"
@@ -423,6 +512,8 @@ def main() -> int:
     beta_popmap = cache_dir / "andean_ducks_beta.popmap.tsv"
     alpha_vcf = cache_dir / "andean_ducks_alpha.filtered.vcf"
     alpha_popmap = cache_dir / "andean_ducks_alpha.popmap.tsv"
+    bean_union_vcf = cache_dir / "runner_bean_union.filtered.vcf"
+    bean_union_popmap = cache_dir / "runner_bean_union.popmap.tsv"
     bean_cdmx_vcf = cache_dir / "runner_bean_cdmx.filtered.vcf"
     bean_cdmx_popmap = cache_dir / "runner_bean_cdmx.popmap.tsv"
     bean_tepoz_vcf = cache_dir / "runner_bean_tepoz.filtered.vcf"
@@ -446,29 +537,35 @@ def main() -> int:
         args.cap,
         2026071002,
     )
-    bean_cdmx_audit = prepare_vcf(
+    bean_union_audit = prepare_vcf(
         runner_vcf,
+        bean_union_manifest,
+        bean_union_vcf,
+        bean_union_popmap,
+        args.cap,
+        2026071003,
+        require_three_populations=False,
+    )
+    bean_cdmx_audit = subset_prepared_vcf(
+        bean_union_vcf,
         bean_cdmx_manifest,
         bean_cdmx_vcf,
         bean_cdmx_popmap,
-        args.cap,
-        2026071003,
+        bean_union_audit,
     )
-    bean_tepoz_audit = prepare_vcf(
-        runner_vcf,
+    bean_tepoz_audit = subset_prepared_vcf(
+        bean_union_vcf,
         bean_tepoz_manifest,
         bean_tepoz_vcf,
         bean_tepoz_popmap,
-        args.cap,
-        2026071004,
+        bean_union_audit,
     )
-    bean_null_audit = prepare_vcf(
-        runner_vcf,
+    bean_null_audit = subset_prepared_vcf(
+        bean_union_vcf,
         bean_null_manifest,
         bean_null_vcf,
         bean_null_popmap,
-        args.cap,
-        2026071005,
+        bean_union_audit,
     )
 
     scaler, model, head_audit = canonical_direction_head(data_root)
