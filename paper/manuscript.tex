@@ -868,24 +868,25 @@ the training history, with the expected attenuation when coalescence is fast and
 \subsection{A learned representation and a kernel correction do not beat the linear head}
 \label{subsec:deep-kernel}
 
-\begin{table}[t]
+\begin{table}[b]
 \centering
-\begin{tabular}{llcc}
+\begin{tabular}{llccc}
 \toprule
-Task & Metric & Linear & Network \\
+Task & Metric & Linear & Network & Boosted trees \\
 \midrule
-Direction (classification) & accuracy (\%) & \textbf{79.0} & 73.8 \\
-Magnitude (regression) & MRE (\%), appreciable & 93.1 & \textbf{27.8} \\
-Magnitude (regression) & Spearman, appreciable & 0.66 & \textbf{0.75} \\
+Direction (classification) & accuracy (\%) & \textbf{78.9} & 76.0 & --- \\
+Magnitude (regression) & MRE (\%), appreciable & 96.0 & 38.7 & \textbf{29.4} \\
+Magnitude (regression) & Spearman, appreciable & 0.68 & 0.70 & \textbf{0.75} \\
 \bottomrule
 \end{tabular}
-\caption{Linear model versus network on the two halves of the problem, under identical leakage-free
-$\mathrm{GroupKFold}(5)$ replicate splits and preprocessing. A linear head is at least as accurate as the
-network on direction---the first-order-linear classification, where our theory predicts no classifier
-beats linear---while the network substantially outperforms the linear model on magnitude, the nonlinear
-regression (lower MRE is better). The magnitude figures are one protocol (the deep-representation
-comparison, seeds shown); the network's roughly threefold advantage over linear is the robust finding,
-the exact error is not.}
+\caption{Linear model versus a network on the two halves of the problem, from one reproducible experiment
+(\texttt{scripts/linear\_vs\_network.py}): one $54$-dimensional vector per replicate (mean and standard
+deviation of the rarefaction coordinates across depths), leakage-free $5$-fold by replicate, fold-local
+scaling. On direction the linear head is the most accurate---the first-order-linear classification, where
+our theory predicts no classifier beats linear, and even a linear-skip or linear-initialised network
+underperforms it. On magnitude the nonlinear models beat the linear ridge substantially (lower MRE is
+better); gradient-boosted trees do as well as the network, so it is nonlinearity, not the network
+specifically, that helps there.}
 \label{tab:lin-vs-net}
 \end{table}
 
@@ -905,9 +906,7 @@ $\mathrm{GroupKFold}(5)$ replicate split, so no replicate informs its own predic
 The added machinery does not help. On three-way direction the network reaches $73.8\%$ overall
 against the linear head's $79.0\%$, and the kernel correction leaves it essentially unchanged
 ($74.0\%$, fewer than one percent of the $2{,}700$ test labels changed); correcting the linear head
-itself with the kernel holds it at $79.0\%$. The standard remedies for an underperforming network do not recover the linear head on direction either: a residual network with an explicit linear skip warm-started from the logistic solution, a linear initialization, and heavy regularization all sit at $75$--$76\%$, short of the linear head. A linear skip guarantees the linear solution only if the nonlinear path is held at zero, but at this information limit that path has only noise to fit, and training spends its capacity on that noise at a cost to test accuracy. The robust choice for direction is therefore the linear head itself. On magnitude the network matches the median-regression
-baseline in the recoverable band (appreciable mean relative error $28\%$, Spearman $0.75$ with the
-true rate) and the kernel correction does not improve it. A positive control rules out an inert
+itself with the kernel holds it at $79.0\%$. The standard remedies for an underperforming network do not recover the linear head on direction either: in a companion experiment (\texttt{scripts/linear\_vs\_network.py}, Table~\ref{tab:lin-vs-net}), a residual network with an explicit linear skip warm-started from the logistic solution, a linear initialization, and heavy regularization all sit at $75$--$76\%$, short of the linear head. A linear skip guarantees the linear solution only if the nonlinear path is held at zero, but at this information limit that path has only noise to fit, and training spends its capacity on that noise at a cost to test accuracy. The robust choice for direction is therefore the linear head itself. On magnitude the network and gradient-boosted trees both beat a linear model but do no better than one another (Table~\ref{tab:lin-vs-net}), and the kernel correction does not improve the network. A positive control rules out an inert
 pipeline: on synthetic data whose label is a nonlinear radius-band function of a rotated
 two-dimensional subspace, the same network lifts accuracy from the linear head's $35\%$---the
 three-way chance level---to $98\%$, and the kernel correction recovers a deliberately underfit
