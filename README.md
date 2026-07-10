@@ -89,7 +89,12 @@ python scripts/realdata_mouse_depth.py      # the depth-requirement curve, measu
 python scripts/realdata_mouse_diversity.py  # when it works: the diversity-balance condition (mouse)
 python scripts/realdata_neanderthal.py      # archaic introgression into non-Africans
 python scripts/realdata_1000g_injection.py  # injected-signal recovery on real human backgrounds
+python scripts/external_benchmarks.py --help # depth-matched duck/runner-bean positive-control OOD audit
 ```
+
+The external benchmark runner records its fixed sample manifests, source/training-array hashes,
+shared-polymorphic locus contract, uncalibrated scores, OOD diagnostics, and published controls
+under `results/external_benchmarks_2026_07_10/`; these stress tests are not classifier validation.
 
 ## Layout
 
