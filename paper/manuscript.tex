@@ -213,7 +213,7 @@ Continuous migration was introduced to explore three introgression scenarios amo
 
 We sampled migration rates in two complementary ways. First, for each non-control direction (A, B, C) we used four fixed rates---$5\times10^{-7}$, $2.5\times10^{-6}$, $5\times10^{-5}$, and $2.5\times10^{-4}$---and generated $100$ replicates at each, giving $400$ fixed-rate replicates per direction ($1{,}200$ in total).
 
-Second, to fill in the spectrum between the fixed rates, we drew $300$ additional rates from an exponential distribution with mean $2.5\times10^{-4}$, assigned each draw to a uniformly chosen non-control direction, and simulated five replicates at that rate. This yields $1{,}500$ continuously-sampled replicates ($500$ per direction) spanning a biologically plausible range of low per-generation rates and lets the network learn behaviour between the fixed grid points.
+Second, to fill in the spectrum between the fixed rates, we drew $100$ additional rates from an exponential distribution with mean $2.5\times10^{-4}$, shared across the three non-control directions, and simulated five replicates per direction at each rate. This yields $1{,}500$ continuously-sampled replicates ($500$ per direction) spanning a biologically plausible range of low per-generation rates and lets the network learn behaviour between the fixed grid points.
 
 \begin{figure}[H]
     \centering
@@ -224,7 +224,7 @@ Second, to fill in the spectrum between the fixed rates, we drew $300$ additiona
 
 For the no-migration control (direction D) we simulated $500$ replicates at zero rate. The full dataset therefore comprises $3{,}200$ replicates---$900$ each for directions A, B, and C and $500$ controls---and is archived, together with the evaluation code, at a public Zenodo record~\citep{delcastillo2026data}.
 
-Each simulation simulated individuals with 1 Mbp with a uniform recombination rate of $1.78 \times 10^{-8}$ per site per generation. Ancestral histories were generated using sim\_ancestry, followed by the introduction of neutral mutations at a rate of $2 \times 10^{-8}$ per site. At the end of each simulation, we sampled 200 individuals from each population, saved in .trees format and converted to .stru format for downstream PADZE analysis.
+Each simulation simulated individuals with 1 Mbp with a uniform recombination rate of $1.78 \times 10^{-8}$ per site per generation. Ancestral histories were generated using sim\_ancestry, followed by the introduction of neutral mutations at a rate of $2 \times 10^{-8}$ per site. At the end of each simulation, we sampled 200 gene copies (haploid, ploidy 1) from each population, saved in .trees format and converted to .stru format for downstream PADZE analysis.
 
 
 \subsection{Allelic Rarefaction Analysis with PADZE}
@@ -324,7 +324,7 @@ g,\,
 x^{*(j)}_g := \left( \mu_{x^{(j)}_g},\ \sigma^2_{x^{(j)}_g},\ \mathrm{SE}_{x^{(j)}_g} \right)
 \]
 
-In our simulation study, we sampled 200 individuals at the end of each replicate from each of the three populations. Thus, running a PADZE analysis on one replicate results in 198 individual allelic richness vectors, one for each standardized sample size $g \in [2, 199]$:
+In our simulation study, we sampled 200 gene copies (haploid) at the end of each replicate from each of the three populations. Thus, running a PADZE analysis on one replicate results in 198 individual allelic richness vectors, one for each standardized sample size $g \in [2, 199]$:
 
 \[
 \begin{aligned}
@@ -346,8 +346,8 @@ standardized-depth allelic richness, private allelic richness, and generalized
 combination-private richness \citep{szpiech2008adze}, all built on the rarefaction
 estimator for the expected number of distinct (or privately held) alleles at a fixed
 subsample depth \citep{kalinowski2004counting}. It retains the classical ADZE mean,
-variance, and standard-error outputs and additionally exposes the across-loci skewness
-and excess kurtosis used as features here. The package reads VCF directly (as well as
+variance, and standard-error outputs; only these three moments (mean, variance, and standard
+error) enter the feature set used here. The package reads VCF directly (as well as
 the original STRUCTURE format, for parity testing), ships a documented Python API and a
 command-line tool, and requires only \textsc{Python} and \textsc{NumPy}, with no
 compilation step.
@@ -647,7 +647,7 @@ replicate. We therefore evaluate DNNaic by ground-truth replicate identity: the 
 PADZE feature vectors are grouped by their originating replicate and split with
 $\mathrm{GroupKFold}(5)$, so no simulated genealogy is ever shared between training and test. The
 benchmark below uses $3{,}200$ true replicate groups---direction classes A/B/C together with a
-zero-migration control D---with per-replicate probability aggregation and six independent random
+zero-migration control D---with per-replicate probability aggregation and three independent random
 seeds. The feature arrays, replicate labels, and evaluation code are archived at a public Zenodo
 record~\citep{delcastillo2026data}.
 
@@ -664,7 +664,7 @@ is stronger still at the informative rates, $71.6\%$ at $5\times10^{-5}$ and $10
 fixed rate.
 Averaged over the strong-migration band---rate $\ge 2.5\times10^{-4}$, which we call
 \emph{appreciable} and which also collects the higher continuously-sampled rates---the accuracy is
-$99.7\%$ (six-seed mean, standard deviation $0.1\%$); averaged over all positive rates it is
+$99.7\%$ (three-seed mean, standard deviation $0.1\%$); averaged over all positive rates it is
 $75.6\%$. The steep rise near $2.5\times10^{-4}$ is not a tuning artifact but the directional
 shadow of the Fisher threshold $m_\star$ (Corollary~\ref{cor:appreciable-threshold}): below it the
 first-order signal $m\Delta_\beta$ that separates directions (Proposition~\ref{prop:linear-optimal})
@@ -675,7 +675,7 @@ smallest rates.
   \centering
   \safeincludegraphics[width=0.6\linewidth]{figures/fig_direction_by_rate.pdf}
   \caption{\textbf{Direction accuracy rises to the Fisher threshold.} Three-way direction accuracy
-  (leakage-controlled, six-seed mean) climbs monotonically with the per-generation migration rate,
+  (leakage-controlled, three-seed mean) climbs monotonically with the per-generation migration rate,
   from the $33\%$ chance level at the smallest rates to $96.6\%$ at the largest fixed rate; the shaded
   band marks the appreciable regime (rate $\ge 2.5\times10^{-4}$). The decline below the threshold is
   the directional shadow of the Fisher-information limit (Corollary~\ref{cor:appreciable-threshold}).}
@@ -700,7 +700,7 @@ all positive rates & 75.6 & \textbf{78.1} \\
 \end{tabular}
 \caption{\textbf{Three-way direction accuracy under the replicate-aware split}
 ($\mathrm{GroupKFold}(5)$ on $3{,}200$ true replicate groups; three-way chance $33\%$). The
-boosted/network column is the six-seed figure of Section~\ref{subsec:benchmarks}; the linear column
+boosted/network column is the three-seed figure of Section~\ref{subsec:benchmarks}; the linear column
 is a logistic model under the identical leakage-free protocol. Accuracy rises monotonically with the
 migration rate, and the Fisher-optimal linear head (Proposition~\ref{prop:linear-optimal}) is
 stronger at the informative rates---$71.6\%$ versus $55.8\%$ at $5\times10^{-5}$ and $100\%$ at the
@@ -724,7 +724,7 @@ it perfect on the replicates retained. This is the usable form of the method: it
 only where the signal is present and abstains where it is not.
 
 Two checks confirm the result is a property of the data rather than of a single model. The accuracy
-is stable across all six seeds (standard deviations at or below $0.3\%$), and an independent
+is stable across all three seeds (standard deviations at or below $0.3\%$), and an independent
 estimator built from a different software stack---an \texttt{sklearn} gradient-boosted classifier
 under the identical leakage-free protocol---reproduces the figures to within a point (appreciable
 gate AUC $0.99$, appreciable direction $99.8\%$, overall $74.7\%$, and the same per-rate decay).
