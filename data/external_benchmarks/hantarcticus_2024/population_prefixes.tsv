@@ -1,0 +1,13 @@
+vcf_prefix	VCF_n	README_locality	paper_model_acronym	benchmark_site	mapping_status	discrepancy_note
+HAS	2	Signy Island	SIG	SIG	author_README	Outside the ROMS model domain and excluded from benchmark panels.
+HA	9	Fildes Bay	FIB	FIB	author_README	The paper Table 1 count is 9 and excludes the separate HAC block.
+HAC	10	Fildes Bay	FIB	FIB	author_README	Present in the 143-column VCF but absent from the 133-sample paper Table 1 totals.
+HAP	12	Chile Bay	CHB	CHB	author_README	None.
+HAD	18	Deception Island	DIS	DIS	author_README	None.
+HAO	20	Bransfield Strait	BST	BST	author_README	None.
+HGR	2	Green Reef	GRE	GRE	VCF_prefix_plus_locality_reconstruction	README says HGE, but the released VCF columns are HGR_01 and HGR_02.
+HFH	18	Foyn Harbour	FHA	FHA	author_README	None.
+HAL	13	Port Lockroy	PLO	PLO	author_README	Genomic locality omitted from the ROMS release points.
+HAY	10	Doumer Island	DOI	DOI	author_README	None.
+HAR	20	Alexander Island	AIS	AIS	cross_source_GBIF_reconstruction	README says Alexander Island, but matching project occurrences place the released HAR identifiers in the Adelaide Island/Rothera region used as AIS by the paper and model.
+HLT	9	Horseshoe Island	HOS	HOS	author_README	None.

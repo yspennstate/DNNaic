@@ -1,0 +1,66 @@
+{
+  "data_doi": "10.5061/dryad.b5mkkwhjk",
+  "dryad_dataset_id": 113899,
+  "dryad_version_id": 292109,
+  "dryad_version_number": 5,
+  "license": "CC0-1.0",
+  "publication_doi": "10.1111/mec.17360",
+  "publication_date": "2024-04-24",
+  "freshness_audit": {
+    "checked_through": "2026-07-11",
+    "status": "latest_peer_reviewed_species_specific_population_genomic_plus_biophysical_connectivity_study",
+    "correction_or_retraction_found": false,
+    "independent_directional_reanalysis_found": false,
+    "newer_species_genomics_not_connectivity": "Martelossi et al. 2026 bioRxiv phased assembly preprint, DOI 10.64898/2026.04.21.719633",
+    "later_cross_taxon_context": "Bruning et al. 2026 Scientific Reports, DOI 10.1038/s41598-026-47577-5, characterizes the cited H. antarcticus structure as subtle with generally high gene flow but does not reanalyse these data.",
+    "guardrail": "Latest connectivity study does not mean latest species genomic resource, and no later work supplies gold directional truth."
+  },
+  "files": {
+    "vcf": {
+      "name": "Hantarcticus_20778_143_neutralSNPs.vcf",
+      "bytes": 12581530,
+      "sha256": "48d832ade62ef3ad21ced7869e6f2a9e5c418593978e6260725be0ba02f998a5",
+      "dryad_file_id": 3121390,
+      "zenodo_mirror_download": "https://zenodo.org/api/records/11109021/files/Hantarcticus_20778_143_neutralSNPs.vcf/content"
+    },
+    "biophysical_matrices": {
+      "name": "biophysical_matrices_Hantarcticus.zip",
+      "bytes": 3705582,
+      "sha256": "3ac56229b68ff9c77de9517015e52dfa766bc3e5590cd4b5e502e8a6aefb3456",
+      "dryad_file_id": 3121392,
+      "zenodo_mirror_download": "https://zenodo.org/api/records/11109021/files/biophysical_matrices_Hantarcticus.zip/content"
+    },
+    "readme": {
+      "name": "README.md",
+      "bytes": 6358,
+      "sha256": "55464f867352d1f99db2fcabdd43e48efb524525667400396d99815cf8068bdc",
+      "dryad_file_id": 3121394,
+      "zenodo_mirror_download": "https://zenodo.org/api/records/11109021/files/README.md/content"
+    }
+  },
+  "records": {
+    "dryad": "https://datadryad.org/dataset/doi:10.5061/dryad.b5mkkwhjk",
+    "zenodo_access_mirror": "https://zenodo.org/records/11109021",
+    "pubmed": "https://pubmed.ncbi.nlm.nih.gov/38656687/",
+    "thesis": "https://repositorio.uchile.cl/handle/2250/196912",
+    "current_paper_connectivity_figure": "https://www.researchgate.net/figure/Connectivity-matrix-C-that-is-the-final-scenario-at-day-100-from-biophysical_fig3_380067468",
+    "current_paper_structure_figure": "https://www.researchgate.net/figure/Genetic-structure-of-neutral-SNP-loci-of-Hantarcticus-along-the-Antarctic-Peninsula_fig4_380067468",
+    "gbif_project_dataset": "https://www.gbif.org/dataset/ef2497c9-3b6b-4468-905d-430c87bd45ca",
+    "gbif_occurrence_query": "https://api.gbif.org/v1/occurrence/search?dataset_key=ef2497c9-3b6b-4468-905d-430c87bd45ca&scientific_name=Harpagifer%20antarcticus"
+  },
+  "mapping_guardrails": {
+    "status": "prefix_mapping_with_cross_source_corrections",
+    "sample_order_sha256": "68545e930910390cf662179939afdc1c5073a42cce269ee485cfc93991be3bcd",
+    "locus_semantic_sha256": "979472625148268308c23f592bb792b05955143252149af992a63f008782718e",
+    "known_discrepancies": [
+      "The README says HGE for Green Reef, while the released VCF uses HGR.",
+      "The README says HAR is Alexander Island; matching occurrences from the same author project place HAR identifiers in the Adelaide Island/Rothera region represented as AIS in the paper and ROMS model.",
+      "The 143-column VCF contains 10 HAC Fildes Bay samples omitted from the 133-sample paper Table 1 totals.",
+      "The archived matrices do not embed site labels. Their old-ten-plus-GRE/HOS order and the current paper figure's different display permutation are reconstructed by exact cell-value cross-checks against labelled thesis and current-paper figures."
+    ]
+  },
+  "normalization_guardrail": {
+    "status": "published_implementation_resolved_but_prose_conflicts",
+    "detail": "Every inspected current-paper Figure 3 cell exactly equals the seasonal ten-run mean day-100 D count. Because 100 particles were released from each origin per run, cells are percentage points of source releases. The methods prose instead reads like an origin share conditional on destination. The benchmark treats D/100 as the published implementation and reports destination-conditional shares only as a semantic sensitivity; neither is genomic migration truth."
+  }
+}

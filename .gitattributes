@@ -21,3 +21,7 @@ data/external_benchmarks/harpagifer/*.tsv text eol=lf
 data/external_benchmarks/harpagifer/*.json text eol=lf
 results/harpagifer_external_benchmark_2026_07_11/*.json text eol=lf
 results/harpagifer_external_benchmark_2026_07_11/*.md text eol=lf
+data/external_benchmarks/hantarcticus_2024/*.tsv text eol=lf
+data/external_benchmarks/hantarcticus_2024/*.json text eol=lf
+results/hantarcticus_2024_external_benchmark_2026_07_11/*.json text eol=lf
+results/hantarcticus_2024_external_benchmark_2026_07_11/*.md text eol=lf

@@ -328,7 +328,56 @@ python scripts/harpagifer_external_benchmark.py \
   --source-vcf /path/to/Hbi_Hpal_118_2993_6May19_GEO.vcf
 ```
 
-Bernal-Duran et al. (2024; DOI 10.1111/mec.17360) provide a separate
-H. antarcticus system with 143 fish, 20,778 neutral SNPs, and independent ROMS
-particle-connectivity matrices. It does not validate the 2022 label, but is a
-promising independent next benchmark.
+## 2024 H. antarcticus (independent biophysical direction stress test)
+
+Bernal-Duran et al. (2024; DOI 10.1111/mec.17360) released 143 fish, 20,778
+source-defined neutral SNPs, and raw ROMS particle matrices. Two topology-
+compatible directions are frozen before DNNaic scoring: DOI (P1) to FHA (P2),
+with HOS as P3, and the weaker AIS (P1) to HOS (P2), with DOI as P3. The
+released archive yields four-season means of 2.30 versus 0.25 percentage points
+of source releases for DOI/FHA and 1.25 versus 0.325 for AIS/HOS. Each forward
+edge exceeds its reciprocal in all four simulated seasons.
+
+As of 2026-07-11 this remains the latest peer-reviewed species-specific study
+combining population genomics with biophysical connectivity. No correction,
+retraction, or independent directional reanalysis was found. A newer 2026
+phased-assembly preprint is a genomic resource, but does not reanalyse these
+populations or their connectivity. A later cross-taxon WAP study describes the
+cited structure as subtle/high-gene-flow context; it likewise does not validate
+any pairwise direction.
+
+The ROMS matrices are numerically independent of the SNPs, but they represent
+potential passive-larval settlement in 2008--2012, not realized historical
+gene flow or introgression. The two comparisons share one oceanographic system
+and only test candidate class A. They are correlated qualitative OOD stress
+tests, not accuracy trials; there is no historical zero-flow null.
+
+The runner audits several source defects explicitly. The archive stores the
+old ten-site order with GRE/HOS appended, whereas the paper figure displays a
+different permutation. The README says HGE although the VCF uses HGR for Green
+Reef, and says HAR=Alexander although same-project GBIF occurrences place the
+HAR samples around Adelaide/Rothera, matching the paper/model AIS group. The
+VCF also contains ten HAC Fildes samples omitted from the paper's 133-sample
+Table 1 totals.
+
+Every current-paper Figure 3 cell equals the ten-run mean day-100 dispersal
+count. With 100 particles released per origin/run, those values are percentage
+points of source releases. The prose reads like destination-conditional
+normalization, so the runner records that alternative only as a semantic
+sensitivity. It never substitutes the different 2023 thesis values for the
+current 2024 result.
+
+All VCF loci have artificial `CHROM=0`, and the Tassel header states that the
+unknown reference was encoded as the global major allele. Physical linkage is
+unavailable, REF is not ancestral, and uncertainty is a naive IID-locus
+sensitivity only. Both standard and within-population-polymorphic scopes are
+run; all fish are already below 25% missingness, so a sample-missingness view
+would be identical. Run:
+
+```bash
+python scripts/hantarcticus_2024_external_benchmark.py \
+  --data-root /path/to/simulation_data \
+  --source-vcf /path/to/Hantarcticus_20778_143_neutralSNPs.vcf \
+  --matrices-zip /path/to/biophysical_matrices_Hantarcticus.zip \
+  --source-readme /path/to/README.md
+```
