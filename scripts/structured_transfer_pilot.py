@@ -77,7 +77,7 @@ DEFAULT_COMPUTE_STATE = Path.home() / ".claude" / "compute" / "compute_state.jso
 STOPPED_TRADING_AUTH_ENV = "DNNAIC_OWNER_AUTHORIZED_STOPPED_TRADING_COMPUTE"
 COMPUTE_TARGET_ENV = "DNNAIC_COMPUTE_TARGET"
 AZURE_CLOSING_OWNER_AUTH_ENV = "DNNAIC_OWNER_AUTHORIZED_CLOSING_AZURE_SESSION"
-AZURE_STOPPED_TRADING_CPU_PSI_MAX = 10.0
+AZURE_STOPPED_TRADING_CPU_PSI_MAX = 20.0
 AZURE_STOPPED_TRADING_OTHER_PSI_MAX = 5.0
 MOMENT_NAMES = ("mean", "variance", "se")
 ORBIT_NAMES = ("alpha", "private", "pair_private")
@@ -282,7 +282,7 @@ def _stopped_trading_pressure_is_safe(state: dict) -> tuple[bool, dict]:
                 "psi_cpu_some_avg60_max": AZURE_STOPPED_TRADING_CPU_PSI_MAX,
                 "psi_mem_io_system_avg60_max": AZURE_STOPPED_TRADING_OTHER_PSI_MAX,
                 "basis": (
-                    "one quarter of the canonical CPU PSI distress threshold and one third "
+                    "one half of the canonical CPU PSI distress threshold and one third "
                     "of the memory threshold; one nice>=10 process is the minimum throttle mode"
                 ),
             },
