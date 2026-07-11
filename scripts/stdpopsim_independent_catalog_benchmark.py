@@ -1379,11 +1379,11 @@ def require_safe_execution_target(
     limit_replicates: int | None,
     operating_system: str = os.name,
 ) -> None:
-    full_or_unlimited = not simulate_only or limit_replicates is None
-    if full_or_unlimited and (compute_target != "azure" or operating_system == "nt"):
+    bounded_smoke = simulate_only and limit_replicates == 1
+    if not bounded_smoke and (compute_target != "azure" or operating_system == "nt"):
         raise ValueError(
-            "full or unlimited independent-catalog execution is Azure-only; use a Linux "
-            "Azure worker with --compute-target azure"
+            "all independent-catalog execution except the one-replicate smoke is Azure-only; "
+            "use a Linux Azure worker with --compute-target azure"
         )
 
 

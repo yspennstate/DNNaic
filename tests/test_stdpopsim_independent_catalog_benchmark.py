@@ -165,6 +165,14 @@ def test_full_execution_is_rejected_off_azure_but_bounded_smoke_is_allowed():
         benchmark.require_safe_execution_target(
             "azure", simulate_only=False, limit_replicates=None, operating_system="nt"
         )
+    for limit in (2, 29, benchmark.DEFAULT_PAIRS_PER_PANEL):
+        with pytest.raises(ValueError, match="Azure-only"):
+            benchmark.require_safe_execution_target(
+                "local",
+                simulate_only=True,
+                limit_replicates=limit,
+                operating_system="nt",
+            )
     benchmark.require_safe_execution_target(
         "azure", simulate_only=False, limit_replicates=None, operating_system="posix"
     )
