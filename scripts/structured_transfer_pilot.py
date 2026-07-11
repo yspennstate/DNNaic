@@ -77,6 +77,8 @@ DEFAULT_COMPUTE_STATE = Path.home() / ".claude" / "compute" / "compute_state.jso
 STOPPED_TRADING_AUTH_ENV = "DNNAIC_OWNER_AUTHORIZED_STOPPED_TRADING_COMPUTE"
 COMPUTE_TARGET_ENV = "DNNAIC_COMPUTE_TARGET"
 AZURE_CLOSING_OWNER_AUTH_ENV = "DNNAIC_OWNER_AUTHORIZED_CLOSING_AZURE_SESSION"
+AZURE_STOPPED_TRADING_CPU_PSI_MAX = 10.0
+AZURE_STOPPED_TRADING_OTHER_PSI_MAX = 5.0
 MOMENT_NAMES = ("mean", "variance", "se")
 ORBIT_NAMES = ("alpha", "private", "pair_private")
 COMPOSITION_NEGATIVE_TOLERANCE = 1e-10
@@ -276,6 +278,14 @@ def _stopped_trading_pressure_is_safe(state: dict) -> tuple[bool, dict]:
             "psi_io_some_avg60": _safe_metric(health.get("psi_io_some_avg60")),
             "sys_slice_psi_avg60": _safe_metric(health.get("sys_slice_psi_avg60")),
             "mem_avail_mb": _safe_metric(health.get("mem_avail_mb"), integer=True),
+            "pressure_thresholds": {
+                "psi_cpu_some_avg60_max": AZURE_STOPPED_TRADING_CPU_PSI_MAX,
+                "psi_mem_io_system_avg60_max": AZURE_STOPPED_TRADING_OTHER_PSI_MAX,
+                "basis": (
+                    "one quarter of the canonical CPU PSI distress threshold and one third "
+                    "of the memory threshold; one nice>=10 process is the minimum throttle mode"
+                ),
+            },
         }
         safe = (
             health.get("status") == "distress"
@@ -286,10 +296,10 @@ def _stopped_trading_pressure_is_safe(state: dict) -> tuple[bool, dict]:
             )
             and len(reasons) == 1
             and str(reasons[0]).startswith("trading_unit_not_active:")
-            and evidence["psi_cpu_some_avg60"] <= 0.5
-            and evidence["psi_mem_some_avg60"] <= 0.5
-            and evidence["psi_io_some_avg60"] <= 0.5
-            and evidence["sys_slice_psi_avg60"] <= 0.5
+            and evidence["psi_cpu_some_avg60"] <= AZURE_STOPPED_TRADING_CPU_PSI_MAX
+            and evidence["psi_mem_some_avg60"] <= AZURE_STOPPED_TRADING_OTHER_PSI_MAX
+            and evidence["psi_io_some_avg60"] <= AZURE_STOPPED_TRADING_OTHER_PSI_MAX
+            and evidence["sys_slice_psi_avg60"] <= AZURE_STOPPED_TRADING_OTHER_PSI_MAX
             and evidence["mem_avail_mb"] >= 8_192
         )
         return bool(safe), evidence

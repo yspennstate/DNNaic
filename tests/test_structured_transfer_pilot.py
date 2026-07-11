@@ -353,7 +353,9 @@ def test_compute_gate_allows_only_pressure_safe_owner_authorized_stopped_trading
     with pytest.raises(RuntimeError, match="distress"):
         pilot.compute_gate(path)
     state["owner_active"] = False
-    state["azure"]["psi_cpu_some_avg60"] = 1.0
+    state["azure"]["psi_cpu_some_avg60"] = (
+        pilot.AZURE_STOPPED_TRADING_CPU_PSI_MAX + 0.01
+    )
     path.write_text(json.dumps(state), encoding="utf-8")
     assert pilot.compute_gate(path)["pressure_evidence"]["compute_target"] == "local"
     monkeypatch.setenv(pilot.COMPUTE_TARGET_ENV, "azure")
@@ -404,6 +406,15 @@ def test_direct_azure_health_requires_exact_host_idle_owner_and_finite_pressure(
     path.write_text(json.dumps(health), encoding="utf-8")
     with pytest.raises(RuntimeError, match="distress"):
         pilot.compute_gate(path)
+    health["psi_cpu_some_avg60"] = pilot.AZURE_STOPPED_TRADING_CPU_PSI_MAX + 0.01
+    path.write_text(json.dumps(health), encoding="utf-8")
+    with pytest.raises(RuntimeError, match="distress"):
+        pilot.compute_gate(path)
+    health["psi_cpu_some_avg60"] = pilot.AZURE_STOPPED_TRADING_CPU_PSI_MAX
+    path.write_text(json.dumps(health), encoding="utf-8")
+    assert pilot.compute_gate(path)["decision"].startswith(
+        "proceed_owner_authorized_stopped_trading"
+    )
     health["psi_cpu_some_avg60"] = 0.0
     health["owner_rdp_active"] = True
     path.write_text(json.dumps(health), encoding="utf-8")
