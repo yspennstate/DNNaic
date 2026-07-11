@@ -1,0 +1,73 @@
+{
+  "schema_version": "dnnaic-dingo-weeks-2025-source-v1",
+  "record": "https://figshare.com/articles/online_resource/27022555",
+  "data_doi": "10.6084/m9.figshare.27022555.v1",
+  "figshare_article_id": 27022555,
+  "version": 1,
+  "published_date": "2024-10-01",
+  "license": "CC-BY-4.0",
+  "paper": {
+    "url": "https://academic.oup.com/evlett/article/9/1/1/7828091",
+    "doi": "10.1093/evlett/qrae057",
+    "title": "Genetic structure and common ancestry expose the dingo-dog hybrid myth",
+    "journal": "Evolution Letters",
+    "volume_pages": "9(1):1-12",
+    "online_publication_date": "2024-10-19",
+    "issue_date": "2025-02"
+  },
+  "files": {
+    "vcf": {
+      "id": 49199059,
+      "key": "Weeks_etal_434.vcf.gz",
+      "url": "https://ndownloader.figshare.com/files/49199059",
+      "bytes": 5266043,
+      "md5": "cc3a6f753726c289cbcb84842ba1ed80",
+      "sha256": "42620f03b3768dc71617f198372a09ff4d42e4654d30c79fc960b972ac7b8125"
+    },
+    "metadata": {
+      "id": 49199065,
+      "key": "Weeks_meta_434.txt",
+      "url": "https://ndownloader.figshare.com/files/49199065",
+      "bytes": 9848,
+      "md5": "3e77e058c1f3dd7aee1ad832ef382e2f",
+      "sha256": "d7cc4fe11dc36d56a52221d648ecb4da1cab878db42e0abfc324ffc139315acb"
+    },
+    "geolocation": {
+      "id": 49199062,
+      "key": "Weeks_meta_geolocation_434.txt",
+      "url": "https://ndownloader.figshare.com/files/49199062",
+      "bytes": 16212,
+      "md5": "d6ac2d30ed054378f4098d6b8f19c516",
+      "sha256": "4ee68f300e14674f771a85264cbdd281033b9ec0292862738c6b993a736ce821"
+    }
+  },
+  "analysis_design": {
+    "P1": "alpine: 248 free-ranging Alpine dingoes",
+    "P2": "back: 8 captive (dingo x dog) F1 hybrid x dingo backcrosses",
+    "P3": "dog: 39 domestic dogs",
+    "candidate_class": "C",
+    "candidate_forward_direction": "domestic dog P3 to captive backcross P2",
+    "candidate_direction_basis": "documented dog ancestry in the captive backcross, independent of SNP genotypes",
+    "pedigree_dog_introgression_component_available": true,
+    "exclusive_single_edge_truth_available": false,
+    "formal_direction_accuracy_eligible": false,
+    "nominal_dog_ancestry": 0.25,
+    "published_pairwise_FST": {
+      "P1_P2": 0.07,
+      "P2_P3": 0.17,
+      "P1_P3": 0.27
+    },
+    "guardrails": [
+      "The eight backcrosses are one small, potentially related cohort; filters are correlated sensitivities, not trials.",
+      "Alpine dingoes and pooled domestic dogs are proxy endpoints, not documented individual parents.",
+      "The pedigree establishes a dog-introgressing component, not an exclusive population-level single-edge history or a formal accuracy datum.",
+      "The seven known F1 hybrids have only 14 maximum diploid copies and cannot support the frozen g=2..16 grid.",
+      "Do not use SNP-inferred free-ranging backcross labels from older dingo work as truth; Weeks et al. argue population structure and incomplete lineage sorting can mimic that signal."
+    ]
+  },
+  "release_discrepancies": [
+    "The analysis metadata labels desert=58 and mallee=74, while paper Table 2 reports Desert=74 and Mallee=58.",
+    "The geolocation file has Desert=77, Mallee=55, and three NIL IDs absent from the 434-sample analysis metadata.",
+    "The 2,466-row VCF retains 233 inherited non-PASS VQSR tranche tags although the paper reports all 2,466 SNPs as the Australian analysis dataset; the benchmark reports both the paper row set and a VCF-PASS-only sensitivity."
+  ]
+}

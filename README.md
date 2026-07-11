@@ -93,6 +93,7 @@ python scripts/external_benchmarks.py --help # depth-matched duck/runner-bean po
 python scripts/additional_external_benchmarks.py --help # giraffe/brook-trout transfer audit
 python scripts/further_external_benchmarks.py --help # scrub-jay and matched Malawi positive/null audit
 python scripts/directional_external_benchmarks.py --help # Ciona direction-labelled contact-zone audit
+python scripts/dingo_weeks_2025_external_benchmark.py --help # pedigree-anchored dingo--dog transfer stress test
 ```
 
 The external benchmark runner records its fixed sample manifests, source/training-array hashes,
@@ -102,6 +103,8 @@ The additional bundles apply the same guardrails to giraffe, brook trout, scrub 
 matched Lake Malawi positive/negative panels.
 The directional bundle adds a purpose-ascertained Ciona positive/control pair with linked-tag
 and hotspot sensitivity; it is a mechanistic transfer test, not held-out validation.
+The dingo runner uses a known captive backcross to anchor a dog-introgressing component while
+keeping proxy-reference, relatedness, filter-correlation, and natural-data OOD guardrails explicit.
 
 ## Layout
 
