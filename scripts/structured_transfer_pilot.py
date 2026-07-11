@@ -76,6 +76,7 @@ DEFAULT_RESULT_DIR = REPO / "results" / "structured_transfer_pilot_v2_2026_07_11
 DEFAULT_COMPUTE_STATE = Path.home() / ".claude" / "compute" / "compute_state.json"
 STOPPED_TRADING_AUTH_ENV = "DNNAIC_OWNER_AUTHORIZED_STOPPED_TRADING_COMPUTE"
 COMPUTE_TARGET_ENV = "DNNAIC_COMPUTE_TARGET"
+AZURE_CLOSING_OWNER_AUTH_ENV = "DNNAIC_OWNER_AUTHORIZED_CLOSING_AZURE_SESSION"
 MOMENT_NAMES = ("mean", "variance", "se")
 ORBIT_NAMES = ("alpha", "private", "pair_private")
 COMPOSITION_NEGATIVE_TOLERANCE = 1e-10
@@ -179,6 +180,46 @@ def _safe_metric(value, *, integer: bool = False) -> float | int:
     return int(number) if integer else number
 
 
+def _closing_azure_owner_session_evidence() -> tuple[bool, dict]:
+    """Verify that a stale Azure owner-session flag refers only to closing sessions."""
+    authorized = os.environ.get(AZURE_CLOSING_OWNER_AUTH_ENV) == "1"
+    evidence = {
+        "explicit_authorization": authorized,
+        "source": "loginctl list-sessions --no-legend",
+        "owner_session_states": [],
+    }
+    if not authorized or os.name == "nt":
+        evidence["decision"] = "not_authorized_or_not_on_posix_target"
+        return False, evidence
+    try:
+        completed = subprocess.run(
+            ["loginctl", "list-sessions", "--no-legend"],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
+        evidence["decision"] = f"loginctl_unavailable:{type(exc).__name__}"
+        return False, evidence
+    states = []
+    rows = []
+    for line in completed.stdout.splitlines():
+        fields = line.split()
+        if len(fields) >= 6 and fields[2] == "owner":
+            rows.append(fields[:6])
+            states.append(fields[5])
+    evidence["owner_session_states"] = states
+    evidence["owner_session_row_sha256"] = hashlib.sha256(
+        _canonical_json(rows)
+    ).hexdigest()
+    safe = bool(states) and all(state == "closing" for state in states)
+    evidence["decision"] = (
+        "all_owner_sessions_closing" if safe else "owner_session_not_proven_closing"
+    )
+    return safe, evidence
+
+
 def _stopped_trading_pressure_is_safe(state: dict) -> tuple[bool, dict]:
     """Recognize stopped-trading availability alerts for one explicit target."""
     target = os.environ.get(COMPUTE_TARGET_ENV, "")
@@ -214,6 +255,11 @@ def _stopped_trading_pressure_is_safe(state: dict) -> tuple[bool, dict]:
             else state
         )
         reasons = list(health.get("reasons", []))
+        closing_owner_safe, closing_owner_evidence = (
+            _closing_azure_owner_session_evidence()
+            if health.get("owner_rdp_active") is True
+            else (False, {"decision": "health_reports_no_owner_session"})
+        )
         evidence = {
             "compute_target": target,
             "schema": (
@@ -223,6 +269,7 @@ def _stopped_trading_pressure_is_safe(state: dict) -> tuple[bool, dict]:
             ),
             "host": health.get("host"),
             "owner_rdp_active": health.get("owner_rdp_active"),
+            "closing_owner_session_override": closing_owner_evidence,
             "trading_health_reasons": reasons,
             "psi_cpu_some_avg60": _safe_metric(health.get("psi_cpu_some_avg60")),
             "psi_mem_some_avg60": _safe_metric(health.get("psi_mem_some_avg60")),
@@ -233,7 +280,10 @@ def _stopped_trading_pressure_is_safe(state: dict) -> tuple[bool, dict]:
         safe = (
             health.get("status") == "distress"
             and health.get("host") == "trading-linux-az"
-            and health.get("owner_rdp_active") is False
+            and (
+                health.get("owner_rdp_active") is False
+                or closing_owner_safe
+            )
             and len(reasons) == 1
             and str(reasons[0]).startswith("trading_unit_not_active:")
             and evidence["psi_cpu_some_avg60"] <= 0.5
@@ -2150,6 +2200,9 @@ def runtime_audit(priority_audit: dict | None = None) -> dict:
         "thread_environment": thread_environment,
         "cuda_visible_devices": os.environ.get("CUDA_VISIBLE_DEVICES"),
         "stopped_trading_compute_authorization": os.environ.get(STOPPED_TRADING_AUTH_ENV),
+        "closing_azure_owner_session_authorization": os.environ.get(
+            AZURE_CLOSING_OWNER_AUTH_ENV
+        ),
         "compute_target": os.environ.get(COMPUTE_TARGET_ENV),
         "process_priority": priority_audit,
         "argv": sys.argv,
@@ -2194,10 +2247,20 @@ def main() -> int:
             "stopped trading and all pinned local/Azure pressure checks remain safe"
         ),
     )
+    parser.add_argument(
+        "--allow-closing-owner-session",
+        action="store_true",
+        help=(
+            "on Azure only, accept owner_rdp_active=true solely when a fresh loginctl check "
+            "shows every owner session is in closing state"
+        ),
+    )
     args = parser.parse_args()
     os.environ[COMPUTE_TARGET_ENV] = args.compute_target
     if args.allow_stopped_trading_compute:
         os.environ[STOPPED_TRADING_AUTH_ENV] = "1"
+    if args.allow_closing_owner_session:
+        os.environ[AZURE_CLOSING_OWNER_AUTH_ENV] = "1"
     if args.max_depth < 3:
         parser.error("--max-depth must be at least 3")
     if args.outer_splits < 3 or args.inner_splits < 3:

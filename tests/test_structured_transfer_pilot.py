@@ -409,6 +409,34 @@ def test_direct_azure_health_requires_exact_host_idle_owner_and_finite_pressure(
     path.write_text(json.dumps(health), encoding="utf-8")
     with pytest.raises(RuntimeError, match="distress"):
         pilot.compute_gate(path)
+    monkeypatch.setenv(pilot.AZURE_CLOSING_OWNER_AUTH_ENV, "1")
+    monkeypatch.setattr(
+        pilot,
+        "_closing_azure_owner_session_evidence",
+        lambda: (True, {"decision": "all_owner_sessions_closing", "test": True}),
+    )
+    audit = pilot.compute_gate(path)
+    assert audit["pressure_evidence"]["closing_owner_session_override"]["test"] is True
+
+
+def test_closing_owner_session_override_parses_only_closing_owner_rows(monkeypatch):
+    monkeypatch.setenv(pilot.AZURE_CLOSING_OWNER_AUTH_ENV, "1")
+    monkeypatch.setattr(pilot.os, "name", "posix")
+    outputs = iter([
+        "c2 1001 owner - - closing no -\n6673 1002 aiwork - - active no -\n",
+        "c2 1001 owner - - active no -\n",
+    ])
+
+    def fake_run(*args, **kwargs):
+        return SimpleNamespace(stdout=next(outputs))
+
+    monkeypatch.setattr(pilot.subprocess, "run", fake_run)
+    safe, evidence = pilot._closing_azure_owner_session_evidence()
+    assert safe is True
+    assert evidence["owner_session_states"] == ["closing"]
+    safe, evidence = pilot._closing_azure_owner_session_evidence()
+    assert safe is False
+    assert evidence["owner_session_states"] == ["active"]
 
 
 def test_staged_bundle_revision_attestation_is_fail_closed(tmp_path, monkeypatch):

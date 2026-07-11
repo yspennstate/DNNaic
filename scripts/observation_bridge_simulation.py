@@ -1728,10 +1728,20 @@ def main() -> int:
         action="store_true",
         help="use the same pressure-checked explicit stopped-trading authorization as the pilot",
     )
+    parser.add_argument(
+        "--allow-closing-owner-session",
+        action="store_true",
+        help=(
+            "on Azure only, accept the owner-session flag solely when loginctl proves every "
+            "owner session is closing"
+        ),
+    )
     args = parser.parse_args()
     os.environ[structured.COMPUTE_TARGET_ENV] = args.compute_target
     if args.allow_stopped_trading_compute:
         os.environ[structured.STOPPED_TRADING_AUTH_ENV] = "1"
+    if args.allow_closing_owner_session:
+        os.environ[structured.AZURE_CLOSING_OWNER_AUTH_ENV] = "1"
     if args.limit is not None and args.limit < 1:
         parser.error("--limit must be positive")
     if args.outer_splits < 3 or args.inner_splits < 3:
