@@ -113,6 +113,16 @@ def test_direction_mapping_and_control_contract_are_frozen():
         ),
     }
     assert all(len(value) == 64 for value in benchmark.OFFICIAL_CONTROL_SHA256.values())
+    assert set(benchmark.BPP_RELEASES) == {"4.6.1", "4.8.7"}
+    assert benchmark.BPP_RELEASES["4.6.1"]["binary_sha256"] == (
+        "567c18544cc8cb015ed5b206ae9976627505825b0c6aa17b6f49b80f601404b4"
+    )
+    assert benchmark.BPP_RELEASES["4.8.7"]["binary_sha256"] == (
+        "6c8828704e1037788e02d6943cc6cbb61d05d6aadbdd976095b71fc965e8e90e"
+    )
+    assert benchmark.BPP_RELEASES["4.8.7"]["distribution_sha256"] == (
+        "577306b8dafa80114d09e61f460633dd567eff9c67d5f878bbc7ae9d74cf69f2"
+    )
     config = benchmark.configuration(benchmark.make_jobs(), {})
     assert "paper's inflow-asymmetric phi=0" in config["null_provenance"]
     assert "independently seeded" in config["stochastic_design"]

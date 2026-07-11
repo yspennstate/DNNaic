@@ -61,8 +61,19 @@ from scripts import structured_transfer_pilot as structured
 SCHEMA_VERSION = "dnnaic-bpp2023-mccoal-benchmark-v1"
 CHECKPOINT_SCHEMA = "dnnaic-bpp2023-mccoal-checkpoint-v1"
 COUNT_SCHEMA = "dnnaic-bpp2023-counts-v1"
-BPP_VERSION = "4.6.1"
-BPP_BINARY_SHA256 = "567c18544cc8cb015ed5b206ae9976627505825b0c6aa17b6f49b80f601404b4"
+BPP_RELEASES = {
+    "4.6.1": {
+        "binary_sha256": "567c18544cc8cb015ed5b206ae9976627505825b0c6aa17b6f49b80f601404b4",
+        "version_token": "bpp v4.6.1",
+        "status": "Ji-era pinned release used for the primary derivative bank",
+    },
+    "4.8.7": {
+        "binary_sha256": "6c8828704e1037788e02d6943cc6cbb61d05d6aadbdd976095b71fc965e8e90e",
+        "distribution_sha256": "577306b8dafa80114d09e61f460633dd567eff9c67d5f878bbc7ae9d74cf69f2",
+        "version_token": "bpp v4.8.7",
+        "status": "current official release sensitivity as verified 2026-07-11",
+    },
+}
 OFFICIAL_ARCHIVE_MD5 = "c233514a93ad48fc67da3be14fa93264"
 OFFICIAL_ARCHIVE_SHA256 = "492c0d8a316d7349a77b5482c46693b4e8a5a05acce4b617651b3ad1f4ef3b02"
 OFFICIAL_CONTROL_SHA256 = {
@@ -234,7 +245,12 @@ def _md5_file(path: Path) -> str:
     return digest.hexdigest()
 
 
-def source_audit(binary: Path, official_controls: Path, official_archive: Path) -> dict:
+def source_audit(
+    binary: Path,
+    official_controls: Path,
+    official_archive: Path,
+    bpp_version: str,
+) -> dict:
     binary = binary.resolve()
     official_controls = official_controls.resolve()
     official_archive = official_archive.resolve()
@@ -242,8 +258,11 @@ def source_audit(binary: Path, official_controls: Path, official_archive: Path) 
         raise FileNotFoundError(
             "BPP binary, official-control directory, or official archive is unavailable"
         )
+    if bpp_version not in BPP_RELEASES:
+        raise ValueError(f"unsupported pinned BPP release {bpp_version!r}")
+    release = BPP_RELEASES[bpp_version]
     binary_hash = structured.sha256_file(binary)
-    if binary_hash != BPP_BINARY_SHA256:
+    if binary_hash != release["binary_sha256"]:
         raise RuntimeError(f"BPP binary SHA-256 changed: {binary_hash}")
     archive_md5 = _md5_file(official_archive)
     archive_sha256 = structured.sha256_file(official_archive)
@@ -277,20 +296,35 @@ def source_audit(binary: Path, official_controls: Path, official_archive: Path) 
         raise RuntimeError("official outflow direction signature changed")
     if "l[&phi=0.106000,tau-parent=no]:0.000307,D" not in inflow.replace(" ", ""):
         raise RuntimeError("official inflow direction signature changed")
-    version = subprocess.run(
-        [str(binary), "--version"],
-        check=True,
-        capture_output=True,
-        text=True,
-        timeout=15,
-    ).stdout
-    if "bpp v4.6.1" not in version:
+    with tempfile.TemporaryDirectory(
+        prefix=".bpp-version-probe-", dir=official_archive.parent
+    ) as probe_directory:
+        version = subprocess.run(
+            [str(binary), "--version"],
+            cwd=probe_directory,
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=15,
+        ).stdout
+        probe_side_effects = []
+        for path in sorted(Path(probe_directory).iterdir(), key=lambda value: value.name):
+            if not path.is_file():
+                raise RuntimeError("BPP version probe created an unexpected directory")
+            probe_side_effects.append({
+                "name": path.name,
+                "bytes": path.stat().st_size,
+                "sha256": structured.sha256_file(path),
+            })
+    if release["version_token"] not in version:
         raise RuntimeError("BPP binary version output changed")
     return {
-        "bpp_version": BPP_VERSION,
+        "bpp_version": bpp_version,
+        "release_contract": release,
         "binary_bytes": binary.stat().st_size,
         "binary_sha256": binary_hash,
         "version_stdout_sha256": hashlib.sha256(version.encode("utf-8")).hexdigest(),
+        "version_probe_side_effects_isolated_then_removed": probe_side_effects,
         "official_archive_bytes": official_archive.stat().st_size,
         "official_archive_md5": archive_md5,
         "official_archive_sha256": archive_sha256,
@@ -1119,6 +1153,9 @@ def configuration(jobs: Sequence[BPPJob], source: dict) -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--bpp-binary", type=Path, required=True)
+    parser.add_argument(
+        "--bpp-version", choices=tuple(BPP_RELEASES), default="4.6.1"
+    )
     parser.add_argument("--official-control-dir", type=Path, required=True)
     parser.add_argument("--official-archive", type=Path, required=True)
     parser.add_argument("--canonical-root", type=Path, required=True)
@@ -1147,7 +1184,12 @@ def main() -> int:
     priority = structured.set_below_normal_priority()
     revision = structured.git_revision(script=Path(__file__))
     structured.require_clean_tracked_revision(revision)
-    source = source_audit(args.bpp_binary, args.official_control_dir, args.official_archive)
+    source = source_audit(
+        args.bpp_binary,
+        args.official_control_dir,
+        args.official_archive,
+        args.bpp_version,
+    )
     jobs = make_jobs()
     config = configuration(jobs, source)
     config_sha256 = hashlib.sha256(_canonical_json(config)).hexdigest()
