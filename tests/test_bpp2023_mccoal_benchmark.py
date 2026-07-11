@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import asdict
 import hashlib
 from pathlib import Path
 
@@ -50,7 +49,7 @@ def test_manifest_is_balanced_unique_and_starts_at_published_setting():
     assert len(jobs) == 90
     assert len({job.job_id for job in jobs}) == 90
     assert len({job.seed for job in jobs}) == 90
-    assert [(job.label, job.phi, job.scale) for job in jobs[:3]] == [
+    assert [(job.label, job.family_positive_phi, job.scale) for job in jobs[:3]] == [
         ("B", 0.106, 1.0),
         ("C", 0.106, 1.0),
         ("D", 0.106, 1.0),
@@ -60,6 +59,13 @@ def test_manifest_is_balanced_unique_and_starts_at_published_setting():
         assert {job.label for job in family} == {"B", "C", "D"}
         assert len({job.family_id for job in family}) == 1
         assert len({job.seed for job in family}) == 3
+    assert [benchmark.job_effective_phi(job) for job in jobs[:3]] == [
+        0.106,
+        0.106,
+        0.0,
+    ]
+    assert benchmark.job_payload(jobs[2])["family_positive_phi"] == 0.106
+    assert benchmark.job_payload(jobs[2])["effective_phi"] == 0.0
 
 
 def test_generated_published_setting_preserves_official_asymmetric_topologies():
@@ -98,6 +104,17 @@ def test_direction_mapping_and_control_contract_are_frozen():
     assert "treefile" not in control.lower()
     assert "modelparafile" not in control.lower()
     assert control.startswith(f"seed = {first.seed}\n")
+    assert benchmark.OFFICIAL_CONTROL_SHA256 == {
+        "MCcoal.outflow-asym.ctl": (
+            "9577804bee2467cb4ba3070a454b570c6500353ef2346822298b97fb8383b4de"
+        ),
+        "MCcoal.inflow-asym.ctl": (
+            "c71d4a2a061eda75db6fc906cef247648059d3d1ccdb9d172b44d497c73744c"
+        ),
+    }
+    config = benchmark.configuration(benchmark.make_jobs(), {})
+    assert "paper's inflow-asymmetric phi=0" in config["null_provenance"]
+    assert "independently seeded" in config["stochastic_design"]
 
 
 def test_small_alignment_parser_counts_only_triplet_polymorphism(tmp_path):
@@ -141,11 +158,11 @@ def test_parser_rejects_trailing_content_and_invalid_dimensions(tmp_path):
 
 def test_imap_parser_requires_all_four_populations(tmp_path):
     path = tmp_path / "Imap.txt"
-    path.write_text("q1^Q Q\nr1^R R\nd1^D D\ns1^S S\n", encoding="ascii")
+    path.write_text("Q Q\nR R\nD D\nS S\n", encoding="ascii")
     audit = benchmark.parse_imap(path)
     assert len(audit["rows"]) == 4
-    path.write_text("q1^Q Q\nr1^R R\nd1^D D\n", encoding="ascii")
-    with pytest.raises(RuntimeError, match="populations changed"):
+    path.write_text("Q Q\nR R\nD D\n", encoding="ascii")
+    with pytest.raises(RuntimeError, match="contract changed"):
         benchmark.parse_imap(path)
 
 
@@ -182,7 +199,7 @@ def test_curve_checkpoint_round_trip_requires_bound_count_file(tmp_path):
     curve = np.zeros((198, 28), dtype=np.float32)
     curve[:, 0] = benchmark.stdbench.FULL_DEPTHS
     record = {
-        **asdict(job),
+        **benchmark.job_payload(job),
         "count_file": count_path.relative_to(tmp_path).as_posix(),
         "count_file_bytes": count_path.stat().st_size,
         "count_file_sha256": benchmark.structured.sha256_file(count_path),
@@ -198,6 +215,13 @@ def test_curve_checkpoint_round_trip_requires_bound_count_file(tmp_path):
     )
     assert len(loaded) == 1
     assert np.array_equal(loaded[0]["curve"], curve)
+    audit = benchmark.checkpoint_audit(checkpoint, loaded, "a" * 64)
+    assert audit["records"] == 1
+    assert audit["stored_curve_shape"] == [1, 198, 28]
+    selection = benchmark.record_selection_audit(loaded)
+    assert selection["records"] == 1
+    with pytest.raises(RuntimeError, match="different records"):
+        benchmark.checkpoint_audit(checkpoint, [], "a" * 64)
     with pytest.raises(RuntimeError, match="configuration changed"):
         benchmark.load_checkpoint(
             checkpoint, "b" * 64, benchmark.make_jobs(), tmp_path

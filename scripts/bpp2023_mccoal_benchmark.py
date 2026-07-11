@@ -6,8 +6,9 @@ The official Ji et al. simulations contain exact outflow (Q -> D) and inflow
 PADZE depths g=2..4 and therefore cannot be scored by DNNaic's frozen g=2..16
 head.  This runner preserves the published asymmetric topology and
 parameterization while increasing Q/R/D sampling to 200 haploid copies and
-adds an explicit no-introgression boundary control.  It is a larger-sample
-derivative benchmark, not a byte or accuracy reproduction of the paper.
+reconstructs the paper's inflow-asymmetric phi=0 false-positive protocol as an
+explicit no-introgression boundary control.  It is a larger-sample derivative
+benchmark, not a byte or accuracy reproduction of the paper.
 
 The population order is frozen before simulation: P1=R, P2=Q, P3=D.  Thus
 published outflow Q->D is class B and inflow D->Q is class C.  D uses the
@@ -64,6 +65,10 @@ BPP_VERSION = "4.6.1"
 BPP_BINARY_SHA256 = "567c18544cc8cb015ed5b206ae9976627505825b0c6aa17b6f49b80f601404b4"
 OFFICIAL_ARCHIVE_MD5 = "c233514a93ad48fc67da3be14fa93264"
 OFFICIAL_ARCHIVE_SHA256 = "492c0d8a316d7349a77b5482c46693b4e8a5a05acce4b617651b3ad1f4ef3b02"
+OFFICIAL_CONTROL_SHA256 = {
+    "MCcoal.outflow-asym.ctl": "9577804bee2467cb4ba3070a454b570c6500353ef2346822298b97fb8383b4de",
+    "MCcoal.inflow-asym.ctl": "c71d4a2a061eda75db6fc906cef247648059d3d1ccdb9d172b44d497c73744c",
+}
 CONDITIONS = ("B", "C", "D")
 POSITIVE_CLASSES = ("B", "C")
 POPULATION_ORDER = ("Q", "R", "D", "S")
@@ -112,11 +117,19 @@ DEFAULT_RESULTS = REPO / "results" / "bpp2023_mccoal_benchmark_2026_07_11"
 class BPPJob:
     family_index: int
     family_id: str
-    phi: float
+    family_positive_phi: float
     scale: float
     label: str
     job_id: str
     seed: int
+
+
+def job_effective_phi(job: BPPJob) -> float:
+    return 0.0 if job.label == "D" else float(job.family_positive_phi)
+
+
+def job_payload(job: BPPJob) -> dict:
+    return {**asdict(job), "effective_phi": job_effective_phi(job)}
 
 
 def _canonical_json(value) -> bytes:
@@ -155,7 +168,7 @@ def make_jobs() -> list[BPPJob]:
                 jobs.append(BPPJob(
                     family_index=family_index,
                     family_id=family_id,
-                    phi=float(phi),
+                    family_positive_phi=float(phi),
                     scale=float(scale),
                     label=label,
                     job_id=f"{family_id}__{label}",
@@ -206,7 +219,7 @@ def control_text(job: BPPJob) -> str:
         "Imapfile = Imap.txt\n"
         "species&tree = 4 Q R D S\n"
         f"  {GENE_COPIES} {GENE_COPIES} {GENE_COPIES} {OUTGROUP_COPIES}\n"
-        f"  {network_newick(job.label, job.phi, job.scale)}\n"
+        f"  {network_newick(job.label, job.family_positive_phi, job.scale)}\n"
         "phase = 0 0 0 0\n"
         f"loci&length = {LOCUS_COUNT} {LOCUS_LENGTH}\n"
         "model = 0\n"
@@ -239,16 +252,21 @@ def source_audit(binary: Path, official_controls: Path, official_archive: Path) 
             "official Ji et al. archive hash changed: "
             f"MD5={archive_md5}, SHA-256={archive_sha256}"
         )
-    control_names = ("MCcoal.outflow-asym.ctl", "MCcoal.inflow-asym.ctl")
+    control_names = tuple(OFFICIAL_CONTROL_SHA256)
     controls = {}
     for name in control_names:
         path = official_controls / name
         if not path.is_file():
             raise FileNotFoundError(path)
         payload = path.read_bytes()
+        control_sha256 = hashlib.sha256(payload).hexdigest()
+        if control_sha256 != OFFICIAL_CONTROL_SHA256[name]:
+            raise RuntimeError(
+                f"extracted official BPP control hash changed for {name}: {control_sha256}"
+            )
         controls[name] = {
             "bytes": len(payload),
-            "sha256": hashlib.sha256(payload).hexdigest(),
+            "sha256": control_sha256,
         }
     outflow = (official_controls / control_names[0]).read_text(encoding="utf-8-sig")
     inflow = (official_controls / control_names[1]).read_text(encoding="utf-8-sig")
@@ -449,9 +467,12 @@ def parse_imap(path: Path) -> dict:
     rows = [line.split() for line in payload.decode("utf-8-sig").splitlines() if line.strip()]
     if any(len(row) != 2 for row in rows):
         raise RuntimeError("BPP Imap.txt row shape changed")
+    expected_rows = [[population, population] for population in POPULATION_ORDER]
+    if rows != expected_rows:
+        raise RuntimeError(
+            f"BPP Imap.txt contract changed: observed {rows}, expected {expected_rows}"
+        )
     mapping = {row[0]: row[1] for row in rows}
-    if set(mapping.values()) != set(POPULATION_ORDER):
-        raise RuntimeError(f"BPP Imap populations changed: {mapping}")
     return {
         "bytes": len(payload),
         "sha256": hashlib.sha256(payload).hexdigest(),
@@ -542,7 +563,7 @@ def save_count_file(
         path,
         schema=np.asarray([COUNT_SCHEMA]),
         config_sha256=np.asarray([config_sha256]),
-        job_json=np.asarray([_canonical_json(asdict(job)).decode("ascii")]),
+        job_json=np.asarray([_canonical_json(job_payload(job)).decode("ascii")]),
         metadata_json=np.asarray([_canonical_json(metadata).decode("ascii")]),
         counts=np.asarray(counts, dtype=np.uint16),
         blocks=np.asarray(blocks, dtype=np.int32),
@@ -563,7 +584,7 @@ def load_count_file(
             raise RuntimeError("BPP count checkpoint schema changed")
         if archive["config_sha256"].tolist() != [config_sha256]:
             raise RuntimeError("BPP count checkpoint configuration changed")
-        if json.loads(str(archive["job_json"][0])) != asdict(job):
+        if json.loads(str(archive["job_json"][0])) != job_payload(job):
             raise RuntimeError("BPP count checkpoint job changed")
         metadata = json.loads(str(archive["metadata_json"][0]))
         counts = np.asarray(archive["counts"], dtype=np.uint16)
@@ -721,7 +742,7 @@ def simulate_job(
     )
     curve32 = curve.astype(np.float32)
     return {
-        **asdict(job),
+        **job_payload(job),
         "count_file": str(count_path.relative_to(cache_dir).as_posix()),
         "count_file_bytes": count_path.stat().st_size,
         "count_file_sha256": structured.sha256_file(count_path),
@@ -787,7 +808,10 @@ def load_checkpoint(
         if job_id not in manifest or job_id in seen:
             raise RuntimeError("BPP checkpoint has an unknown or duplicate job")
         seen.add(job_id)
-        if any(current.get(key) != value for key, value in asdict(manifest[job_id]).items()):
+        if any(
+            current.get(key) != value
+            for key, value in job_payload(manifest[job_id]).items()
+        ):
             raise RuntimeError(f"BPP checkpoint job manifest changed for {job_id}")
         if curve.shape != (198, 28) or not np.isfinite(curve).all():
             raise RuntimeError(f"BPP checkpoint curve is invalid for {job_id}")
@@ -804,23 +828,46 @@ def load_checkpoint(
     return sorted(records, key=record_key)
 
 
-def checkpoint_audit(path: Path, records: Sequence[dict], config_sha256: str) -> dict:
+def record_selection_audit(records: Sequence[dict]) -> dict:
     families = {}
     for record in records:
         families.setdefault(record["family_id"], set()).add(record["label"])
     complete = sum(labels == set(CONDITIONS) for labels in families.values())
     return {
-        "path": str(path.resolve()),
-        "bytes": path.stat().st_size,
-        "sha256": structured.sha256_file(path),
-        "schema_version": CHECKPOINT_SCHEMA,
-        "configuration_sha256": config_sha256,
         "records": len(records),
         "complete_B_C_D_families": int(complete),
         "record_curve_hash_ledger_sha256": hashlib.sha256(_canonical_json([
             [record["job_id"], record["curve_sha256_float32"], record["count_file_sha256"]]
             for record in sorted(records, key=record_key)
         ])).hexdigest(),
+    }
+
+
+def checkpoint_audit(path: Path, records: Sequence[dict], config_sha256: str) -> dict:
+    records = sorted(records, key=record_key)
+    with np.load(path, allow_pickle=False) as archive:
+        if archive["schema"].tolist() != [CHECKPOINT_SCHEMA]:
+            raise RuntimeError("BPP checkpoint audit found a changed schema")
+        if archive["config_sha256"].tolist() != [config_sha256]:
+            raise RuntimeError("BPP checkpoint audit found a changed configuration")
+        stored_metadata = json.loads(str(archive["metadata_json"][0]))
+        stored_curve_shape = list(archive["curves"].shape)
+    expected_metadata = [
+        {key: value for key, value in record.items() if key != "curve"}
+        for record in records
+    ]
+    if stored_metadata != expected_metadata:
+        raise RuntimeError(
+            "BPP checkpoint bytes and supplied full-record audit describe different records"
+        )
+    return {
+        "path": str(path.resolve()),
+        "bytes": path.stat().st_size,
+        "sha256": structured.sha256_file(path),
+        "schema_version": CHECKPOINT_SCHEMA,
+        "configuration_sha256": config_sha256,
+        "stored_curve_shape": stored_curve_shape,
+        **record_selection_audit(records),
     }
 
 
@@ -902,9 +949,21 @@ def analyze_records(
                 model,
                 feature_columns=structured.representation_columns(name),
             ),
+            "linked_site_SE_guardrail": (
+                "raw_all includes PADZE site-level SE even though sites are linked within each "
+                "500-bp locus; interpret the pre-specified raw_mean_variance sensitivity "
+                "prominently because it removes this non-block-robust coordinate."
+                if name == "raw_all"
+                else "this representation excludes PADZE site-level SE"
+            ),
             "chance_guardrail": (
                 "B and C are exactly balanced; a constant B or constant C predictor has 0.5 "
                 "balanced accuracy. D is excluded from this denominator."
+            ),
+            "grid_interval_guardrail": (
+                "Wilson intervals are descriptive summaries across a fixed heterogeneous "
+                "phi-by-scale grid, not population-sampling confidence intervals. Balanced "
+                "accuracy is an equal-grid average, not a prevalence-weighted estimate."
             ),
         }
     gate_train, gate_contract = stdbench._gate_features(canonical_table)
@@ -927,7 +986,8 @@ def analyze_records(
             "job_id": record["job_id"],
             "family_id": record["family_id"],
             "family_index": int(record["family_index"]),
-            "phi": float(record["phi"]),
+            "family_positive_phi": float(record["family_positive_phi"]),
+            "effective_phi": float(record["effective_phi"]),
             "scale": float(record["scale"]),
             "truth": record["label"] if record["label"] in POSITIVE_CLASSES else None,
             "included_in_direction_accuracy": bool(positive[index]),
@@ -945,7 +1005,10 @@ def analyze_records(
     by_phi = {}
     for phi in PHIS:
         use = positive & np.isclose(
-            np.asarray([record["phi"] for record in records], dtype=float), phi,
+            np.asarray(
+                [record["family_positive_phi"] for record in records], dtype=float
+            ),
+            phi,
             rtol=0,
             atol=1e-15,
         )
@@ -990,6 +1053,10 @@ def analyze_records(
             "positive_score": stdbench._distribution_summary(gate_score[positive]),
             "D_score": stdbench._distribution_summary(gate_score[null]),
             "model": stdbench._model_payload(gate_scaler, gate_model),
+            "grid_interval_guardrail": (
+                "Sensitivity and specificity intervals summarize the fixed heterogeneous "
+                "design grid only; they are not population-sampling confidence intervals."
+            ),
         },
         "simulation_record_ledger": [
             {key: value for key, value in record.items() if key != "curve"}
@@ -1000,7 +1067,10 @@ def analyze_records(
         "guardrail": (
             "This is a derivative known-truth simulation bank. Ji et al. used four copies per "
             "population and BPP detection power is not a direction-accuracy comparator. Phi is "
-            "episodic ancestry proportion and must not be scored as DNNaic migration magnitude."
+            "episodic ancestry proportion and must not be scored as DNNaic migration magnitude. "
+            "B/C/D within a family share parameters but use independent seeds, not paired common "
+            "random numbers. D repeats ten independently simulated nulls per scale even though "
+            "its nominal family-positive phi is ignored and its effective phi is always zero."
         ),
     }
 
@@ -1009,17 +1079,22 @@ def configuration(jobs: Sequence[BPPJob], source: dict) -> dict:
     return {
         "schema_version": SCHEMA_VERSION,
         "source": source,
-        "jobs": [asdict(job) for job in jobs],
+        "jobs": [job_payload(job) for job in jobs],
         "phis": list(PHIS),
         "scales": list(SCALES),
         "base_parameters": BASE_PARAMETERS,
         "mapping": DNNAIC_MAPPING,
         "truth": {"B": "Q->D", "C": "D->Q", "D": "no event"},
         "null_provenance": (
-            "D is a runner-added phi=0 donor/phi=1 resident boundary control; "
-            "the official archive does not supply a no-introgression control"
+            "D reconstructs the paper's inflow-asymmetric phi=0 false-positive "
+            "protocol as a donor-phi=0/resident-phi=1 boundary control; the official "
+            "Zenodo archive does not supply a separate null MCcoal control file"
         ),
         "sampling": {"Q": 200, "R": 200, "D": 200, "S_unused_outgroup": 1},
+        "stochastic_design": (
+            "one independently seeded dataset per class and phi-by-scale cell; B/C/D are "
+            "parameter-matched but are not paired common-random-number replicates"
+        ),
         "alignments": {
             "independent_loci": LOCUS_COUNT,
             "sites_per_locus": LOCUS_LENGTH,
@@ -1111,7 +1186,8 @@ def main() -> int:
         final_revision = structured.git_revision(script=Path(__file__))
         structured.require_revision_unchanged(revision, final_revision)
         print(json.dumps({
-            "checkpoint": checkpoint_audit(checkpoint, selected, config_sha256),
+            "checkpoint": checkpoint_audit(checkpoint, records, config_sha256),
+            "requested_selection": record_selection_audit(selected),
             "configuration_sha256": config_sha256,
             "source_commit": final_revision["commit"],
             "requested_families": requested_families,
