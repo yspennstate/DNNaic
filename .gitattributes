@@ -4,3 +4,6 @@ results/external_benchmarks_2026_07_10/*.json text eol=lf
 results/external_benchmarks_2026_07_10/*.md text eol=lf
 results/additional_external_benchmarks_2026_07_11/*.json text eol=lf
 results/additional_external_benchmarks_2026_07_11/*.md text eol=lf
+data/external_benchmarks/seabass/*.tsv text eol=lf
+results/seabass_external_benchmark_2026_07_11/*.json text eol=lf
+results/seabass_external_benchmark_2026_07_11/*.md text eol=lf
