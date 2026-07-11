@@ -714,6 +714,19 @@ def _model_payload(scaler, model, *, feature_columns: Sequence[str] | None = Non
     }
 
 
+def _distribution_summary(values: Sequence[float]) -> dict:
+    values = np.asarray(values, dtype=float)
+    if values.ndim != 1 or len(values) == 0 or not np.isfinite(values).all():
+        raise ValueError("distribution summary requires a nonempty finite vector")
+    return {
+        "n": int(len(values)),
+        "minimum": float(values.min()),
+        "mean": float(values.mean()),
+        "median": float(np.median(values)),
+        "maximum": float(values.max()),
+    }
+
+
 def analyze_records(
     records: Sequence[dict],
     canonical_root: Path,
@@ -814,6 +827,41 @@ def analyze_records(
     direction_correct = direction_prediction[pulse] == TRUE_DIRECTION
     gate_truth = pulse.astype(int)
     gate_call = gate_probability >= 0.5
+    paired_gate_differences = []
+    for family_id in sorted(families):
+        indices = [
+            index for index, record in enumerate(records)
+            if str(record["family_id"]) == family_id
+        ]
+        by_condition = {str(records[index]["condition"]): index for index in indices}
+        if set(by_condition) != set(CONDITIONS):
+            raise AssertionError(f"paired score ledger is incomplete for {family_id}")
+        paired_gate_differences.append(
+            float(
+                gate_probability[by_condition["pulse"]]
+                - gate_probability[by_condition["control"]]
+            )
+        )
+    simulation_ledger = [
+        {key: value for key, value in record.items() if key != "curve"}
+        for record in records
+    ]
+    simulation_summary = {}
+    for condition in CONDITIONS:
+        current = [record for record in records if record["condition"] == condition]
+        simulation_summary[condition] = {
+            "globally_polymorphic_loci": _distribution_summary([
+                record["simulation_audit"]["globally_polymorphic_loci"]
+                for record in current
+            ]),
+            "multiallelic_globally_polymorphic_loci": _distribution_summary([
+                record["simulation_audit"]["multiallelic_globally_polymorphic_loci"]
+                for record in current
+            ]),
+            "elapsed_seconds": _distribution_summary([
+                record["elapsed_seconds"] for record in current
+            ]),
+        }
     result = {
         "statistical_unit": "one independent one-megabase ancestry/mutation realization",
         "complete_pulse_control_families": len(families),
@@ -827,6 +875,12 @@ def analyze_records(
                 for label, count in zip(*np.unique(canonical_labels[positive], return_counts=True))
             },
             "pulse_class_C_recall": _wilson(direction_correct),
+            "trivial_always_C_pulse_recall": 1.0,
+            "baseline_guardrail": (
+                "Because every positive row has class-C truth, always predicting C has 100% "
+                "recall. This benchmark can falsify class-C transfer but cannot establish "
+                "three-class skill even if recall is perfect."
+            ),
             "pulse_predicted_class_counts": {
                 str(label): int(count)
                 for label, count in zip(*np.unique(direction_prediction[pulse], return_counts=True))
@@ -837,6 +891,7 @@ def analyze_records(
             },
             "pulse_C_probability_mean": float(c_probability[pulse].mean()),
             "pulse_C_probability_median": float(np.median(c_probability[pulse])),
+            "control_C_probability_mean_diagnostic_only": float(c_probability[control].mean()),
             "pulse_C_vs_next_best_margin_mean": float((c_probability - next_probability)[pulse].mean()),
             "model": _model_payload(
                 direction_scaler,
@@ -860,6 +915,14 @@ def analyze_records(
             "matched_pulse_control_roc_auc": float(roc_auc_score(gate_truth, gate_probability)),
             "pulse_score_mean": float(gate_probability[pulse].mean()),
             "control_score_mean": float(gate_probability[control].mean()),
+            "paired_pulse_minus_control_score": {
+                **_distribution_summary(paired_gate_differences),
+                "fraction_positive": float(np.mean(np.asarray(paired_gate_differences) > 0)),
+                "guardrail": (
+                    "Pairs share configuration labels but use independent ancestry/mutation seeds; "
+                    "this is a descriptive matched-design contrast, not a paired genealogy effect."
+                ),
+            },
             "model": _model_payload(gate_scaler, gate_model),
         },
         "external_support": {
@@ -868,6 +931,8 @@ def analyze_records(
             "direction_scaler_max_abs_z_p95": float(np.quantile(np.max(np.abs(direction_z), axis=1), 0.95)),
             "gate_scaler_rms_z_median": float(np.median(np.sqrt(np.mean(gate_z**2, axis=1)))),
         },
+        "simulation_summary": simulation_summary,
+        "simulation_record_ledger": simulation_ledger,
         "prediction_ledger": ledger,
         "canonical_source_audit": canonical["audit"],
         "guardrail": (

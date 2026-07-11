@@ -113,6 +113,20 @@ def test_wilson_interval_and_empty_contract():
     }
 
 
+def test_distribution_summary_is_finite_and_exact():
+    assert benchmark._distribution_summary([1, 2, 6]) == {
+        "n": 3,
+        "minimum": 1.0,
+        "mean": 3.0,
+        "median": 2.0,
+        "maximum": 6.0,
+    }
+    with pytest.raises(ValueError, match="nonempty finite"):
+        benchmark._distribution_summary([])
+    with pytest.raises(ValueError, match="nonempty finite"):
+        benchmark._distribution_summary([1, np.nan])
+
+
 def test_canonical_json_is_sorted_compact_and_rejects_nan():
     assert benchmark._canonical_json({"b": 2, "a": 1}) == b'{"a":1,"b":2}'
     with pytest.raises(ValueError):
