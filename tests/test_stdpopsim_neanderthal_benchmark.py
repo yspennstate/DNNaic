@@ -159,7 +159,8 @@ def test_contig_and_sampling_produce_200_gene_copies_per_population():
         {name: benchmark.INDIVIDUALS_PER_POPULATION for name in benchmark.POPULATIONS},
         ploidy=contig.ploidy,
     )
-    assert [sample.num_samples for sample in samples] == [200, 200, 200]
+    assert [sample.num_samples for sample in samples] == [100, 100, 100]
+    assert [sample.num_samples * sample.ploidy for sample in samples] == [200, 200, 200]
     engine = stdpopsim.get_engine("msprime")
     assert engine.simulate(
         models["pulse"],
