@@ -85,7 +85,9 @@ def test_dingo_source_panel_and_locus_contracts_are_pinned():
 def test_dingo_sources_record_preserves_discrepancies_and_guardrails():
     validated = dingo.validate_sources_record()
     record = validated["record"]
-    assert {key: validated[key] for key in ("bytes", "sha256")} == dingo.SOURCE_RECORD_CONTRACT
+    assert validated["canonical_lf"] == dingo.SOURCE_RECORD_CANONICAL_LF_CONTRACT
+    assert validated["working_tree"]["bytes"] >= validated["canonical_lf"]["bytes"]
+    assert len(validated["working_tree"]["sha256"]) == 64
     assert record["data_doi"] == "10.6084/m9.figshare.27022555.v1"
     assert record["license"] == "CC-BY-4.0"
     assert record["paper"]["doi"] == "10.1093/evlett/qrae057"

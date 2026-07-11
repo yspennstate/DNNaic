@@ -52,7 +52,7 @@ from tinkerbird_external_benchmark import frequency_projection, runtime_audit
 DEFAULT_CACHE = REPO / "data" / "real" / "dingo_weeks_2025_external_benchmark"
 DEFAULT_RESULTS = REPO / "results" / "dingo_weeks_2025_external_benchmark_2026_07_11"
 SOURCE_RECORD = MANIFEST_DIR / "dingo_weeks_2025" / "sources.json"
-SOURCE_RECORD_CONTRACT = {
+SOURCE_RECORD_CANONICAL_LF_CONTRACT = {
     "bytes": 3_480,
     "sha256": "30e8c5088aaaea37099d2be64b4b5868ec081b59f3372ba3ae7d7ee0ec9a16ad",
 }
@@ -195,10 +195,16 @@ def ensure_source(path: Path, spec: dict, download_missing: bool) -> dict:
 
 def validate_sources_record() -> dict:
     raw = SOURCE_RECORD.read_bytes()
-    observed_contract = {"bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest()}
-    if observed_contract != SOURCE_RECORD_CONTRACT:
-        raise AssertionError("dingo sources.json byte contract changed")
-    record = json.loads(SOURCE_RECORD.read_text(encoding="utf-8"))
+    canonical_lf = raw.replace(b"\r\n", b"\n")
+    if b"\r" in canonical_lf:
+        raise AssertionError("dingo sources.json contains a non-CRLF carriage return")
+    canonical_contract = {
+        "bytes": len(canonical_lf),
+        "sha256": hashlib.sha256(canonical_lf).hexdigest(),
+    }
+    if canonical_contract != SOURCE_RECORD_CANONICAL_LF_CONTRACT:
+        raise AssertionError("dingo sources.json canonical LF contract changed")
+    record = json.loads(raw.decode("utf-8"))
     if record["schema_version"] != "dnnaic-dingo-weeks-2025-source-v1":
         raise AssertionError("unexpected dingo source schema")
     if record["data_doi"] != "10.6084/m9.figshare.27022555.v1":
@@ -208,7 +214,12 @@ def validate_sources_record() -> dict:
             raise AssertionError(f"sources.json {name} contract differs from runner")
     return {
         "path": str(SOURCE_RECORD),
-        **observed_contract,
+        "canonical_lf": canonical_contract,
+        "working_tree": {
+            "bytes": len(raw),
+            "sha256": hashlib.sha256(raw).hexdigest(),
+            "line_endings_normalized_for_contract": raw != canonical_lf,
+        },
         "record": record,
     }
 
