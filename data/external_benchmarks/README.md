@@ -144,3 +144,37 @@ python scripts/directional_external_benchmarks.py \
   --data-root /path/to/simulation_data \
   --ciona-vcf /path/to/Ciona_data3_introgression_mac2.vcf.gz
 ```
+
+## European seabass (directional positive and reversed contrast)
+
+Robinet et al. report a localized Mediterranean-ancestry excess in Atlantic
+seabass from SINE. The fixed design uses Atlantic PENI as P1, either SINE
+(positive) or VIGO (reversed contrast) as P2, and ten Mediterranean references
+as P3. The source interpretation supports MED P3 -> SINE P2, DNNaic class C.
+Raw author ancestry estimates are 0.111878 for SINE, 0.044890 for PENI, and
+0.036501 for VIGO; six SINE fish but no VIGO fish exceed 0.15 Mediterranean
+ancestry. VIGO is therefore a useful same-source contrast, not a pristine
+no-flow null.
+
+The source is a 1,012-marker SNP-chip/WGS merge. The committed converter pins a
+pure-Python PED/MAP-to-VCF contract and labels its lexicographic REF/ALT coding
+as nominal rather than reference-genome orientation. Both panels use one shared
+PENI/SINE/VIGO/MED callable-site intersection. A robustness pass additionally
+requires both alleles inside every one of the four populations. The authors
+excluded Mediterranean-private variants and typed Atlantic and Mediterranean
+fish on different platforms, so this remains an ascertainment-heavy OOD stress
+test rather than an unbiased accuracy estimate.
+
+The released PED and ancestry/metadata bundles also differ by three Atlantic
+fish outside the benchmark groups. The runner records the discrepancy and
+joins ancestry by explicit sample ID; positional alignment is forbidden. Run:
+
+```bash
+python scripts/seabass_external_benchmark.py \
+  --data-root /path/to/simulation_data \
+  --ped /path/to/seabass.ped \
+  --map /path/to/seabass.map \
+  --metadata /path/to/metadata.csv \
+  --ancestry /path/to/ancestry.Q \
+  --summary /path/to/mean_ancestry.csv
+```
