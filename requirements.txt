@@ -7,6 +7,9 @@ padze>=0.1.0
 # Simulation and tree-sequence handling.
 msprime>=1.2
 tskit>=0.5
+# Pinned because the published-demography benchmark audits the exact 0.3.0
+# HomSap event ledger (1,298 pulse-rate changes at generations 856--2153).
+stdpopsim==0.3.0
 
 # Feature evaluation, baselines, and figures (CPU only).
 numpy>=1.24
