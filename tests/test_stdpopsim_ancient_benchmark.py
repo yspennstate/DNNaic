@@ -155,7 +155,7 @@ def test_exact_catalog_events_and_controls_differ_only_at_focal_event():
     importlib_util.find_spec("stdpopsim") is None,
     reason="the pinned stdpopsim engine is exercised in the Azure environment",
 )
-def test_every_panel_condition_accepts_200_gene_copies_at_catalog_times():
+def test_every_panel_condition_runs_tiny_actual_simulation_at_catalog_times():
     import stdpopsim
 
     models, audit = benchmark.prepare_models()
@@ -177,13 +177,20 @@ def test_every_panel_condition_accepts_200_gene_copies_at_catalog_times():
             assert [sample.time for sample in samples] == [
                 expected_times[name] for name in panel.populations
             ]
-            assert engine.simulate(
+            tiny_contig = stdpopsim.Contig.basic_contig(
+                length=1_000,
+                mutation_rate=float(model.mutation_rate),
+                recombination_rate=benchmark.RECOMBINATION_RATE,
+                ploidy=2,
+            )
+            tree_sequence = engine.simulate(
                 model,
-                benchmark.make_contig(model),
+                tiny_contig,
                 {
                     name: benchmark.INDIVIDUALS_PER_POPULATION
                     for name in panel.populations
                 },
                 seed=12345,
-                dry_run=True,
-            ) is None
+            )
+            assert tree_sequence.num_samples == 600
+            assert tree_sequence.num_individuals == 300

@@ -387,6 +387,12 @@ def prepare_models() -> tuple[dict[str, dict[str, object]], dict]:
             "BasalEurasian->LBK is excluded because the catalog ghost population has "
             "default_sampling_time=None"
         ),
+        "engine_guardrail": (
+            "msprime 1.4.2 dry_run aborts in native code for the unmodified "
+            "AncientEurope_4A21 catalog model (lib/msprime.c line 6148), while actual "
+            "simulations succeed. This runner never invokes dry_run; the pinned test suite "
+            "uses tiny actual simulations for every panel and condition."
+        ),
     }
 
 
