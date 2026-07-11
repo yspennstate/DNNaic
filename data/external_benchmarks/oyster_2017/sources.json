@@ -70,6 +70,7 @@
     "direction_truth_available": false,
     "gate_truth_available": false,
     "independent_validation_panels": 0,
+    "minimum_called_copies_guardrail": "The shared minimum of 16 called copies lets QBB2 (n=9) miss at most one diploid genotype per locus while n=12 cohorts may miss four; the shared W/Q intersection therefore conditions W on Q missingness.",
     "shared_locus_filters": {
       "standard_contract": {
         "loci": 1101,
@@ -93,7 +94,7 @@
       "publication_date": "2021-03-12",
       "data_doi": "10.5281/zenodo.4589782",
       "scope": "363 definitive wild S. glomerata and 3,400 neutral SNPs across 25 estuaries; no B2 or overcatch cohort",
-      "interpretation": "Different question and release, with overlapping authors; not a documented reanalysis or independent benchmark. Its broad connectivity, high effective population size, and no-recent-bottleneck result blocks species-wide generalization of the 2017 local low-diversity contrast."
+      "interpretation": "Different question and release; O'Hare is the same lead researcher as Thompson, and Stow/Raftos are shared coauthors; not a documented reanalysis or independent benchmark. Its broad connectivity, high effective population size, and no-recent-bottleneck result argues against generalizing the 2017 Georges River inference to compromised species-wide wild-population resilience; it does not re-test or overturn the local wild-versus-B2 diversity contrast."
     },
     "restoration_review_2023": {
       "doi": "10.3389/fmars.2023.1162487",

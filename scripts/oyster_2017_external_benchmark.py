@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run a guarded Sydney rock oyster near-null specificity stress test.
+"""Run a guarded Sydney rock oyster candidate-null crossing stress test.
 
 Thompson et al. (2017) reported no detectable sustained introgression from the
 selectively bred B2 line into wild Sydney rock oysters at two Georges River
@@ -62,6 +62,7 @@ DEFAULT_RESULTS = REPO / "results" / "oyster_2017_external_benchmark_2026_07_11"
 DEFAULT_CAP = 1_200
 PANEL_RECORD = MANIFEST_DIR / "oyster_2017" / "panel_populations.tsv"
 SOURCES_RECORD = MANIFEST_DIR / "oyster_2017" / "sources.json"
+PANEL_RECORD_SHA256 = "4eaa7255f777c04be58a73a48c83c0a048314144d7df6b113d17e7194dd0669d"
 
 DRYAD_RECORD = "https://datadryad.org/dataset/doi:10.5061/dryad.32q80"
 DRYAD_ARCHIVE = "https://datadryad.org/api/v2/versions/3411/download"
@@ -93,6 +94,13 @@ SOURCE_CONTRACT = {
     "missing_original_sample_ids": ["28", "29", "31"],
     "samples_below_0_95_call_rate": ["20", "24", "36", "38", "50", "57", "66", "70", "84"],
     "loci_below_0_95_call_rate": 387,
+}
+DERIVED_SOURCE_CONTRACT = {
+    "bytes": 470_039,
+    "sha256": "7d978cb745008e880a023f4c6347c54d50abd9c19cfb5daeba1f964fc829d756",
+    "ordered_locus_id_sha256": SOURCE_CONTRACT["ordered_locus_sha256"],
+    "samples": 90,
+    "loci": 1_200,
 }
 WORKBOOK_POPULATION_COUNTS = {
     "PSHB2": 11,
@@ -183,6 +191,8 @@ def _extract_workbook(archive: Path, output: Path) -> None:
         members = [name for name in bundle.namelist() if Path(name).name == FILE["archive_member"]]
         if members != [FILE["archive_member"]]:
             raise AssertionError(f"unexpected Dryad archive members for oyster workbook: {members}")
+        if bundle.getinfo(members[0]).file_size != FILE["bytes"]:
+            raise AssertionError("Dryad archive workbook byte count changed")
         output.parent.mkdir(parents=True, exist_ok=True)
         temporary = output.with_suffix(output.suffix + ".part")
         with bundle.open(members[0]) as source, temporary.open("wb") as target:
@@ -192,7 +202,6 @@ def _extract_workbook(archive: Path, output: Path) -> None:
 
 
 def ensure_source(workbook: Path, archive: Path, download_missing: bool) -> dict:
-    direct_download_error = None
     if not workbook.exists():
         if archive.exists():
             _extract_workbook(archive, workbook)
@@ -201,27 +210,18 @@ def ensure_source(workbook: Path, archive: Path, download_missing: bool) -> dict
         else:
             try:
                 _download(DRYAD_FILE_DOWNLOAD, workbook)
-            except urllib.error.HTTPError as exc:
-                direct_download_error = f"HTTP {exc.code}"
+                _verify_workbook(workbook)
+            except (urllib.error.URLError, TimeoutError, AssertionError):
+                workbook.unlink(missing_ok=True)
                 _download(DRYAD_ARCHIVE, archive)
                 _extract_workbook(archive, workbook)
-    verified = {"workbook": _verify_workbook(workbook)}
-    verified["archive_wrapper_observation"] = (
-        {
-            "path": str(archive),
-            "bytes": archive.stat().st_size,
-            "sha256": sha256_file(archive),
-            "verification_status": "observed_only_not_pinned",
-            "guardrail": (
-                "Dryad generates the version ZIP wrapper; only the extracted workbook byte/hash "
-                "contract is canonical"
-            ),
-        }
-        if archive.exists()
-        else None
-    )
-    verified["direct_file_download_error_before_version_archive_fallback"] = direct_download_error
-    return verified
+    return {
+        "workbook": _verify_workbook(workbook),
+        "retrieval_contract": (
+            "only the canonical inner workbook is recorded; acquisition route and generated ZIP-wrapper "
+            "presence, bytes, timestamp, size, and digest are deliberately excluded from result identity"
+        ),
+    }
 
 
 def _column_index(letters: str) -> int:
@@ -579,7 +579,15 @@ def materialize_source_vcf(workbook: dict, output: Path) -> dict:
     }
 
 
+def validate_derived_source_audit(audit: dict) -> None:
+    observed = {key: audit[key] for key in DERIVED_SOURCE_CONTRACT}
+    if observed != DERIVED_SOURCE_CONTRACT:
+        raise AssertionError("deterministic oyster GenAlEx-to-VCF contract changed")
+
+
 def read_panel_record(path: Path = PANEL_RECORD) -> list[dict[str, str]]:
+    if sha256_file(path) != PANEL_RECORD_SHA256:
+        raise AssertionError("oyster population-record byte contract changed")
     with path.open(encoding="utf-8", newline="") as handle:
         rows = list(csv.DictReader(handle, delimiter="\t"))
     if [row["workbook_population"] for row in rows] != list(WORKBOOK_POPULATION_COUNTS):
@@ -669,8 +677,9 @@ def oyster_frequency_geometry(vcf: Path, manifest: Path, population_order: tuple
     )
     result["interpretation"] = (
         "sample-frequency geometry only. Projection is reference-flip invariant but is not bounded ancestry, "
-        "migration, or temporal direction. The finite-called-copy f3 correction is a model-free sensitivity, "
-        "not a certificate of a near-null. The prespecified 0.95 diagnostic threshold is never tuned post hoc."
+        "migration, or temporal direction. The finite-called-copy f3 subtraction assumes independent binomial "
+        "called-copy sampling and is not generally unbiased; positive f3 does not prove a near-null and negative "
+        "f3 would not supply direction. The prespecified 0.95 diagnostic threshold is never tuned post hoc."
     )
     return result
 
@@ -756,6 +765,11 @@ def run_panels(
         shared_audit["shared_site_contract"] = (
             "one exact ordered W/Q locus intersection; site outputs are directly paired within this filter"
         )
+        shared_audit["joint_called_copy_guardrail"] = (
+            "minimum 16 called copies in every one of six cohorts means QBB2 (n=9) may miss at most one "
+            "diploid genotype per locus while n=12 cohorts may miss four; because loci are shared, W is "
+            "also conditioned on Q missingness"
+        )
         shared_audits[filter_name] = shared_audit
 
         for site, spec in PANEL_SPECS.items():
@@ -775,7 +789,7 @@ def run_panels(
             if panel_audit["ordered_locus_id_sha256"] != expected["ordered_locus_id_sha256"]:
                 raise AssertionError("oyster panel subsetting changed locus IDs")
             expectation = {
-                "benchmark_role": "same_SNP_literature_supported_near_null_specificity_stress_test",
+                "benchmark_role": "same_release_literature_supported_candidate_null_crossing_sensitivity_stress_test",
                 "site_role": spec["role"],
                 "expected_gate": None,
                 "literature_candidate_gate_state": "no_detected_sustained_B2_to_wild_introgression",
@@ -792,6 +806,10 @@ def run_panels(
                 "same_data_excluded_ids": spec["same_data_excluded_ids"],
                 "joint_ascertainment": (
                     "W and Q share one DArT discovery/filtering process and one anonymous locus release"
+                ),
+                "joint_called_copy_guardrail": (
+                    "the shared minimum of 16 called copies allows at most one missing QBB2 genotype "
+                    "(n=9) versus four in n=12 cohorts, so the primary W panel is conditioned on Q missingness"
                 ),
                 "sample_scope": "all released samples for this site after author preprocessing",
                 "locus_filter_variant": (
@@ -817,6 +835,14 @@ def run_panels(
             )
             panel["population_order"]["tree_contract_status"] = expectation["tree_contract_status"]
             add_gate_score(panel, gate_head[0], gate_head[1])
+            panel["simulation_head"]["interpretation"] = (
+                "uncalibrated classifier scores on a natural-data input; not probabilities, posteriors, "
+                "or OOD-detector scores"
+            )
+            panel["simulation_gate"]["interpretation"] = (
+                "uncalibrated gate-classifier score on a natural-data input; not a probability, posterior, "
+                "migration estimate, or OOD-detector score"
+            )
             panel["model_free_comparator"] = oyster_frequency_geometry(
                 panel_vcf, manifests[site], spec["population_order"]
             )
@@ -876,14 +902,45 @@ def validate_sources_record(path: Path = SOURCES_RECORD) -> dict:
     record = json.loads(path.read_text(encoding="utf-8"))
     if record["data_doi"] != "10.5061/dryad.32q80" or record["version_id"] != 3_411:
         raise AssertionError("oyster Dryad source identity changed")
+    for key in ("id", "key", "archive_member", "download", "bytes", "md5", "sha256"):
+        if record["file"][key] != FILE[key]:
+            raise AssertionError(f"oyster source-record file {key} changed")
     if record["file"]["sha256"] != FILE["sha256"] or record["file"]["md5"] != FILE["md5"]:
         raise AssertionError("oyster source-record workbook hash changed")
     if record["archive"]["digest_policy"] != ARCHIVE["digest_policy"]:
         raise AssertionError("oyster source-record archive policy changed")
-    if record["workbook_contract"]["genalex_semantic_sha256"] != SOURCE_CONTRACT["genalex_semantic_sha256"]:
-        raise AssertionError("oyster source-record semantic hash changed")
-    if record["analysis_design"]["independent_validation_panels"] != 0:
+    workbook_record = record["workbook_contract"]
+    for key in (
+        "sheet_name",
+        "dimension",
+        "samples",
+        "loci",
+        "genotype_pairs",
+        "missing_genotype_pairs",
+        "ordered_sample_sha256",
+        "sample_population_tsv_sha256",
+        "ordered_locus_sha256",
+        "genalex_semantic_sha256",
+    ):
+        if workbook_record[key] != SOURCE_CONTRACT[key]:
+            raise AssertionError(f"oyster source-record workbook {key} changed")
+    rows = read_panel_record()
+    expected_crosswalk = {row["workbook_population"]: row["paper_population"] for row in rows}
+    if record["population_mapping"]["workbook_to_paper"] != expected_crosswalk:
+        raise AssertionError("oyster source-record population crosswalk changed")
+    design = record["analysis_design"]
+    if (
+        design["expected_gate"] is not None
+        or design["direction_truth_available"] is not False
+        or design["gate_truth_available"] is not False
+        or design["independent_validation_panels"] != 0
+        or design["candidate_class_if_event_present"] != "C"
+    ):
         raise AssertionError("oyster source record incorrectly claims independent validation")
+    for filter_name, expected in EXPECTED_FILTERS.items():
+        observed = design["shared_locus_filters"][filter_name]
+        if observed["loci"] != expected["loci"] or observed["ordered_locus_sha256"] != expected["ordered_locus_sha256"]:
+            raise AssertionError(f"oyster source-record {filter_name} contract changed")
     return record
 
 
@@ -913,6 +970,8 @@ def main() -> int:
     workbook = parse_genalex_workbook(workbook_path)
     source_vcf = cache / "oyster.synthetic_source.vcf"
     derived_source = materialize_source_vcf(workbook, source_vcf)
+    validate_derived_source_audit(derived_source)
+    population_record = read_panel_record()
     manifests, manifest_audit = materialize_manifests(workbook, cache / "manifests")
 
     data_root = Path(args.data_root).resolve()
@@ -945,6 +1004,11 @@ def main() -> int:
                 "sha256": sha256_file(SOURCES_RECORD),
                 "content": sources_record,
             },
+            "population_record": {
+                "path": str(PANEL_RECORD),
+                "sha256": sha256_file(PANEL_RECORD),
+                "rows": population_record,
+            },
             "workbook_audit": workbook["audit"],
             "derived_source_vcf": derived_source,
             "manifest_audit": manifest_audit,
@@ -975,12 +1039,14 @@ def main() -> int:
                 "wild_population_study": (
                     "O'Hare et al. 2021 (10.1007/s10592-021-01343-4) analyzed a different 363-wild-"
                     "oyster/3,400-neutral-SNP question, contains no B2 or overcatch cohorts, and is not a "
-                    "documented reanalysis; overlapping authors also prevent treating it as independent validation"
+                    "documented reanalysis; O'Hare is the same lead researcher as Thompson and Stow/Raftos "
+                    "are shared coauthors, so it is not independent validation"
                 ),
                 "species_wide_generalization_guardrail": (
                     "the 2021 result of one highly connected wild stock, high effective population size, and no "
-                    "recent bottleneck means the 2017 local Georges River diversity contrast must not be "
-                    "generalized to species-wide low diversity or adaptive capacity"
+                    "recent bottleneck argues against generalizing the 2017 Georges River inference to compromised "
+                    "species-wide wild-population resilience; it does not re-test or overturn the local "
+                    "wild-versus-B2 diversity contrast"
                 ),
                 "review": (
                     "Bishop et al. 2023 (10.3389/fmars.2023.1162487) is a review that repeats the source "

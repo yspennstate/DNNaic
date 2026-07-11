@@ -382,14 +382,15 @@ python scripts/hantarcticus_2024_external_benchmark.py \
   --source-readme /path/to/README.md
 ```
 
-## 2017 Sydney rock oyster (same-SNP near-null specificity stress test)
+## 2017 Sydney rock oyster (same-release candidate-null crossing-sensitivity stress test)
 
 Thompson et al. (2017; DOI 10.3354/meps12109) reported strong partitioning
 between wild and selectively bred B2 Sydney rock oysters and no detectable
 sustained introgression at two Georges River sites. This is not a gold zero-
 flow label. The conclusion, clusters, and Q-site exclusions reuse the released
-SNPs; only 9--12 individuals remain per cohort; and low or episodic gene flow
-could have escaped detection.
+SNPs; only 9--12 individuals remain per cohort; and low gene flow, occasional
+hybridization, or gene flow not producing sustained introgression could have
+escaped detection.
 
 The primary W comparison is WWC (P1), WOC rack overcatch (P2), and WB2 selected
 stock (P3). QWC/QOC/QB2 is secondary because three B2-labelled Q oysters
@@ -404,6 +405,11 @@ validation trials. W/Q share sampling date, B2 stock/pedigree, DArT discovery,
 anonymous loci, and source inference. The 21 Port Stephens hatchery-reference
 oysters are audited but excluded because two cohorts do not supply a defensible
 three-population topology.
+
+The shared minimum of 16 called copies is deliberately explicit but unequal in
+missing-genotype tolerance: QBB2 (n=9) can miss at most one diploid genotype per
+locus, while each n=12 cohort can miss four. Because both sites use the same
+intersection, even the primary W panel is conditioned on Q missingness.
 
 The Dryad workbook contains 90 oysters and 1,200 generic paired-code loci. It
 does not identify the paper's 1,189 neutral versus 11 consensus selection-
