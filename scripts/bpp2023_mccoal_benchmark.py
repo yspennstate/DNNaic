@@ -58,9 +58,9 @@ from scripts import stdpopsim_neanderthal_benchmark as stdbench
 from scripts import structured_transfer_pilot as structured
 
 
-SCHEMA_VERSION = "dnnaic-bpp2023-mccoal-benchmark-v1"
-CHECKPOINT_SCHEMA = "dnnaic-bpp2023-mccoal-checkpoint-v1"
-COUNT_SCHEMA = "dnnaic-bpp2023-counts-v1"
+SCHEMA_VERSION = "dnnaic-bpp2023-mccoal-benchmark-v2"
+CHECKPOINT_SCHEMA = "dnnaic-bpp2023-mccoal-checkpoint-v2"
+COUNT_SCHEMA = "dnnaic-bpp2023-counts-v2"
 BPP_RELEASES = {
     "4.6.1": {
         "binary_sha256": "567c18544cc8cb015ed5b206ae9976627505825b0c6aa17b6f49b80f601404b4",
@@ -69,7 +69,7 @@ BPP_RELEASES = {
     },
     "4.8.7": {
         "binary_sha256": "6c8828704e1037788e02d6943cc6cbb61d05d6aadbdd976095b71fc965e8e90e",
-        "distribution_sha256": "577306b8dafa80114d09e61f460633dd567eff9c67d5f878bbc7ae9d74cf69f2",
+        "official_distribution_sha256": "577306b8dafa80114d09e61f460633dd567eff9c67d5f878bbc7ae9d74cf69f2",
         "version_token": "bpp v4.8.7",
         "status": "current official release sensitivity as verified 2026-07-11",
     },
@@ -250,6 +250,7 @@ def source_audit(
     official_controls: Path,
     official_archive: Path,
     bpp_version: str,
+    bpp_distribution_archive: Path | None = None,
 ) -> dict:
     binary = binary.resolve()
     official_controls = official_controls.resolve()
@@ -264,6 +265,30 @@ def source_audit(
     binary_hash = structured.sha256_file(binary)
     if binary_hash != release["binary_sha256"]:
         raise RuntimeError(f"BPP binary SHA-256 changed: {binary_hash}")
+    expected_distribution_hash = release.get("official_distribution_sha256")
+    distribution_audit = None
+    if expected_distribution_hash is not None:
+        if bpp_distribution_archive is None:
+            raise FileNotFoundError(
+                f"BPP {bpp_version} requires its pinned official distribution archive"
+            )
+        distribution_path = bpp_distribution_archive.resolve()
+        if not distribution_path.is_file():
+            raise FileNotFoundError(distribution_path)
+        distribution_hash = structured.sha256_file(distribution_path)
+        if distribution_hash != expected_distribution_hash:
+            raise RuntimeError(
+                f"BPP {bpp_version} distribution SHA-256 changed: {distribution_hash}"
+            )
+        distribution_audit = {
+            "bytes": distribution_path.stat().st_size,
+            "sha256": distribution_hash,
+            "verified_against_pinned_official_release": True,
+        }
+    elif bpp_distribution_archive is not None:
+        raise ValueError(
+            f"BPP {bpp_version} has no pinned standalone distribution contract"
+        )
     archive_md5 = _md5_file(official_archive)
     archive_sha256 = structured.sha256_file(official_archive)
     if archive_md5 != OFFICIAL_ARCHIVE_MD5 or archive_sha256 != OFFICIAL_ARCHIVE_SHA256:
@@ -321,6 +346,7 @@ def source_audit(
     return {
         "bpp_version": bpp_version,
         "release_contract": release,
+        "bpp_distribution_archive": distribution_audit,
         "binary_bytes": binary.stat().st_size,
         "binary_sha256": binary_hash,
         "version_stdout_sha256": hashlib.sha256(version.encode("utf-8")).hexdigest(),
@@ -374,12 +400,28 @@ def parse_bpp_alignments(
     locus_length: int = LOCUS_LENGTH,
     gene_copies: int = GENE_COPIES,
     outgroup_copies: int = OUTGROUP_COPIES,
+    bpp_version: str = "4.6.1",
+    imap_mapping: dict[str, str] | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, dict]:
     path = Path(path)
     if locus_count < 1 or locus_length < 1 or gene_copies < 1 or outgroup_copies < 1:
         raise ValueError("BPP parser dimensions must be positive")
     if gene_copies > np.iinfo(np.uint16).max:
         raise ValueError("BPP parser gene-copy count exceeds uint16 capacity")
+    if bpp_version not in BPP_RELEASES:
+        raise ValueError(f"unsupported BPP parser version {bpp_version!r}")
+    if imap_mapping is None:
+        imap_mapping = {population: population for population in POPULATION_ORDER}
+    expected_sample_names = set()
+    for population in POPULATION_ORDER:
+        count = outgroup_copies if population == "S" else gene_copies
+        for index in range(1, count + 1):
+            key = f"{population.lower()}{index}"
+            expected_sample_names.add(
+                f"{key}^{population}"
+                if bpp_version == "4.6.1"
+                else f"{population}^{key}"
+            )
     reader = _HashingReader(path)
     all_counts = []
     all_blocks = []
@@ -401,6 +443,7 @@ def parse_bpp_alignments(
                     f"[{expected_sequences}, {locus_length}]"
                 )
             sequences = {name: [] for name in POPULATION_ORDER}
+            observed_sample_names = set()
             for sequence_index in range(expected_sequences):
                 line = _next_nonempty(reader)
                 if not line:
@@ -419,11 +462,50 @@ def parse_bpp_alignments(
                     sequence += "".join(continuation.decode("ascii").split())
                 if len(sequence) != locus_length:
                     raise RuntimeError("BPP sequence length changed")
-                if "^" not in sample_name:
+                if sample_name.count("^") != 1:
                     raise RuntimeError(f"BPP sample lacks an Imap suffix: {sample_name!r}")
-                population = sample_name.rsplit("^", 1)[1]
+                left, right = sample_name.split("^", 1)
+                if bpp_version == "4.6.1":
+                    population = right
+                    expected_key = left
+                    if imap_mapping.get(population) != population:
+                        raise RuntimeError(
+                            f"BPP 4.6.1 Imap does not self-map {population!r}"
+                        )
+                else:
+                    if right not in imap_mapping:
+                        raise RuntimeError(
+                            f"BPP {bpp_version} sample key is absent from Imap: {right!r}"
+                        )
+                    population = imap_mapping[right]
+                    expected_key = right
+                    if left != population:
+                        raise RuntimeError(
+                            f"BPP {bpp_version} sample prefix {left!r} != Imap population "
+                            f"{population!r}"
+                        )
                 if population not in sequences:
-                    raise RuntimeError(f"BPP sample has unknown population suffix {population!r}")
+                    raise RuntimeError(f"BPP sample has unknown population {population!r}")
+                population_count = (
+                    outgroup_copies if population == "S" else gene_copies
+                )
+                expected_prefix = population.lower()
+                suffix = expected_key[len(expected_prefix):]
+                if not expected_key.startswith(expected_prefix) or not suffix.isdigit():
+                    raise RuntimeError(
+                        f"BPP {bpp_version} sample key changed: {expected_key!r}"
+                    )
+                sample_index = int(suffix)
+                if (
+                    not 1 <= sample_index <= population_count
+                    or expected_key != f"{expected_prefix}{sample_index}"
+                ):
+                    raise RuntimeError(
+                        f"BPP {bpp_version} sample key changed: {expected_key!r}"
+                    )
+                if sample_name in observed_sample_names:
+                    raise RuntimeError(f"BPP locus repeats sample name {sample_name!r}")
+                observed_sample_names.add(sample_name)
                 encoded = np.frombuffer(sequence.encode("ascii"), dtype=np.uint8)
                 if not np.isin(encoded, base_codes).all():
                     raise RuntimeError("BPP JC69 alignment contains a non-ACGT base")
@@ -439,6 +521,8 @@ def parse_bpp_alignments(
                 raise RuntimeError(
                     f"BPP locus {locus_index} population counts changed: {observed_counts}"
                 )
+            if observed_sample_names != expected_sample_names:
+                raise RuntimeError("BPP locus exact sample-name contract changed")
             counts = np.zeros((locus_length, 3, 4), dtype=np.uint16)
             for population_index, population in enumerate(("R", "Q", "D")):
                 matrix = np.stack(sequences[population])
@@ -496,12 +580,31 @@ def parse_bpp_alignments(
     return counts, blocks, positions, audit
 
 
-def parse_imap(path: Path) -> dict:
+def parse_imap(
+    path: Path,
+    *,
+    bpp_version: str = "4.6.1",
+    gene_copies: int = GENE_COPIES,
+    outgroup_copies: int = OUTGROUP_COPIES,
+) -> tuple[dict, dict[str, str]]:
+    if gene_copies < 1 or outgroup_copies < 1:
+        raise ValueError("BPP Imap dimensions must be positive")
     payload = path.read_bytes()
     rows = [line.split() for line in payload.decode("utf-8-sig").splitlines() if line.strip()]
     if any(len(row) != 2 for row in rows):
         raise RuntimeError("BPP Imap.txt row shape changed")
-    expected_rows = [[population, population] for population in POPULATION_ORDER]
+    if bpp_version == "4.6.1":
+        expected_rows = [[population, population] for population in POPULATION_ORDER]
+    elif bpp_version == "4.8.7":
+        expected_rows = []
+        for population in POPULATION_ORDER:
+            count = outgroup_copies if population == "S" else gene_copies
+            expected_rows.extend([
+                [f"{population.lower()}{index}", population]
+                for index in range(1, count + 1)
+            ])
+    else:
+        raise ValueError(f"unsupported BPP Imap version {bpp_version!r}")
     if rows != expected_rows:
         raise RuntimeError(
             f"BPP Imap.txt contract changed: observed {rows}, expected {expected_rows}"
@@ -510,8 +613,14 @@ def parse_imap(path: Path) -> dict:
     return {
         "bytes": len(payload),
         "sha256": hashlib.sha256(payload).hexdigest(),
-        "rows": rows,
-    }
+        "row_count": len(rows),
+        "row_ledger_sha256": hashlib.sha256(_canonical_json(rows)).hexdigest(),
+        "contract": (
+            "four exact population self-maps" if bpp_version == "4.6.1"
+            else "one exact sample-to-population row per simulated sequence"
+        ),
+        "bpp_version": bpp_version,
+    }, mapping
 
 
 def counts_to_curve(
@@ -519,6 +628,7 @@ def counts_to_curve(
     blocks: np.ndarray,
     positions: np.ndarray,
     *,
+    bpp_version: str,
     compute_state: Path | None = None,
 ) -> tuple[np.ndarray, dict]:
     from padze import LociData, Metadata, compute_features
@@ -544,7 +654,7 @@ def counts_to_curve(
         sample_sizes=sample_sizes,
         locus_ids=locus_ids,
         metadata=Metadata(
-            source="BPP 4.6.1 MCcoal derivative of Ji et al. 2023",
+            source=f"BPP {bpp_version} MCcoal derivative of Ji et al. 2023",
             populations=["P1", "P2", "P3"],
             sample_ids={name: [] for name in ("P1", "P2", "P3")},
             ploidy={name: 1 for name in ("P1", "P2", "P3")},
@@ -672,6 +782,7 @@ def simulate_job(
     binary: Path,
     cache_dir: Path,
     config_sha256: str,
+    bpp_version: str,
     compute_state: Path | None = None,
     timeout_seconds: int = 1800,
 ) -> dict:
@@ -709,8 +820,15 @@ def simulate_job(
             imap_path = job_dir / "Imap.txt"
             if not seq_path.is_file() or not imap_path.is_file():
                 raise RuntimeError("BPP did not produce Seq.txt and Imap.txt")
-            counts, blocks, positions, parser_audit = parse_bpp_alignments(seq_path)
-            imap_audit = parse_imap(imap_path)
+            imap_audit, imap_mapping = parse_imap(
+                imap_path,
+                bpp_version=bpp_version,
+            )
+            counts, blocks, positions, parser_audit = parse_bpp_alignments(
+                seq_path,
+                bpp_version=bpp_version,
+                imap_mapping=imap_mapping,
+            )
             raw_retention = None
             if job.family_index == 0:
                 raw_retention = _gzip_atomic(
@@ -772,6 +890,7 @@ def simulate_job(
         counts,
         blocks,
         positions,
+        bpp_version=bpp_version,
         compute_state=compute_state,
     )
     curve32 = curve.astype(np.float32)
@@ -1109,10 +1228,15 @@ def analyze_records(
     }
 
 
-def configuration(jobs: Sequence[BPPJob], source: dict) -> dict:
+def configuration(jobs: Sequence[BPPJob], source: dict, revision: dict) -> dict:
     return {
         "schema_version": SCHEMA_VERSION,
         "source": source,
+        "producer_source": {
+            "commit": revision["commit"],
+            "script_sha256": revision["script_sha256"],
+            "head_blob_oid": revision["head_blob_oid"],
+        },
         "jobs": [job_payload(job) for job in jobs],
         "phis": list(PHIS),
         "scales": list(SCALES),
@@ -1156,6 +1280,7 @@ def main() -> int:
     parser.add_argument(
         "--bpp-version", choices=tuple(BPP_RELEASES), default="4.6.1"
     )
+    parser.add_argument("--bpp-distribution-archive", type=Path, default=None)
     parser.add_argument("--official-control-dir", type=Path, required=True)
     parser.add_argument("--official-archive", type=Path, required=True)
     parser.add_argument("--canonical-root", type=Path, required=True)
@@ -1189,9 +1314,10 @@ def main() -> int:
         args.official_control_dir,
         args.official_archive,
         args.bpp_version,
+        args.bpp_distribution_archive,
     )
     jobs = make_jobs()
-    config = configuration(jobs, source)
+    config = configuration(jobs, source, revision)
     config_sha256 = hashlib.sha256(_canonical_json(config)).hexdigest()
     requested_families = 30 if args.limit_families is None else args.limit_families
     requested_jobs = [job for job in jobs if job.family_index < requested_families]
@@ -1208,6 +1334,7 @@ def main() -> int:
                 binary=args.bpp_binary,
                 cache_dir=args.cache_dir,
                 config_sha256=config_sha256,
+                bpp_version=args.bpp_version,
                 compute_state=args.compute_state,
                 timeout_seconds=args.timeout_seconds,
             )

@@ -32,7 +32,16 @@ def _small_alignment() -> bytes:
     ).encode("ascii")
 
 
+def _small_alignment_487() -> bytes:
+    return _small_alignment().replace(b"q1^Q", b"Q^q1").replace(
+        b"q2^Q", b"Q^q2"
+    ).replace(b"r1^R", b"R^r1").replace(b"r2^R", b"R^r2").replace(
+        b"d1^D", b"D^d1"
+    ).replace(b"d2^D", b"D^d2").replace(b"s1^S", b"S^s1")
+
+
 def _parsed_small_alignment(tmp_path: Path):
+    tmp_path.mkdir(parents=True, exist_ok=True)
     path = tmp_path / "Seq.txt"
     path.write_bytes(_small_alignment())
     return benchmark.parse_bpp_alignments(
@@ -120,12 +129,21 @@ def test_direction_mapping_and_control_contract_are_frozen():
     assert benchmark.BPP_RELEASES["4.8.7"]["binary_sha256"] == (
         "6c8828704e1037788e02d6943cc6cbb61d05d6aadbdd976095b71fc965e8e90e"
     )
-    assert benchmark.BPP_RELEASES["4.8.7"]["distribution_sha256"] == (
+    assert benchmark.BPP_RELEASES["4.8.7"]["official_distribution_sha256"] == (
         "577306b8dafa80114d09e61f460633dd567eff9c67d5f878bbc7ae9d74cf69f2"
     )
-    config = benchmark.configuration(benchmark.make_jobs(), {})
+    config = benchmark.configuration(
+        benchmark.make_jobs(),
+        {},
+        {
+            "commit": "a" * 40,
+            "script_sha256": "b" * 64,
+            "head_blob_oid": "c" * 40,
+        },
+    )
     assert "paper's inflow-asymmetric phi=0" in config["null_provenance"]
     assert "independently seeded" in config["stochastic_design"]
+    assert config["producer_source"]["script_sha256"] == "b" * 64
 
 
 def test_small_alignment_parser_counts_only_triplet_polymorphism(tmp_path):
@@ -167,14 +185,95 @@ def test_parser_rejects_trailing_content_and_invalid_dimensions(tmp_path):
         benchmark.parse_bpp_alignments(path, locus_count=0)
 
 
+def test_bpp_461_parser_rejects_leading_zero_sample_alias(tmp_path):
+    path = tmp_path / "Seq.txt"
+    path.write_bytes(_small_alignment().replace(b"q1^Q", b"q01^Q"))
+    with pytest.raises(RuntimeError, match="sample key changed"):
+        benchmark.parse_bpp_alignments(
+            path,
+            locus_count=2,
+            locus_length=5,
+            gene_copies=2,
+            outgroup_copies=1,
+        )
+
+
 def test_imap_parser_requires_all_four_populations(tmp_path):
     path = tmp_path / "Imap.txt"
     path.write_text("Q Q\nR R\nD D\nS S\n", encoding="ascii")
-    audit = benchmark.parse_imap(path)
-    assert len(audit["rows"]) == 4
+    audit, mapping = benchmark.parse_imap(path)
+    assert audit["row_count"] == 4
+    assert audit["contract"] == "four exact population self-maps"
+    assert mapping == {"Q": "Q", "R": "R", "D": "D", "S": "S"}
     path.write_text("Q Q\nR R\nD D\n", encoding="ascii")
     with pytest.raises(RuntimeError, match="contract changed"):
         benchmark.parse_imap(path)
+
+
+def test_bpp_487_imap_and_alignment_contract(tmp_path):
+    imap_path = tmp_path / "Imap.txt"
+    imap_path.write_text(
+        "q1 Q\nq2 Q\nr1 R\nr2 R\nd1 D\nd2 D\ns1 S\n",
+        encoding="ascii",
+    )
+    audit, mapping = benchmark.parse_imap(
+        imap_path,
+        bpp_version="4.8.7",
+        gene_copies=2,
+        outgroup_copies=1,
+    )
+    assert audit["row_count"] == 7
+    assert audit["bpp_version"] == "4.8.7"
+    assert mapping == {
+        "q1": "Q",
+        "q2": "Q",
+        "r1": "R",
+        "r2": "R",
+        "d1": "D",
+        "d2": "D",
+        "s1": "S",
+    }
+    seq_path = tmp_path / "Seq.txt"
+    seq_path.write_bytes(_small_alignment_487())
+    observed = benchmark.parse_bpp_alignments(
+        seq_path,
+        locus_count=2,
+        locus_length=5,
+        gene_copies=2,
+        outgroup_copies=1,
+        bpp_version="4.8.7",
+        imap_mapping=mapping,
+    )
+    expected = _parsed_small_alignment(tmp_path / "expected")
+    for observed_array, expected_array in zip(observed[:3], expected[:3]):
+        assert np.array_equal(observed_array, expected_array)
+    assert observed[3]["raw_seq_sha256"] == hashlib.sha256(
+        _small_alignment_487()
+    ).hexdigest()
+
+
+def test_bpp_487_parser_rejects_prefix_imap_disagreement(tmp_path):
+    path = tmp_path / "Seq.txt"
+    path.write_bytes(_small_alignment_487().replace(b"Q^q1", b"R^q1", 1))
+    mapping = {
+        "q1": "Q",
+        "q2": "Q",
+        "r1": "R",
+        "r2": "R",
+        "d1": "D",
+        "d2": "D",
+        "s1": "S",
+    }
+    with pytest.raises(RuntimeError, match="sample prefix"):
+        benchmark.parse_bpp_alignments(
+            path,
+            locus_count=2,
+            locus_length=5,
+            gene_copies=2,
+            outgroup_copies=1,
+            bpp_version="4.8.7",
+            imap_mapping=mapping,
+        )
 
 
 def test_count_checkpoint_round_trip_and_ledger_binding(tmp_path):
