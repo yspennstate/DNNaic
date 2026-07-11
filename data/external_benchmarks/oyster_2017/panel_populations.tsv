@@ -1,0 +1,9 @@
+workbook_population	paper_population	site	cohort	benchmark_population	benchmark_role	expected_n	analysis_status	source_sample_ids	guardrail
+PSHB2	HB2	Port Stephens Hatchery	B2 selected hatchery reference	NA	nonbenchmark_reference	11	excluded	1-11	Two PSH cohorts do not form a defensible three-population DNNaic topology.
+PSHWT	HC	Port Stephens Hatchery	unselected hatchery control	NA	nonbenchmark_reference	10	excluded	12-21	Same founder-generation context is useful biologically but not an independent third population.
+QBB2	QB2	Q site	B2 selected stock	P3	secondary_posthoc_cleaned_sensitivity	9	included	22-27,30,32-33	Original IDs 28, 29, and 31 were removed after same-SNP DAPC classified them as wild-like.
+QBOC	QOC	Q site	rack overcatch	P2	secondary_posthoc_cleaned_sensitivity	12	included	34-45	Wild overcatch is a nearby microhabitat cohort, not a temporal descendant population.
+QBWC	QWC	Q site	local wild caught	P1	secondary_posthoc_cleaned_sensitivity	12	included	46-57	Q shares stock, sampling date, joint SNP ascertainment, and source inference with W.
+WBB2	WB2	W site	B2 selected stock	P3	primary_cleaner_near_null	12	included	58-69	B2 is a sixth-generation selected/founder stock, not a species-tree outgroup.
+WBOC	WOC	W site	rack overcatch	P2	primary_cleaner_near_null	12	included	70-81	Candidate exposure orientation if an event exists is P3 to P2 (class C), not a positive truth label.
+WBWC	WWC	W site	local wild caught	P1	primary_cleaner_near_null	12	included	82-93	The source near-null is same-data and detection-limited, not proof of zero gene flow.

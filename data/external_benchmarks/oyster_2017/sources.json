@@ -1,0 +1,107 @@
+{
+  "record": "https://datadryad.org/dataset/doi:10.5061/dryad.32q80",
+  "data_doi": "10.5061/dryad.32q80",
+  "dataset_id": 3390,
+  "version_id": 3411,
+  "version_number": 1,
+  "publication_date": "2018-04-12",
+  "license": "CC0-1.0",
+  "archive_download": "https://datadryad.org/api/v2/versions/3411/download",
+  "archive": {
+    "key": "doi_10_5061_dryad_32q80__version_3411.zip",
+    "digest_policy": "not_pinned_generated_ZIP_wrapper_validate_inner_workbook_only"
+  },
+  "file": {
+    "id": 21290,
+    "key": "SNP_data_M12109.xlsx",
+    "archive_member": "SNP_data_M12109.xlsx",
+    "download": "https://datadryad.org/api/v2/files/21290/download",
+    "bytes": 729706,
+    "md5": "572a079597af8530b15aaffd07325b55",
+    "sha256": "e0f6983f1a15c9d7a1aeb4a76e220f24b1d4c766600502413b2cb5c4fdde8029"
+  },
+  "paper": {
+    "doi": "10.3354/meps12109",
+    "title": "Lack of genetic introgression between wild and selectively bred Sydney rock oysters Saccostrea glomerata",
+    "journal_year": 2017,
+    "publication_date": "2017-04-27",
+    "journal": "Marine Ecology Progress Series",
+    "volume_pages": "570:127-139",
+    "guardrail": "The reported failure to detect sustained introgression is same-data and power-limited; it is not proof that migration equals zero."
+  },
+  "workbook_contract": {
+    "sheet_name": "SNP_data_M12109",
+    "dimension": "A1:CNJ93",
+    "samples": 90,
+    "loci": 1200,
+    "genotype_pairs": 108000,
+    "missing_genotype_pairs": 3647,
+    "ordered_sample_sha256": "1cb297a1bcebd42d09e8ecbe8b1a9805c8cc2e735237248d0475b35de69ea034",
+    "sample_population_tsv_sha256": "3673f332f880de07355c5d3a1c0612140f068325339bbc85dccbc67480e0d03f",
+    "ordered_locus_sha256": "48f1c20c0bb01bad52330eae6bf5775ffd3cc2bf74e9d7eae374165546614632",
+    "genalex_semantic_sha256": "9f58cf09e53c8353ea5d1ec272b0af7ac7ae05af257b12b6acb014c392be825e",
+    "allele_encoding": "0/0 missing; 1 is the workbook reference code; 2 is the workbook SNP code",
+    "identity_guardrail": "All loci are generic LocusN labels. The 1,189 neutral and 11 consensus selection-outlier loci cannot be distinguished from the release."
+  },
+  "population_mapping": {
+    "crosswalk_status": "mechanical workbook-code to paper-code mapping verified against row order, counts, and source methods",
+    "workbook_to_paper": {
+      "PSHB2": "HB2",
+      "PSHWT": "HC",
+      "QBB2": "QB2",
+      "QBOC": "QOC",
+      "QBWC": "QWC",
+      "WBB2": "WB2",
+      "WBOC": "WOC",
+      "WBWC": "WWC"
+    },
+    "Q_same_SNP_removed_original_ids": [
+      "28",
+      "29",
+      "31"
+    ]
+  },
+  "analysis_design": {
+    "W": "primary cleaner near-null comparison: WWC=P1, WOC=P2, WB2=P3",
+    "Q": "secondary post-hoc-cleaned sensitivity: QWC=P1, QOC=P2, QB2=P3",
+    "candidate_class_if_event_present": "C",
+    "candidate_forward_direction_if_present": "B2 P3 to overcatch P2",
+    "expected_gate": null,
+    "direction_truth_available": false,
+    "gate_truth_available": false,
+    "independent_validation_panels": 0,
+    "shared_locus_filters": {
+      "standard_contract": {
+        "loci": 1101,
+        "ordered_locus_sha256": "edafecad96e334e40dfff485bb99ba6e1354a0d7841af7257851673c286a75ed"
+      },
+      "within_population_polymorphism": {
+        "loci": 589,
+        "ordered_locus_sha256": "df6659235f9030e4ecec84c36be610239e0912d8986daf2f053144892d71ec26"
+      }
+    }
+  },
+  "known_release_discrepancies": [
+    "The paper states that individuals and loci were retained at at least 95% call rate, but the released final workbook has 9 individuals and 387 loci below 95%; all individuals remain above 94%.",
+    "A site-only W standard prefilter happens to retain 1,189 loci, numerically matching the paper's neutral count, but the released generic locus labels cannot establish that it is the same neutral subset; the paired benchmark instead freezes a shared W/Q intersection.",
+    "The Dryad usage note says workbook population codes match the manuscript, while the workbook uses PSH/QB/WB prefixes that require an explicit crosswalk to HB/HC/Q/W paper codes."
+  ],
+  "later_context": {
+    "wild_connectivity_2021": {
+      "doi": "10.1007/s10592-021-01343-4",
+      "title": "Genetic structure and effective population size of Sydney rock oysters in eastern Australia",
+      "publication_date": "2021-03-12",
+      "data_doi": "10.5281/zenodo.4589782",
+      "scope": "363 definitive wild S. glomerata and 3,400 neutral SNPs across 25 estuaries; no B2 or overcatch cohort",
+      "interpretation": "Different question and release, with overlapping authors; not a documented reanalysis or independent benchmark. Its broad connectivity, high effective population size, and no-recent-bottleneck result blocks species-wide generalization of the 2017 local low-diversity contrast."
+    },
+    "restoration_review_2023": {
+      "doi": "10.3389/fmars.2023.1162487",
+      "title": "Oyster reef restoration - aquaculture interactions: maximizing positive synergies",
+      "publication_date": "2023-09-19",
+      "type": "review",
+      "interpretation": "Cites the 2017 finding but performs no genotype reanalysis; dependent synthesis only."
+    },
+    "search_status_as_of_2026_07_11": "Dryad/DataCite relations and exact DOI/filename searches located no later independent reanalysis or benchmark label for the released 90-by-1,200 matrix."
+  }
+}

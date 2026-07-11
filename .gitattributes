@@ -25,3 +25,7 @@ data/external_benchmarks/hantarcticus_2024/*.tsv text eol=lf
 data/external_benchmarks/hantarcticus_2024/*.json text eol=lf
 results/hantarcticus_2024_external_benchmark_2026_07_11/*.json text eol=lf
 results/hantarcticus_2024_external_benchmark_2026_07_11/*.md text eol=lf
+data/external_benchmarks/oyster_2017/*.tsv text eol=lf
+data/external_benchmarks/oyster_2017/*.json text eol=lf
+results/oyster_2017_external_benchmark_2026_07_11/*.json text eol=lf
+results/oyster_2017_external_benchmark_2026_07_11/*.md text eol=lf

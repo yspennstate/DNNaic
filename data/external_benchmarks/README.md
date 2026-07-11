@@ -381,3 +381,46 @@ python scripts/hantarcticus_2024_external_benchmark.py \
   --matrices-zip /path/to/biophysical_matrices_Hantarcticus.zip \
   --source-readme /path/to/README.md
 ```
+
+## 2017 Sydney rock oyster (same-SNP near-null specificity stress test)
+
+Thompson et al. (2017; DOI 10.3354/meps12109) reported strong partitioning
+between wild and selectively bred B2 Sydney rock oysters and no detectable
+sustained introgression at two Georges River sites. This is not a gold zero-
+flow label. The conclusion, clusters, and Q-site exclusions reuse the released
+SNPs; only 9--12 individuals remain per cohort; and low or episodic gene flow
+could have escaped detection.
+
+The primary W comparison is WWC (P1), WOC rack overcatch (P2), and WB2 selected
+stock (P3). QWC/QOC/QB2 is secondary because three B2-labelled Q oysters
+(original IDs 28, 29, and 31) were removed after same-SNP DAPC classified them
+as wild-like. Class C (B2 P3 to overcatch P2) is only the exposure orientation
+if an event exists. Neither direction nor gate truth is available.
+
+Both sites use one exact shared locus intersection. The standard view retains
+1,101 loci; the within-population-polymorphic sensitivity retains 589. These
+are two correlated sites crossed with two ascertainment filters, not four
+validation trials. W/Q share sampling date, B2 stock/pedigree, DArT discovery,
+anonymous loci, and source inference. The 21 Port Stephens hatchery-reference
+oysters are audited but excluded because two cohorts do not supply a defensible
+three-population topology.
+
+The Dryad workbook contains 90 oysters and 1,200 generic paired-code loci. It
+does not identify the paper's 1,189 neutral versus 11 consensus selection-
+outlier loci, nor provide bases, chromosomes, coordinates, or a linkage map.
+The runner therefore uses explicit synthetic A/C coding on CHROM 0 and treats
+IID-locus resampling only as a fixed-sample sensitivity. It also records that
+the final workbook has 9 individuals and 387 loci below the paper's stated 95%
+call-rate threshold.
+
+A raw gate below 0.5 is qualitatively concordant with the study's failure to
+detect sustained introgression; a crossing is qualitatively in tension.
+Neither is a true negative or false positive because the source is same-data,
+power-limited, and does not establish migration rate zero. Severe-OOD panels
+abstain regardless of the raw class or gate score. Run:
+
+```bash
+python scripts/oyster_2017_external_benchmark.py \
+  --data-root /path/to/simulation_data \
+  --source-xlsx /path/to/SNP_data_M12109.xlsx
+```
