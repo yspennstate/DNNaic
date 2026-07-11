@@ -149,7 +149,14 @@ def make_jobs(pairs: int, seed_base: int) -> list[BenchmarkJob]:
 
 def _event_signature(event) -> dict:
     payload = {"event_type": type(event).__name__}
-    payload.update({key: _jsonable(value) for key, value in vars(event).items()})
+    # ``Demography.validate`` attaches a runtime back-reference named
+    # ``demography`` to each event.  It is not model content and necessarily
+    # differs between a deep copy and its source.
+    payload.update({
+        key: _jsonable(value)
+        for key, value in vars(event).items()
+        if key != "demography"
+    })
     return payload
 
 
