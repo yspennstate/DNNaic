@@ -95,6 +95,7 @@ python scripts/further_external_benchmarks.py --help # scrub-jay and matched Mal
 python scripts/directional_external_benchmarks.py --help # Ciona direction-labelled contact-zone audit
 python scripts/dingo_weeks_2025_external_benchmark.py --help # pedigree-anchored dingo--dog transfer stress test
 python scripts/yellowstone_2019_external_benchmark.py --help # trout stocking/history and GT-vs-PL transfer stress test
+python scripts/guppy_2020_external_benchmark.py --help # replicated experimental guppy genetic-rescue transfer test
 ```
 
 The external benchmark runner records its fixed sample manifests, source/training-array hashes,
@@ -109,6 +110,9 @@ keeping proxy-reference, relatedness, filter-correlation, and natural-data OOD g
 The Yellowstone runner freezes its target from stocking/distance metadata, audits genotype
 representation and library confounding, and treats all reference/target/filter rows as correlated
 stress tests rather than accuracy trials.
+The guppy runner uses two experimentally directed recipient drainages, but keeps their shared
+source proxy, serial sampling, outcome-inclusive locus ascertainment, low-locus strict filters, and
+unlicensed runtime-only source explicit.
 
 ## Layout
 

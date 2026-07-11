@@ -1,0 +1,87 @@
+{
+  "schema_version": "dnnaic-guppy-2020-source-v1",
+  "repository": "https://github.com/gbradburd/guppy_seln",
+  "repository_commit": "ac8ec0cdf29dec539494b49d8bdf32ff6f0197f2",
+  "repository_tree": "eac1fe39081906b691f857e4493864db66361b02",
+  "repository_license": null,
+  "data_use_policy": "Fetch exact bytes at runtime only; do not vendor source VCFs or author code without a license grant.",
+  "paper": {
+    "url": "https://www.sciencedirect.com/science/article/pii/S0960982219315325",
+    "doi": "10.1016/j.cub.2019.11.062",
+    "license": "CC-BY-NC-ND-4.0",
+    "title": "Genomic and Fitness Consequences of Genetic Rescue in Wild Populations"
+  },
+  "original_experiment": {
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4947150/",
+    "doi": "10.1111/eva.12356",
+    "license": "CC-BY"
+  },
+  "files": {
+    "NCA": {
+      "key": "nchr_NCA_mapped.vcf",
+      "url": "https://raw.githubusercontent.com/gbradburd/guppy_seln/ac8ec0cdf29dec539494b49d8bdf32ff6f0197f2/1_data/nchr_NCA_mapped.vcf",
+      "bytes": 4967968,
+      "sha256": "4cf713eac4243808c85800b5b192ff19b8132d66b240c6cc9f48f5658ab2c940",
+      "git_blob": "471ab9e4952cfd72d9dd53e298393ef73b51632b"
+    },
+    "NTY": {
+      "key": "nchr_NTY_mapped.vcf",
+      "url": "https://raw.githubusercontent.com/gbradburd/guppy_seln/ac8ec0cdf29dec539494b49d8bdf32ff6f0197f2/1_data/nchr_NTY_mapped.vcf",
+      "bytes": 4829947,
+      "sha256": "041de93e3fb4361d029dc272a633ff6af8415959297730e34ba6e10ac88fc0b0",
+      "git_blob": "d5282c035bd85fe48d475df7dfa895f50696f61f"
+    },
+    "PCA": {
+      "key": "nchr_PCA_mapped.vcf",
+      "url": "https://raw.githubusercontent.com/gbradburd/guppy_seln/ac8ec0cdf29dec539494b49d8bdf32ff6f0197f2/1_data/nchr_PCA_mapped.vcf",
+      "bytes": 5276051,
+      "sha256": "e4eddf5b9917db4fed4ed80ee42317fd8faebc8246472ab420815f78abadd682",
+      "git_blob": "9e767e652387657fea2aad8bd23eb951eb6684fc"
+    },
+    "PTY": {
+      "key": "nchr_PTY_mapped.vcf",
+      "url": "https://raw.githubusercontent.com/gbradburd/guppy_seln/ac8ec0cdf29dec539494b49d8bdf32ff6f0197f2/1_data/nchr_PTY_mapped.vcf",
+      "bytes": 6252249,
+      "sha256": "75945f56e2ffd9360df5173db9fc050f0b0ac684c3bacdc380a46a3310ba4ff3",
+      "git_blob": "464d42c9e88c6ffe4bc0d6676b4914e10c25f2b8"
+    },
+    "SGS": {
+      "key": "nchr_SGS_mapped.vcf",
+      "url": "https://raw.githubusercontent.com/gbradburd/guppy_seln/ac8ec0cdf29dec539494b49d8bdf32ff6f0197f2/1_data/nchr_SGS_mapped.vcf",
+      "bytes": 2870728,
+      "sha256": "88fe8b9e17493a9d8f5b930a76ee71eb6e6c11c1455cacd6c4a42b72adca7692",
+      "git_blob": "0a63f9b8bab4607f45dca6ddf7ac66ae203d476b"
+    }
+  },
+  "format_script": {
+    "key": "format_guppy_data.R",
+    "url": "https://raw.githubusercontent.com/gbradburd/guppy_seln/ac8ec0cdf29dec539494b49d8bdf32ff6f0197f2/1_data/format_guppy_data.R",
+    "bytes": 3657,
+    "sha256": "ce3ea9823bb21d284bec2552ffa544f57353c24f5d9e8ea031aa0a6783ff3236",
+    "git_blob": "dd2463fe0beb5de95d42a1cb46df31684c8b3617"
+  },
+  "analysis_design": {
+    "caigual": "P1=NCA pre-flow recipient (18), P2=PCA post-flow recipient (19), P3=SGS source proxy (9)",
+    "taylor": "P1=NTY pre-flow recipient (17), P2=PTY post-flow recipient (23), P3=SGS source proxy (9)",
+    "candidate_class": "C",
+    "experimental_flow_direction_available": true,
+    "exclusive_single_edge_truth_available": false,
+    "formal_direction_accuracy_eligible": false,
+    "gate_truth_available": false,
+    "release_locus_ascertainment_outcome_blind": false,
+    "benchmark_locus_filters_outcome_blind": false,
+    "locus_ascertainment_guardrail": "The author release was filtered across pre/post populations, and both runner filters inspect post-flow P2. Experimental direction is SNP-independent, but locus inclusion is not prospective held-out.",
+    "guardrails": [
+      "Caigual and Taylor are two ecological recipient units sharing one SGS source proxy.",
+      "P1/P2 are serial samples of recipient lineages and SGS is not the exact introduced cohort.",
+      "Standard/strict filters are correlated; strict panels have only 30 and 22 loci.",
+      "Release and benchmark locus selection use post-flow samples; this is a transfer stress test, not prospective held-out validation.",
+      "Published FST and monomorphism changes reuse the experiment/genotypes and are sanity checks, not extra labels."
+    ]
+  },
+  "release_discrepancies": [
+    "The paper reports 12,407 SNPs, but each of the five runtime-verified VCFs contains 11,417.",
+    "format_guppy_data.R incorrectly comments that NCA is post-flow; downstream code, paper, and ancestry plots use NCA as pre-flow and PCA as post-flow.",
+    "The author data repository has no explicit LICENSE/COPYING file and GitHub reports license=null."
+  ]
+}
