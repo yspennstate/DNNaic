@@ -6,7 +6,7 @@ paper.  It asks a narrow question motivated by the external-data audit: can a
 population-structured, scale-reduced representation preserve the canonical
 simulation signal while reducing the extreme observation-domain shift?
 
-Three prespecified logistic heads are compared on the identical g=2..16 grid:
+Three data-informed logistic heads are compared on the identical g=2..16 grid:
 
 * ``raw_all``: the current 54-D mean+SD summary of all mean/variance/SE curves;
 * ``raw_mean_variance``: the same summary with the locus-count-bearing SE
@@ -26,8 +26,8 @@ scaler is fit on training data only.  Two outer estimands are reported:
 
 The pinned standardized natural cohort is loaded only after all simulation
 evaluation.  It provides unlabeled coverage/OOD diagnostics and descriptive
-candidate concordance, never an accuracy denominator.  Study bundles receive
-equal weight in the prespecified transfer criterion.  The script records full
+candidate concordance, never an accuracy denominator.  Result-file bundles
+receive equal weight in the exploratory transfer diagnostic.  The script records full
 fold and OOF ledgers so overlap and model selection can be audited.
 
 The process aborts before loading arrays whenever the owner's compute governor
@@ -50,6 +50,7 @@ import subprocess
 import sys
 import time
 from typing import Iterable, Sequence
+import warnings
 
 # Set numerical-library thread defaults before importing NumPy/sklearn.
 for _name in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "NUMEXPR_NUM_THREADS"):
@@ -59,6 +60,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = ""
 import numpy as np
 import sklearn
 from sklearn.linear_model import LogisticRegression
+from sklearn.exceptions import ConvergenceWarning
 from sklearn.metrics import balanced_accuracy_score, f1_score, log_loss
 from sklearn.model_selection import StratifiedGroupKFold
 from sklearn.preprocessing import StandardScaler
@@ -68,9 +70,9 @@ REPO = Path(__file__).resolve().parents[1]
 CLASSES = np.array(["A", "B", "C"])
 APPRECIABLE = 2.5e-4
 DEFAULT_MAX_DEPTH = 16
-SCHEMA_VERSION = "dnnaic-structured-transfer-pilot-v1"
-SIMULATION_CHECKPOINT_SCHEMA = "dnnaic-structured-simulation-checkpoint-v1"
-DEFAULT_RESULT_DIR = REPO / "results" / "structured_transfer_pilot_2026_07_11"
+SCHEMA_VERSION = "dnnaic-structured-transfer-pilot-v2"
+SIMULATION_CHECKPOINT_SCHEMA = "dnnaic-structured-simulation-checkpoint-v2"
+DEFAULT_RESULT_DIR = REPO / "results" / "structured_transfer_pilot_v2_2026_07_11"
 DEFAULT_COMPUTE_STATE = Path.home() / ".claude" / "compute" / "compute_state.json"
 STOPPED_TRADING_AUTH_ENV = "DNNAIC_OWNER_AUTHORIZED_STOPPED_TRADING_COMPUTE"
 COMPUTE_TARGET_ENV = "DNNAIC_COMPUTE_TARGET"
@@ -365,6 +367,15 @@ def git_revision(
             capture_output=True,
             text=True,
         ).stdout.strip()
+        tracked_dirty = subprocess.run(
+            [
+                "git", "-C", str(repo), "status", "--porcelain",
+                "--untracked-files=no",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
         try:
             relative_script = script.relative_to(repo).as_posix()
         except ValueError:
@@ -372,6 +383,8 @@ def git_revision(
         script_in_head = False
         head_script_sha256 = None
         diff = None
+        head_blob_oid = None
+        worktree_blob_oid = None
         if relative_script is not None:
             tracked = subprocess.run(
                 ["git", "-C", str(repo), "ls-files", "--error-unmatch", "--", relative_script],
@@ -391,11 +404,27 @@ def git_revision(
                 check=True,
                 capture_output=True,
             ).stdout
+            head_blob_oid = subprocess.run(
+                ["git", "-C", str(repo), "rev-parse", f"HEAD:{relative_script}"],
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+            worktree_blob_oid = subprocess.run(
+                [
+                    "git", "-C", str(repo), "hash-object",
+                    f"--path={relative_script}", relative_script,
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
         source = "local_git_worktree"
         commit_verified_locally = True
         diff_bytes = None if diff is None else int(len(diff))
         diff_sha256 = None if diff is None else hashlib.sha256(diff).hexdigest()
         dirty_at_run = bool(dirty)
+        tracked_dirty_at_snapshot = bool(tracked_dirty)
     except (FileNotFoundError, subprocess.CalledProcessError):
         commit = os.environ.get("DNNAIC_SOURCE_COMMIT", "").lower()
         dirty_text = os.environ.get("DNNAIC_SOURCE_DIRTY", "")
@@ -414,18 +443,54 @@ def git_revision(
         diff_bytes = None
         diff_sha256 = None
         dirty_at_run = dirty_text == "1"
+        tracked_dirty_at_snapshot = None
+        head_blob_oid = None
+        worktree_blob_oid = None
     return {
         "commit": commit,
         "dirty_at_run": dirty_at_run,
+        "tracked_dirty_at_snapshot": tracked_dirty_at_snapshot,
         "source": source,
         "commit_verified_locally": commit_verified_locally,
         "script_in_head": script_in_head,
         "head_script_sha256": head_script_sha256,
+        "head_blob_oid": head_blob_oid,
+        "worktree_blob_oid": worktree_blob_oid,
         "script": str(script),
         "script_sha256": sha256_file(script),
         "tracked_diff_bytes": diff_bytes,
         "tracked_diff_sha256": diff_sha256,
     }
+
+
+def require_clean_tracked_revision(revision: dict) -> None:
+    """Fail closed unless the executing source is exactly a clean local Git HEAD."""
+    failures = []
+    if revision.get("source") != "local_git_worktree":
+        failures.append("source is not a local Git worktree")
+    if revision.get("commit_verified_locally") is not True:
+        failures.append("commit was not verified locally")
+    if revision.get("script_in_head") is not True:
+        failures.append("runner is not tracked in HEAD")
+    if revision.get("tracked_dirty_at_snapshot") is not False:
+        failures.append("tracked worktree content is dirty before output creation")
+    if revision.get("head_blob_oid") != revision.get("worktree_blob_oid"):
+        failures.append("runner canonical Git blob differs from HEAD")
+    if revision.get("tracked_diff_bytes") != 0:
+        failures.append("runner has a tracked diff")
+    if failures:
+        raise RuntimeError(
+            "publishable structured pilot requires clean tracked source: "
+            + "; ".join(failures)
+        )
+
+
+def require_revision_unchanged(initial: dict, final: dict) -> None:
+    """Reject a mid-run source or HEAD transition before the final result write."""
+    require_clean_tracked_revision(final)
+    fields = ("commit", "head_blob_oid", "worktree_blob_oid", "script_in_head")
+    if any(initial.get(field) != final.get(field) for field in fields):
+        raise RuntimeError("structured pilot source changed after the initial snapshot")
 
 
 def _canonical_json(value) -> bytes:
@@ -436,6 +501,20 @@ def _canonical_json(value) -> bytes:
         ensure_ascii=True,
         allow_nan=False,
     ).encode("ascii")
+
+
+def validate_C_grid(values: Iterable[float]) -> tuple[float, ...]:
+    """Return a finite, positive, unique, strictly increasing model grid."""
+    grid = tuple(float(value) for value in values)
+    if not grid:
+        raise ValueError("C grid is empty")
+    if any(not math.isfinite(value) or value <= 0 for value in grid):
+        raise ValueError("C grid values must be finite and positive")
+    if len(set(grid)) != len(grid):
+        raise ValueError("C grid values must be unique")
+    if tuple(sorted(grid)) != grid:
+        raise ValueError("C grid values must be strictly increasing")
+    return grid
 
 
 class SingleWriterLease:
@@ -812,9 +891,17 @@ def grouped_folds(
 
 def _fit_model(features: np.ndarray, labels: np.ndarray, C: float):
     scaler = StandardScaler().fit(features)
-    model = LogisticRegression(C=float(C), max_iter=3000, solver="lbfgs").fit(
-        scaler.transform(features), labels
-    )
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always", ConvergenceWarning)
+        model = LogisticRegression(C=float(C), max_iter=3000, solver="lbfgs").fit(
+            scaler.transform(features), labels
+        )
+    convergence = [warning for warning in caught if issubclass(warning.category, ConvergenceWarning)]
+    if convergence or np.any(np.asarray(model.n_iter_) >= model.max_iter):
+        raise RuntimeError(
+            f"logistic regression did not converge for C={float(C):g}; "
+            f"n_iter={np.asarray(model.n_iter_).astype(int).tolist()}"
+        )
     return scaler, model
 
 
@@ -828,6 +915,7 @@ def _choose_C(
     n_splits: int,
     compute_state: Path | None = None,
 ) -> tuple[float, dict]:
+    grid = validate_C_grid(grid)
     folds = grouped_folds(labels, blocks, n_splits=n_splits, seed=seed)
     fold_ledger = []
     for fold_index, (train, test) in enumerate(folds):
@@ -888,11 +976,79 @@ def _balanced_accuracy_without_spurious_class_warning(
     ]))
 
 
+def _equal_rate_family_summary(
+    labels: np.ndarray,
+    probability: np.ndarray,
+    rates: np.ndarray,
+    designs: np.ndarray,
+    family_ids: np.ndarray,
+) -> dict:
+    """Macro-average appreciable performance over exact rate families."""
+    labels = np.asarray(labels)
+    probability = np.asarray(probability, dtype=float)
+    rates = np.asarray(rates, dtype=float)
+    designs = np.asarray(designs)
+    family_ids = np.asarray(family_ids)
+    if not (
+        len(labels) == len(probability) == len(rates) == len(designs) == len(family_ids)
+    ):
+        raise ValueError("equal-family metric arrays differ in length")
+    appreciable = rates >= APPRECIABLE
+    prediction = probability.argmax(axis=1)
+    family_scores = []
+    for family in sorted(np.unique(family_ids[appreciable]), key=str):
+        all_family = family_ids == family
+        use = all_family & appreciable
+        if not np.array_equal(use, all_family):
+            raise AssertionError("only part of an exact rate family is appreciable")
+        family_rates = np.unique(rates[use])
+        family_designs = np.unique(designs[use])
+        if len(family_rates) != 1 or len(family_designs) != 1:
+            raise AssertionError("exact rate family mixes rate or design metadata")
+        score = _balanced_accuracy_without_spurious_class_warning(
+            labels[use], prediction[use]
+        )
+        family_scores.append({
+            "family_id": str(family),
+            "design": str(family_designs[0]),
+            "rate": float(family_rates[0]),
+            "rate_hex": float(family_rates[0]).hex(),
+            "n_rows": int(use.sum()),
+            "class_counts": _class_counts(labels[use]),
+            "balanced_accuracy": score,
+        })
+    by_design = {}
+    for design in sorted({row["design"] for row in family_scores}):
+        scores = [
+            row["balanced_accuracy"] for row in family_scores if row["design"] == design
+        ]
+        by_design[design] = {
+            "families": int(len(scores)),
+            "balanced_accuracy": float(np.mean(scores)),
+        }
+    scores = [row["balanced_accuracy"] for row in family_scores]
+    return {
+        "metric": "equal-weight mean of within-exact-rate-family balanced accuracy",
+        "n_rows": int(appreciable.sum()),
+        "n_families": int(len(family_scores)),
+        "balanced_accuracy": None if not scores else float(np.mean(scores)),
+        "median_family_balanced_accuracy": (
+            None if not scores else float(np.median(scores))
+        ),
+        "minimum_family_balanced_accuracy": (
+            None if not scores else float(np.min(scores))
+        ),
+        "family_scores": family_scores,
+        "by_design": by_design,
+    }
+
+
 def _probability_summary(
     labels: np.ndarray,
     probability: np.ndarray,
     rates: np.ndarray,
     designs: np.ndarray,
+    evaluation_families: np.ndarray | None = None,
 ) -> dict:
     prediction = probability.argmax(axis=1)
 
@@ -936,6 +1092,14 @@ def _probability_summary(
             "rate": float(rate),
             **metrics((designs == "fixed") & (rates == rate)),
         }
+    if evaluation_families is not None:
+        result["appreciable_equal_rate_family"] = _equal_rate_family_summary(
+            labels,
+            probability,
+            rates,
+            designs,
+            np.asarray(evaluation_families),
+        )
     return result
 
 
@@ -952,17 +1116,25 @@ def nested_oof(
     C_grid: Sequence[float],
     outer_splits: int,
     inner_splits: int,
+    evaluation_families: np.ndarray | None = None,
     compute_state: Path | None = None,
 ) -> dict:
+    if evaluation_families is not None:
+        evaluation_families = np.asarray(evaluation_families)
+        if len(evaluation_families) != len(labels):
+            raise ValueError("evaluation-family IDs differ from OOF rows")
     repeats = []
     probability_repeats = []
     distance_repeats = []
     fold_ledgers = []
+    per_repeat_oof = []
+    support_references = []
     for repeat_index, seed in enumerate(seeds):
         if compute_state is not None:
             compute_gate(compute_state)
         probability = np.full((len(labels), len(CLASSES)), np.nan, dtype=float)
         distance = np.full(len(labels), np.nan, dtype=float)
+        outer_fold = np.full(len(labels), -1, dtype=np.int16)
         folds = grouped_folds(labels, outer_blocks, n_splits=outer_splits, seed=int(seed))
         repeat_ledger = []
         for fold_index, (train, test) in enumerate(folds):
@@ -979,6 +1151,9 @@ def nested_oof(
             )
             scaler, model = _fit_model(features[train], labels[train], selected_C)
             transformed = scaler.transform(features[test])
+            if np.any(outer_fold[test] != -1):
+                raise AssertionError("nested OOF row assigned to multiple outer folds")
+            outer_fold[test] = int(fold_index)
             probability[test] = model.predict_proba(transformed)
             distance[test] = np.sqrt(np.mean(transformed**2, axis=1))
             train_blocks = sorted(set(map(str, outer_blocks[train])))
@@ -998,12 +1173,51 @@ def nested_oof(
                 "inner_selection": inner,
                 "scaler_fit_rows": int(len(train)),
                 "model_fit_rows": int(len(train)),
+                "model_n_iter": np.asarray(model.n_iter_).astype(int).tolist(),
+                "convergence_warning": False,
             })
-        if not np.isfinite(probability).all() or not np.isfinite(distance).all():
+            support_references.append({
+                "repeat": int(repeat_index),
+                "seed": int(seed),
+                "fold": int(fold_index),
+                "feature_dimension": int(features.shape[1]),
+                "train_rows": int(len(train)),
+                "test_rows": int(len(test)),
+                "train_block_sha256": sha256_text(train_blocks),
+                "test_block_sha256": sha256_text(test_blocks),
+                "scaler_mean": np.asarray(scaler.mean_, dtype=float).tolist(),
+                "scaler_scale": np.asarray(scaler.scale_, dtype=float).tolist(),
+                "source_test_rms_z_p99": float(
+                    np.quantile(distance[test], 0.99, method="linear")
+                ),
+            })
+        if (
+            not np.isfinite(probability).all()
+            or not np.isfinite(distance).all()
+            or np.any(outer_fold < 0)
+        ):
             raise AssertionError("nested OOF prediction ledger is incomplete")
-        repeats.append(_probability_summary(labels, probability, rates, designs))
+        repeats.append(_probability_summary(
+            labels,
+            probability,
+            rates,
+            designs,
+            evaluation_families=evaluation_families,
+        ))
         probability_repeats.append(probability)
         distance_repeats.append(distance)
+        repeat_payload = {
+            "repeat": int(repeat_index),
+            "seed": int(seed),
+            "outer_fold": outer_fold.astype(int).tolist(),
+            "probability": probability.tolist(),
+            "prediction_index": probability.argmax(axis=1).astype(int).tolist(),
+            "rms_z": distance.tolist(),
+        }
+        repeat_payload["payload_sha256"] = hashlib.sha256(
+            _canonical_json(repeat_payload)
+        ).hexdigest()
+        per_repeat_oof.append(repeat_payload)
         fold_ledgers.append({
             "repeat": int(repeat_index),
             "seed": int(seed),
@@ -1018,6 +1232,13 @@ def nested_oof(
         for repeat in fold_ledgers
         for fold in repeat["folds"]
     )
+    selected_values = [
+        float(fold["selected_C"])
+        for repeat in fold_ledgers
+        for fold in repeat["folds"]
+    ]
+    grid_max = float(max(C_grid))
+    maximum_selected = int(sum(value == grid_max for value in selected_values))
     oof_rows = []
     for index in range(len(labels)):
         oof_rows.append({
@@ -1035,7 +1256,17 @@ def nested_oof(
             "mean_rms_z": float(mean_distance[index]),
         })
     oof_digest = hashlib.sha256(_canonical_json(oof_rows)).hexdigest()
-    return {
+    row_contract = [
+        [
+            str(group_ids[index]),
+            str(outer_blocks[index]),
+            str(CLASSES[labels[index]]),
+            float(rates[index]).hex(),
+            str(designs[index]),
+        ]
+        for index in range(len(labels))
+    ]
+    result = {
         "outer_estimand": outer_name,
         "outer_splits": int(outer_splits),
         "inner_splits": int(inner_splits),
@@ -1043,10 +1274,35 @@ def nested_oof(
         "C_grid": [float(value) for value in C_grid],
         "per_repeat_metrics": repeats,
         "mean_probability_metrics": _probability_summary(
-            labels, mean_probability, rates, designs
+            labels,
+            mean_probability,
+            rates,
+            designs,
+            evaluation_families=evaluation_families,
         ),
         "selected_C_counts": dict(sorted(selected_counts.items())),
+        "C_grid_diagnostic": {
+            "minimum": float(min(C_grid)),
+            "maximum": grid_max,
+            "fold_selections": int(len(selected_values)),
+            "maximum_selected": maximum_selected,
+            "maximum_selected_fraction": float(maximum_selected / len(selected_values)),
+            "C_grid_ceiling_reached": bool(maximum_selected > 0),
+            "interpretation": (
+                "Any maximum selection is a capacity-boundary diagnostic; expand the grid "
+                "before interpreting a capacity-limited comparison."
+            ),
+        },
         "fold_ledger": fold_ledgers,
+        "oof_row_contract": {
+            "class_order": CLASSES.tolist(),
+            "rows": int(len(labels)),
+            "row_key_sha256": hashlib.sha256(_canonical_json(row_contract)).hexdigest(),
+        },
+        "per_repeat_oof": per_repeat_oof,
+        "per_repeat_oof_sha256": hashlib.sha256(
+            _canonical_json([row["payload_sha256"] for row in per_repeat_oof])
+        ).hexdigest(),
         "oof_predictions": oof_rows,
         "oof_predictions_sha256": oof_digest,
         "crossfit_source_rms_z_descriptive": {
@@ -1057,7 +1313,255 @@ def nested_oof(
             "maximum": float(np.max(mean_distance)),
             "values": mean_distance.tolist(),
         },
+        "crossfit_support_reference": {
+            "metric": "RMS standardized distance over representation features",
+            "source_test_quantile": 0.99,
+            "quantile_method": "linear",
+            "folds": support_references,
+            "folds_sha256": hashlib.sha256(
+                _canonical_json(support_references)
+            ).hexdigest(),
+            "guardrail": (
+                "Fold-local source-test p99 comparisons are descriptive OOD diagnostics, "
+                "not conformal coverage, calibrated probabilities, or p-values."
+            ),
+        },
     }
+    validate_nested_oof_payload(
+        result,
+        labels,
+        rates,
+        designs,
+        group_ids,
+        outer_blocks,
+        evaluation_families=evaluation_families,
+        features=features,
+    )
+    return result
+
+
+def validate_nested_oof_payload(
+    result: dict,
+    labels: np.ndarray,
+    rates: np.ndarray,
+    designs: np.ndarray,
+    group_ids: np.ndarray,
+    outer_blocks: np.ndarray,
+    *,
+    evaluation_families: np.ndarray | None = None,
+    features: np.ndarray | None = None,
+) -> None:
+    """Semantically validate the persisted repeat-level OOF and fold ledger."""
+    labels = np.asarray(labels)
+    rates = np.asarray(rates, dtype=float)
+    designs = np.asarray(designs)
+    group_ids = np.asarray(group_ids)
+    outer_blocks = np.asarray(outer_blocks)
+    n_rows = len(labels)
+    if not all(len(array) == n_rows for array in (rates, designs, group_ids, outer_blocks)):
+        raise RuntimeError("nested OOF validation arrays differ in length")
+    if evaluation_families is not None:
+        evaluation_families = np.asarray(evaluation_families)
+        if len(evaluation_families) != n_rows:
+            raise RuntimeError("nested OOF evaluation families differ in length")
+    if features is not None:
+        features = np.asarray(features, dtype=float)
+        if features.ndim != 2 or len(features) != n_rows or not np.isfinite(features).all():
+            raise RuntimeError("nested OOF validation feature matrix is invalid")
+    row_contract = [
+        [
+            str(group_ids[index]),
+            str(outer_blocks[index]),
+            str(CLASSES[labels[index]]),
+            float(rates[index]).hex(),
+            str(designs[index]),
+        ]
+        for index in range(n_rows)
+    ]
+    expected_row_hash = hashlib.sha256(_canonical_json(row_contract)).hexdigest()
+    contract = result.get("oof_row_contract", {})
+    if (
+        contract.get("class_order") != CLASSES.tolist()
+        or contract.get("rows") != n_rows
+        or contract.get("row_key_sha256") != expected_row_hash
+    ):
+        raise RuntimeError("nested OOF row contract changed")
+    seeds = [int(seed) for seed in result.get("repeat_seeds", [])]
+    payloads = result.get("per_repeat_oof", [])
+    fold_ledgers = result.get("fold_ledger", [])
+    saved_metrics = result.get("per_repeat_metrics", [])
+    if not (len(payloads) == len(fold_ledgers) == len(saved_metrics) == len(seeds)):
+        raise RuntimeError("nested OOF repeat ledgers differ in length")
+    expected_combined = hashlib.sha256(
+        _canonical_json([payload.get("payload_sha256") for payload in payloads])
+    ).hexdigest()
+    if result.get("per_repeat_oof_sha256") != expected_combined:
+        raise RuntimeError("nested OOF combined repeat hash changed")
+
+    probabilities = []
+    distances = []
+    outer_splits = int(result["outer_splits"])
+    for repeat_index, (seed, payload, ledger) in enumerate(
+        zip(seeds, payloads, fold_ledgers)
+    ):
+        without_hash = {
+            key: value for key, value in payload.items() if key != "payload_sha256"
+        }
+        expected_hash = hashlib.sha256(_canonical_json(without_hash)).hexdigest()
+        if payload.get("payload_sha256") != expected_hash:
+            raise RuntimeError(f"nested OOF repeat {repeat_index} payload hash changed")
+        if payload.get("repeat") != repeat_index or payload.get("seed") != seed:
+            raise RuntimeError("nested OOF repeat identity changed")
+        probability = np.asarray(payload.get("probability"), dtype=float)
+        distance = np.asarray(payload.get("rms_z"), dtype=float)
+        prediction = np.asarray(payload.get("prediction_index"), dtype=int)
+        outer_fold = np.asarray(payload.get("outer_fold"), dtype=int)
+        if (
+            probability.shape != (n_rows, len(CLASSES))
+            or distance.shape != (n_rows,)
+            or prediction.shape != (n_rows,)
+            or outer_fold.shape != (n_rows,)
+        ):
+            raise RuntimeError("nested OOF repeat payload shape changed")
+        if (
+            not np.isfinite(probability).all()
+            or not np.allclose(probability.sum(axis=1), 1.0, atol=1e-12, rtol=0)
+            or np.any(probability < 0)
+            or not np.isfinite(distance).all()
+            or np.any(distance < 0)
+            or not np.array_equal(prediction, probability.argmax(axis=1))
+            or np.any((outer_fold < 0) | (outer_fold >= outer_splits))
+        ):
+            raise RuntimeError("nested OOF repeat payload values are invalid")
+        for block in np.unique(outer_blocks):
+            if len(np.unique(outer_fold[outer_blocks == block])) != 1:
+                raise RuntimeError("nested OOF outer block crosses folds")
+        if (
+            ledger.get("repeat") != repeat_index
+            or ledger.get("seed") != seed
+            or len(ledger.get("folds", [])) != outer_splits
+        ):
+            raise RuntimeError("nested OOF fold ledger identity changed")
+        for fold_index, fold in enumerate(ledger["folds"]):
+            test = np.flatnonzero(outer_fold == fold_index)
+            train = np.flatnonzero(outer_fold != fold_index)
+            train_blocks = sorted(set(map(str, outer_blocks[train])))
+            test_blocks = sorted(set(map(str, outer_blocks[test])))
+            expected_fields = {
+                "fold": int(fold_index),
+                "train_rows": int(len(train)),
+                "test_rows": int(len(test)),
+                "train_blocks": int(len(train_blocks)),
+                "test_blocks": int(len(test_blocks)),
+                "train_block_sha256": sha256_text(train_blocks),
+                "test_block_sha256": sha256_text(test_blocks),
+                "train_class_counts": _class_counts(labels[train]),
+                "test_class_counts": _class_counts(labels[test]),
+            }
+            if any(fold.get(key) != value for key, value in expected_fields.items()):
+                raise RuntimeError("nested OOF fold ledger does not match row assignments")
+            if set(train_blocks) & set(test_blocks) or fold.get("block_overlap") is not False:
+                raise RuntimeError("nested OOF fold ledger contains block overlap")
+        recomputed = _probability_summary(
+            labels,
+            probability,
+            rates,
+            designs,
+            evaluation_families=evaluation_families,
+        )
+        if _canonical_json(recomputed) != _canonical_json(saved_metrics[repeat_index]):
+            raise RuntimeError("nested OOF repeat metrics do not match saved probabilities")
+        probabilities.append(probability)
+        distances.append(distance)
+
+    probability_mean = np.mean(np.stack(probabilities), axis=0)
+    distance_mean = np.mean(np.stack(distances), axis=0)
+    recomputed_mean = _probability_summary(
+        labels,
+        probability_mean,
+        rates,
+        designs,
+        evaluation_families=evaluation_families,
+    )
+    if _canonical_json(recomputed_mean) != _canonical_json(result["mean_probability_metrics"]):
+        raise RuntimeError("nested OOF mean metrics do not match repeat probabilities")
+    expected_rows = []
+    for index in range(n_rows):
+        expected_rows.append({
+            "group_id": str(group_ids[index]),
+            "outer_block": str(outer_blocks[index]),
+            "truth": str(CLASSES[labels[index]]),
+            "rate": float(rates[index]),
+            "rate_hex": float(rates[index]).hex(),
+            "design": str(designs[index]),
+            "mean_probability": {
+                str(label): float(value)
+                for label, value in zip(CLASSES, probability_mean[index])
+            },
+            "mean_prediction": str(CLASSES[int(np.argmax(probability_mean[index]))]),
+            "mean_rms_z": float(distance_mean[index]),
+        })
+    if _canonical_json(expected_rows) != _canonical_json(result.get("oof_predictions")):
+        raise RuntimeError("nested OOF mean row ledger changed")
+    expected_rows_hash = hashlib.sha256(_canonical_json(expected_rows)).hexdigest()
+    if result.get("oof_predictions_sha256") != expected_rows_hash:
+        raise RuntimeError("nested OOF mean row hash changed")
+    saved_distances = np.asarray(
+        result.get("crossfit_source_rms_z_descriptive", {}).get("values"),
+        dtype=float,
+    )
+    if not np.array_equal(saved_distances, distance_mean):
+        raise RuntimeError("nested OOF mean RMS-z ledger changed")
+
+    support = result.get("crossfit_support_reference", {})
+    references = support.get("folds", [])
+    if len(references) != len(seeds) * outer_splits:
+        raise RuntimeError("cross-fit support reference is incomplete")
+    if support.get("folds_sha256") != hashlib.sha256(
+        _canonical_json(references)
+    ).hexdigest():
+        raise RuntimeError("cross-fit support reference hash changed")
+    for reference in references:
+        repeat_index = int(reference.get("repeat", -1))
+        fold_index = int(reference.get("fold", -1))
+        if not (0 <= repeat_index < len(seeds) and 0 <= fold_index < outer_splits):
+            raise RuntimeError("cross-fit support reference identity is invalid")
+        fold = fold_ledgers[repeat_index]["folds"][fold_index]
+        mean = np.asarray(reference.get("scaler_mean"), dtype=float)
+        scale = np.asarray(reference.get("scaler_scale"), dtype=float)
+        p99 = float(reference.get("source_test_rms_z_p99", math.nan))
+        if (
+            mean.ndim != 1
+            or scale.shape != mean.shape
+            or len(mean) != int(reference.get("feature_dimension", -1))
+            or not np.isfinite(mean).all()
+            or not np.isfinite(scale).all()
+            or np.any(scale <= 0)
+            or not math.isfinite(p99)
+            or p99 <= 0
+            or reference.get("train_rows") != fold["train_rows"]
+            or reference.get("test_rows") != fold["test_rows"]
+            or reference.get("train_block_sha256") != fold["train_block_sha256"]
+            or reference.get("test_block_sha256") != fold["test_block_sha256"]
+        ):
+            raise RuntimeError("cross-fit support reference values are invalid")
+        if features is not None:
+            outer_fold = np.asarray(
+                payloads[repeat_index]["outer_fold"], dtype=int
+            )
+            train = outer_fold != fold_index
+            test = outer_fold == fold_index
+            fitted = StandardScaler().fit(features[train])
+            expected_distance = np.sqrt(
+                np.mean(fitted.transform(features[test]) ** 2, axis=1)
+            )
+            expected_p99 = float(np.quantile(expected_distance, 0.99, method="linear"))
+            if (
+                not np.allclose(mean, fitted.mean_, atol=1e-12, rtol=0)
+                or not np.allclose(scale, fitted.scale_, atol=1e-12, rtol=0)
+                or not math.isclose(p99, expected_p99, abs_tol=1e-12, rel_tol=0)
+            ):
+                raise RuntimeError("cross-fit support reference does not match source features")
 
 
 def design_transfer(
@@ -1103,6 +1607,8 @@ def design_transfer(
             "train_group_sha256": sha256_text(sorted(map(str, group_ids[train]))),
             "test_group_sha256": sha256_text(sorted(map(str, group_ids[test]))),
             "group_overlap": bool(overlap),
+            "model_n_iter": np.asarray(model.n_iter_).astype(int).tolist(),
+            "convergence_warning": False,
             "metrics": _probability_summary(
                 labels[test], probability, rates[test], designs[test]
             ),
@@ -1131,7 +1637,7 @@ def _contains_true_accuracy_flag(value) -> bool:
 
 
 def pinned_natural_paths(repo: Path = REPO) -> list[Path]:
-    """Return the prespecified natural cohort without filesystem globbing."""
+    """Return the frozen exploratory natural cohort without filesystem globbing."""
     paths = [(repo / relative).resolve() for relative in PINNED_NATURAL_RESULTS]
     missing = [str(path) for path in paths if not path.is_file()]
     if missing:
@@ -1237,6 +1743,7 @@ def final_natural_score(
     C_grid: Sequence[float],
     inner_splits: int,
     seed: int,
+    crossfit_support_reference: dict | None = None,
     compute_state: Path | None = None,
     verify_source_raw_head: bool = True,
 ) -> dict:
@@ -1262,8 +1769,51 @@ def final_natural_score(
     if compute_state is not None:
         compute_gate(compute_state)
     scaler, model = _fit_model(features, labels, selected_C)
+    selection["final_model_n_iter"] = np.asarray(model.n_iter_).astype(int).tolist()
+    selection["convergence_warning"] = False
     natural_table = np.concatenate([panel["matrix"][None, :, :] for panel in panels], axis=0)
     natural_features = representation_features(natural_table, representation)
+    crossfit_rows = None
+    if crossfit_support_reference is not None:
+        references = crossfit_support_reference.get("folds", [])
+        if not references:
+            raise ValueError("cross-fit natural support reference is empty")
+        if crossfit_support_reference.get("folds_sha256") != hashlib.sha256(
+            _canonical_json(references)
+        ).hexdigest():
+            raise ValueError("cross-fit natural support reference hash changed")
+        fold_distance = []
+        fold_ratio = []
+        for reference_row in references:
+            mean = np.asarray(reference_row.get("scaler_mean"), dtype=float)
+            scale = np.asarray(reference_row.get("scaler_scale"), dtype=float)
+            p99 = float(reference_row.get("source_test_rms_z_p99", math.nan))
+            if (
+                mean.shape != (natural_features.shape[1],)
+                or scale.shape != mean.shape
+                or not np.isfinite(mean).all()
+                or not np.isfinite(scale).all()
+                or np.any(scale <= 0)
+                or not math.isfinite(p99)
+                or p99 <= 0
+            ):
+                raise ValueError("cross-fit natural support reference is invalid")
+            current = np.sqrt(np.mean(((natural_features - mean) / scale) ** 2, axis=1))
+            fold_distance.append(current)
+            fold_ratio.append(current / p99)
+        fold_distance = np.stack(fold_distance, axis=1)
+        fold_ratio = np.stack(fold_ratio, axis=1)
+        crossfit_rows = [
+            {
+                "folds": int(fold_ratio.shape[1]),
+                "within_source_test_p99_folds": int(np.sum(fold_ratio[index] <= 1.0)),
+                "within_source_test_p99_fraction": float(np.mean(fold_ratio[index] <= 1.0)),
+                "median_rms_z": float(np.median(fold_distance[index])),
+                "median_rms_z_over_source_test_p99": float(np.median(fold_ratio[index])),
+                "rms_z_over_source_test_p99_by_fold": fold_ratio[index].tolist(),
+            }
+            for index in range(len(natural_features))
+        ]
     transformed = scaler.transform(natural_features)
     probability = model.predict_proba(transformed)
     distance = np.sqrt(np.mean(transformed**2, axis=1))
@@ -1278,7 +1828,7 @@ def final_natural_score(
     for index, panel in enumerate(panels):
         prediction = str(CLASSES[int(np.argmax(probability[index]))])
         empirical_tail = float((1 + np.sum(reference >= distance[index])) / (len(reference) + 1))
-        rows.append({
+        row = {
             "bundle": panel["bundle"],
             "panel_id": panel["panel_id"],
             "population_order": panel["population_order"],
@@ -1298,7 +1848,10 @@ def final_natural_score(
                 None if panel["candidate_class"] is None else prediction == panel["candidate_class"]
             ),
             "formal_accuracy_eligible": False,
-        })
+        }
+        if crossfit_rows is not None:
+            row["crossfit_source_test_support"] = crossfit_rows[index]
+        rows.append(row)
     raw_reproduction = None
     if representation == "raw_all" and verify_source_raw_head:
         comparable = [
@@ -1344,12 +1897,67 @@ def final_natural_score(
         bundle: {
             "rows": int(len(current)),
             "median_rms_z": float(np.median([row["rms_z"] for row in current])),
+            **(
+                {
+                    "median_crossfit_rms_z_over_source_test_p99": float(np.median([
+                        row["crossfit_source_test_support"][
+                            "median_rms_z_over_source_test_p99"
+                        ]
+                        for row in current
+                    ])),
+                    "median_crossfit_within_source_test_p99_fraction": float(np.median([
+                        row["crossfit_source_test_support"][
+                            "within_source_test_p99_fraction"
+                        ]
+                        for row in current
+                    ])),
+                }
+                if crossfit_rows is not None
+                else {}
+            ),
         }
         for bundle, current in bundle_rows.items()
     }
     bundle_medians = np.asarray([
         bundle_summary[bundle]["median_rms_z"] for bundle in sorted(bundle_summary)
     ])
+    crossfit_bundle_pass_fraction = None
+    crossfit_bundle_summary = None
+    if crossfit_rows is not None:
+        bundle_pass = {
+            bundle: bool(
+                summary["median_crossfit_rms_z_over_source_test_p99"] <= 1.0
+            )
+            for bundle, summary in bundle_summary.items()
+        }
+        crossfit_bundle_pass_fraction = float(np.mean(list(bundle_pass.values())))
+        crossfit_bundle_summary = {
+            "fold_local_comparison": (
+                "Each natural row is transformed separately by every outer-training scaler and "
+                "compared only with that fold's held-out source p99."
+            ),
+            "result_file_bundles": int(len(bundle_pass)),
+            "bundles_with_median_normalized_rms_z_at_most_one": int(sum(bundle_pass.values())),
+            "fraction_of_bundles_with_median_normalized_rms_z_at_most_one": (
+                crossfit_bundle_pass_fraction
+            ),
+            "exploratory_70_percent_bundle_threshold_pass": bool(
+                crossfit_bundle_pass_fraction >= 0.70
+            ),
+            "by_bundle": {
+                bundle: {
+                    "median_normalized_rms_z": bundle_summary[bundle][
+                        "median_crossfit_rms_z_over_source_test_p99"
+                    ],
+                    "at_most_one": bundle_pass[bundle],
+                }
+                for bundle in sorted(bundle_pass)
+            },
+            "guardrail": (
+                "This is a descriptive OOD diagnostic, not conformal coverage, exchangeability, "
+                "a calibrated probability, a p-value, or real-world accuracy."
+            ),
+        }
     return {
         "selected_model": selection,
         "feature_dimension": int(features.shape[1]),
@@ -1368,7 +1976,7 @@ def final_natural_score(
                 "rms_z_p95": float(np.quantile(rms, 0.95)),
                 "rms_z_max": float(np.max(rms)),
             },
-            "bundle_balanced_prespecified": {
+            "result_file_bundle_balanced_descriptive": {
                 "bundles": int(len(bundle_summary)),
                 "aggregation": (
                     "median RMS-z within each result bundle, then equal-weight summaries "
@@ -1379,6 +1987,7 @@ def final_natural_score(
                 "rms_z_max": float(np.max(bundle_medians)),
                 "by_bundle": bundle_summary,
             },
+            "crossfit_source_test_support_descriptive": crossfit_bundle_summary,
         },
         "candidate_concordance_descriptive_only": {
             "rows_with_candidate": int(len(candidate_rows)),
@@ -1394,6 +2003,16 @@ def final_natural_score(
             "calibration_guardrail": (
                 "Empirical tail fractions are heuristic ranks against in-fit source rows, not "
                 "conformal p-values, calibrated probabilities, or coverage guarantees."
+            ),
+            "crossfit_reference": (
+                None
+                if crossfit_support_reference is None
+                else {
+                    "outer_estimand": "new exact rate family",
+                    "folds": int(len(crossfit_support_reference["folds"])),
+                    "folds_sha256": crossfit_support_reference["folds_sha256"],
+                    "result_file_bundle_threshold_fraction": crossfit_bundle_pass_fraction,
+                }
             ),
         },
         "rows": rows,
@@ -1415,18 +2034,28 @@ def adjudicate_pilot(variants: dict) -> dict:
         structured["genealogy_cv"], "appreciable", "accuracy"
     )
     baseline_rate = _mean_repeat_metric(
-        baseline["rate_family_cv"], "appreciable", "accuracy"
+        baseline["rate_family_cv"],
+        "appreciable_equal_rate_family",
+        "balanced_accuracy",
     )
     structured_rate = _mean_repeat_metric(
+        structured["rate_family_cv"],
+        "appreciable_equal_rate_family",
+        "balanced_accuracy",
+    )
+    baseline_rate_row_weighted = _mean_repeat_metric(
+        baseline["rate_family_cv"], "appreciable", "accuracy"
+    )
+    structured_rate_row_weighted = _mean_repeat_metric(
         structured["rate_family_cv"], "appreciable", "accuracy"
     )
     genealogy_loss_points = 100.0 * (baseline_genealogy - structured_genealogy)
     rate_loss_points = 100.0 * (baseline_rate - structured_rate)
     baseline_coverage = baseline["natural_transfer"]["coverage"][
-        "bundle_balanced_prespecified"
+        "result_file_bundle_balanced_descriptive"
     ]
     structured_coverage = structured["natural_transfer"]["coverage"][
-        "bundle_balanced_prespecified"
+        "result_file_bundle_balanced_descriptive"
     ]
     baseline_bundles = baseline_coverage["by_bundle"]
     structured_bundles = structured_coverage["by_bundle"]
@@ -1445,13 +2074,13 @@ def adjudicate_pilot(variants: dict) -> dict:
         "structured_genealogy_appreciable_accuracy_at_least_0_95": bool(
             structured_genealogy >= 0.95
         ),
-        "structured_rate_family_appreciable_accuracy_at_least_0_90": bool(
+        "structured_rate_family_macro_appreciable_balanced_accuracy_at_least_0_90": bool(
             structured_rate >= 0.90
         ),
         "genealogy_appreciable_accuracy_loss_vs_raw_at_most_one_point": bool(
             genealogy_loss_points <= 1.0 + 1e-12
         ),
-        "rate_family_appreciable_accuracy_loss_vs_raw_at_most_one_point": bool(
+        "rate_family_macro_appreciable_balanced_accuracy_loss_vs_raw_at_most_one_point": bool(
             rate_loss_points <= 1.0 + 1e-12
         ),
         "median_paired_bundle_rms_z_ratio_at_most_0_75": bool(
@@ -1465,8 +2094,8 @@ def adjudicate_pilot(variants: dict) -> dict:
         ),
     }
     return {
-        "prespecified_success_criteria": criteria,
-        "all_criteria_pass": bool(all(criteria.values())),
+        "exploratory_relative_bridge_thresholds": criteria,
+        "all_relative_bridge_thresholds_pass": bool(all(criteria.values())),
         "appreciable_accuracy": {
             "genealogy_cv": {
                 "raw_all": baseline_genealogy,
@@ -1477,9 +2106,16 @@ def adjudicate_pilot(variants: dict) -> dict:
                 "raw_all": baseline_rate,
                 "structured": structured_rate,
                 "structured_loss_percentage_points": rate_loss_points,
+                "primary_estimand": (
+                    "equal-weight mean of within-exact-rate-family balanced accuracy"
+                ),
+                "row_weighted_secondary": {
+                    "raw_all": baseline_rate_row_weighted,
+                    "structured": structured_rate_row_weighted,
+                },
             },
         },
-        "natural_bundle_balanced_rms_z": {
+        "natural_result_file_bundle_balanced_rms_z": {
             "raw_all_median": baseline_coverage["rms_z_median"],
             "structured_median": structured_coverage["rms_z_median"],
             "raw_all_p95": baseline_coverage["rms_z_p95"],
@@ -1530,7 +2166,7 @@ def main() -> int:
     parser.add_argument("--result-dir", type=Path, default=DEFAULT_RESULT_DIR)
     parser.add_argument("--max-depth", type=int, default=DEFAULT_MAX_DEPTH)
     parser.add_argument("--seeds", default="0,1,2")
-    parser.add_argument("--C-grid", default="0.01,0.1,1,10")
+    parser.add_argument("--C-grid", default="0.001,0.01,0.1,1,10,100,1000")
     parser.add_argument("--outer-splits", type=int, default=5)
     parser.add_argument("--inner-splits", type=int, default=4)
     parser.add_argument(
@@ -1567,18 +2203,29 @@ def main() -> int:
     if args.outer_splits < 3 or args.inner_splits < 3:
         parser.error("outer/inner splits must be at least 3")
     seeds = tuple(int(value) for value in args.seeds.split(",") if value != "")
-    C_grid = tuple(float(value) for value in args.C_grid.split(",") if value != "")
-    if not seeds or not C_grid or any(value <= 0 for value in C_grid):
-        parser.error("seeds and positive C-grid values are required")
+    try:
+        C_grid = validate_C_grid(
+            float(value) for value in args.C_grid.split(",") if value != ""
+        )
+    except ValueError as exc:
+        parser.error(str(exc))
+    if not seeds:
+        parser.error("at least one repeat seed is required")
 
     # This is intentionally a separate pre-work gate.
     gate = compute_gate(args.compute_state)
+    priority = set_below_normal_priority()
+    revision = git_revision()
+    require_clean_tracked_revision(revision)
+    test_file_sha256 = sha256_file(
+        REPO / "tests" / "test_structured_transfer_pilot.py"
+    )
+    # Capture and validate pristine source provenance before creating any output
+    # directory or lock file inside the worktree.
     run_lock = SingleWriterLease(
         args.result_dir,
         ".structured_transfer.lock",
     ).acquire()
-    priority = set_below_normal_priority()
-    revision = git_revision()
     canonical = load_canonical(args.canonical_root.resolve(), args.max_depth)
     positive = canonical["labels"] != "D"
     table = canonical["table"][positive]
@@ -1598,6 +2245,7 @@ def main() -> int:
     simulation_contract = {
         "schema_version": SIMULATION_CHECKPOINT_SCHEMA,
         "script_sha256": revision["script_sha256"],
+        "test_file_sha256": test_file_sha256,
         "source_commit": revision["commit"],
         "canonical_array_contracts": canonical["audit"]["array_contracts"],
         "max_depth": int(args.max_depth),
@@ -1630,6 +2278,25 @@ def main() -> int:
         if features.shape[1] != len(columns):
             raise AssertionError(f"{name}: feature-column dimension mismatch")
         if name in variants:
+            validate_nested_oof_payload(
+                variants[name]["genealogy_cv"],
+                labels,
+                rates,
+                designs,
+                group_ids,
+                group_ids,
+                features=features,
+            )
+            validate_nested_oof_payload(
+                variants[name]["rate_family_cv"],
+                labels,
+                rates,
+                designs,
+                group_ids,
+                rate_blocks,
+                evaluation_families=rate_blocks,
+                features=features,
+            )
             print(f"[representation] {name} (checkpoint)", flush=True)
             continue
         print(f"[representation] {name}", flush=True)
@@ -1659,6 +2326,7 @@ def main() -> int:
             C_grid=C_grid,
             outer_splits=args.outer_splits,
             inner_splits=args.inner_splits,
+            evaluation_families=rate_blocks,
             compute_state=args.compute_state,
         )
         transfer = design_transfer(
@@ -1722,14 +2390,20 @@ def main() -> int:
             C_grid=C_grid,
             inner_splits=args.inner_splits,
             seed=80_711,
+            crossfit_support_reference=variants[name]["rate_family_cv"][
+                "crossfit_support_reference"
+            ],
             compute_state=args.compute_state,
         )
 
+    final_revision = git_revision()
+    require_revision_unchanged(revision, final_revision)
     result = {
         "schema_version": SCHEMA_VERSION,
         "status": "exploratory_bridge_not_paper_result",
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "git": revision,
+        "final_source_recheck": final_revision,
         "compute_gate": gate,
         "runtime": runtime_audit(priority),
         "single_writer_lock": {
@@ -1738,9 +2412,12 @@ def main() -> int:
         },
         "guardrail": (
             "Representations and all simulation CV completed before the natural cohort was loaded. "
-            "Natural rows are unlabeled correlated diagnostics, not validation or an accuracy "
-            "denominator; the success criterion gives each result bundle equal weight."
+            "The natural cohort informed representation design and is not a validation set. "
+            "Natural rows are unlabeled correlated OOD diagnostics, not an accuracy denominator."
         ),
+        "natural_cohort_informed_representation_design": True,
+        "natural_cohort_is_validation_set": False,
+        "real_world_accuracy_established": False,
         "canonical_source": canonical["audit"],
         "analysis_population": {
             "positive_replicates": int(len(labels)),
@@ -1766,13 +2443,10 @@ def main() -> int:
         },
         "representations": variants,
         "pilot_adjudication": adjudicate_pilot(variants),
-        "next_step_if_success": (
-            "Generate a sealed observation-process simulation bank and evaluate by held-out "
-            "demography x ascertainment family before interpreting any natural direction score."
-        ),
-        "next_step_if_failure": (
-            "Do not tune on natural labels; simulate paired MAF/call-rate/missingness/locus-count "
-            "views and group them by parent genealogy."
+        "required_next_step": (
+            "Regardless of relative bridge thresholds, evaluate a sealed observation-process "
+            "simulation bank with held-out demography x ascertainment families; do not tune on "
+            "natural candidate labels or interpret them as external accuracy."
         ),
     }
     output = args.result_dir / "results.json"

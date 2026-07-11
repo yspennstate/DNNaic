@@ -323,12 +323,21 @@ def test_analysis_preflight_rejects_too_few_complete_rate_families():
 
 def test_bridge_adjudication_has_absolute_accuracy_and_attrition_floors():
     def cv(value):
-        return {"per_repeat_metrics": [{"appreciable": {"accuracy": value}}]}
+        return {"per_repeat_metrics": [{
+            "appreciable": {"accuracy": value},
+            "appreciable_equal_rate_family": {"balanced_accuracy": value},
+        }]}
+
+    def factor(value):
+        return {
+            "balanced_accuracy": value,
+            "appreciable": {"n": 9, "balanced_accuracy": value},
+        }
 
     def natural(a, b):
         return {
             "coverage": {
-                "bundle_balanced_prespecified": {
+                "result_file_bundle_balanced_descriptive": {
                     "by_bundle": {
                         "one": {"median_rms_z": a},
                         "two": {"median_rms_z": b},
@@ -340,14 +349,20 @@ def test_bridge_adjudication_has_absolute_accuracy_and_attrition_floors():
     variants = {
         "raw_all": {
             "genealogy_cv": cv(0.96),
+            "genealogy_cv_by_observation_view": {
+                "control": {"appreciable": {"n": 9, "accuracy": 0.96}}
+            },
             "rate_family_cv": cv(0.92),
-            "leave_one_observation_factor_out": {"maf": {"balanced_accuracy": 0.75}},
+            "leave_one_observation_factor_out": {"maf": factor(0.75)},
             "natural_transfer": natural(20.0, 30.0),
         },
         "orbit_composition_mean_variance": {
             "genealogy_cv": cv(0.95),
+            "genealogy_cv_by_observation_view": {
+                "control": {"appreciable": {"n": 9, "accuracy": 0.95}}
+            },
             "rate_family_cv": cv(0.90),
-            "leave_one_observation_factor_out": {"maf": {"balanced_accuracy": 0.74}},
+            "leave_one_observation_factor_out": {"maf": factor(0.74)},
             "natural_transfer": natural(10.0, 20.0),
         },
     }
@@ -362,12 +377,18 @@ def test_bridge_adjudication_has_absolute_accuracy_and_attrition_floors():
         "complete_rate_family_fraction": 0.85,
     }
     result = bridge.adjudicate_bridge(validity, variants)
-    assert result["all_criteria_pass"] is True
+    assert result["all_exploratory_bridge_thresholds_pass"] is True
     low_family = copy.deepcopy(validity)
     low_family["complete_rate_family_fraction"] = 0.79
-    assert bridge.adjudicate_bridge(low_family, variants)["all_criteria_pass"] is False
+    assert bridge.adjudicate_bridge(low_family, variants)[
+        "all_exploratory_bridge_thresholds_pass"
+    ] is False
     low_class = copy.deepcopy(validity)
     low_class["by_class"]["C"]["complete_parent_fraction"] = 0.79
-    assert bridge.adjudicate_bridge(low_class, variants)["all_criteria_pass"] is False
+    assert bridge.adjudicate_bridge(low_class, variants)[
+        "all_exploratory_bridge_thresholds_pass"
+    ] is False
     variants["orbit_composition_mean_variance"]["genealogy_cv"] = cv(0.40)
-    assert bridge.adjudicate_bridge(validity, variants)["all_criteria_pass"] is False
+    assert bridge.adjudicate_bridge(validity, variants)[
+        "all_exploratory_bridge_thresholds_pass"
+    ] is False

@@ -26,7 +26,7 @@ The runner checks the owner's compute governor before initial work and before
 every simulation; distress aborts before the next job.  It is single-threaded,
 BelowNormal on Windows, and stores no tree sequences.
 
-The optional analysis is exploratory.  It evaluates the prespecified raw,
+The optional analysis is exploratory.  It evaluates the frozen raw,
 SE-free, and S3-orbit representations with parent-genealogy and rate-family
 outer splits, plus leave-one-observation-view-out transfer.  Natural rows are
 unlabeled OOD diagnostics only, never an accuracy denominator.
@@ -93,7 +93,7 @@ DEFAULT_CACHE = (
 )
 DEFAULT_RESULTS = REPO / "results" / "observation_bridge_simulation_2026_07_11"
 
-# These views are prespecified and deliberately separate biological genealogy
+# These views are frozen before execution and deliberately separate biological genealogy
 # from the observation/ascertainment process.
 VIEW_SPECS = {
     "complete_all_observed_alleles": {
@@ -1166,7 +1166,7 @@ def validity_audit(records: Sequence[dict]) -> dict:
         "by_parent": by_parent,
         "decision_contract": (
             "Invalid views are abstentions/failures. A rate family is modeled only when its "
-            "A/B/C parents each have every prespecified view, preventing class-dependent "
+            "A/B/C parents each have every frozen view, preventing class-dependent "
             "survivorship and preserving paired exact-rate comparisons."
         ),
     }
@@ -1184,19 +1184,29 @@ def view_metrics(cv_result: dict, records: Sequence[dict]) -> dict:
             continue
         truth = np.array([np.searchsorted(CLASSES, records[index]["label"]) for index in use])
         prediction = np.array([np.searchsorted(CLASSES, rows[index]["mean_prediction"]) for index in use])
+        appreciable = np.array([
+            float(records[index]["rate"]) >= structured.APPRECIABLE for index in use
+        ])
+
+        def summarize(mask: np.ndarray) -> dict:
+            mask = np.asarray(mask, dtype=bool)
+            if not mask.any():
+                return {"n": 0}
+            return {
+                "n": int(mask.sum()),
+                "accuracy": float(np.mean(prediction[mask] == truth[mask])),
+                "balanced_accuracy": structured._balanced_accuracy_without_spurious_class_warning(
+                    truth[mask], prediction[mask]
+                ),
+                "macro_f1": float(f1_score(
+                    truth[mask], prediction[mask], average="macro",
+                    labels=np.arange(len(CLASSES)), zero_division=0,
+                )),
+            }
+
         result[view] = {
-            "n": int(len(use)),
-            "accuracy": float(np.mean(prediction == truth)),
-            "balanced_accuracy": float(balanced_accuracy_score(truth, prediction)),
-            "macro_f1": float(
-                f1_score(
-                    truth,
-                    prediction,
-                    average="macro",
-                    labels=np.arange(len(CLASSES)),
-                    zero_division=0,
-                )
-            ),
+            **summarize(np.ones(len(use), dtype=bool)),
+            "appreciable": summarize(appreciable),
             "median_rms_z": float(np.median([rows[index]["mean_rms_z"] for index in use])),
         }
     return result
@@ -1207,6 +1217,7 @@ def leave_view_out(
     labels: np.ndarray,
     parents: np.ndarray,
     views: np.ndarray,
+    rates: np.ndarray,
     *,
     C_grid: Sequence[float],
     outer_splits: int,
@@ -1259,19 +1270,26 @@ def leave_view_out(
             raise AssertionError(f"leave-view-out ledger incomplete for {target_view}")
         prediction = probability[target].argmax(axis=1)
         truth = labels[target]
+        appreciable = rates[target] >= structured.APPRECIABLE
+
+        def summarize(mask: np.ndarray) -> dict:
+            if not np.any(mask):
+                return {"n": 0}
+            return {
+                "n": int(np.sum(mask)),
+                "accuracy": float(np.mean(prediction[mask] == truth[mask])),
+                "balanced_accuracy": structured._balanced_accuracy_without_spurious_class_warning(
+                    truth[mask], prediction[mask]
+                ),
+                "macro_f1": float(f1_score(
+                    truth[mask], prediction[mask], average="macro",
+                    labels=np.arange(len(CLASSES)), zero_division=0,
+                )),
+            }
+
         result[str(target_view)] = {
-            "n": int(target.sum()),
-            "accuracy": float(np.mean(prediction == truth)),
-            "balanced_accuracy": float(balanced_accuracy_score(truth, prediction)),
-            "macro_f1": float(
-                f1_score(
-                    truth,
-                    prediction,
-                    average="macro",
-                    labels=np.arange(len(CLASSES)),
-                    zero_division=0,
-                )
-            ),
+            **summarize(np.ones(len(truth), dtype=bool)),
+            "appreciable": summarize(appreciable),
             "prediction_counts": {
                 str(label): int(np.sum(prediction == index))
                 for index, label in enumerate(CLASSES)
@@ -1286,6 +1304,7 @@ def leave_factor_out(
     labels: np.ndarray,
     parents: np.ndarray,
     views: np.ndarray,
+    rates: np.ndarray,
     *,
     C_grid: Sequence[float],
     outer_splits: int,
@@ -1349,20 +1368,27 @@ def leave_factor_out(
             raise AssertionError(f"factor holdout ledger incomplete for {factor}")
         prediction = probability[target].argmax(axis=1)
         truth = labels[target]
+        appreciable = rates[target] >= structured.APPRECIABLE
+
+        def summarize(mask: np.ndarray) -> dict:
+            if not np.any(mask):
+                return {"n": 0}
+            return {
+                "n": int(np.sum(mask)),
+                "accuracy": float(np.mean(prediction[mask] == truth[mask])),
+                "balanced_accuracy": structured._balanced_accuracy_without_spurious_class_warning(
+                    truth[mask], prediction[mask]
+                ),
+                "macro_f1": float(f1_score(
+                    truth[mask], prediction[mask], average="macro",
+                    labels=np.arange(len(CLASSES)), zero_division=0,
+                )),
+            }
+
         result[factor] = {
-            "n": int(target.sum()),
+            **summarize(np.ones(len(truth), dtype=bool)),
+            "appreciable": summarize(appreciable),
             "target_views": sorted(target_views),
-            "accuracy": float(np.mean(prediction == truth)),
-            "balanced_accuracy": float(balanced_accuracy_score(truth, prediction)),
-            "macro_f1": float(
-                f1_score(
-                    truth,
-                    prediction,
-                    average="macro",
-                    labels=np.arange(len(CLASSES)),
-                    zero_division=0,
-                )
-            ),
             "fold_ledger": fold_ledger,
         }
     return result
@@ -1379,23 +1405,46 @@ def adjudicate_bridge(validity: dict, variants: dict) -> dict:
             for repeat in current["per_repeat_metrics"]
         ]))
 
+    def mean_equal_family(current: dict) -> float:
+        return float(np.mean([
+            repeat["appreciable_equal_rate_family"]["balanced_accuracy"]
+            for repeat in current["per_repeat_metrics"]
+        ]))
+
     raw_genealogy = mean_appreciable(raw["genealogy_cv"])
     structured_genealogy = mean_appreciable(structured_variant["genealogy_cv"])
-    raw_rate = mean_appreciable(raw["rate_family_cv"])
-    structured_rate = mean_appreciable(structured_variant["rate_family_cv"])
+    raw_rate = mean_equal_family(raw["rate_family_cv"])
+    structured_rate = mean_equal_family(structured_variant["rate_family_cv"])
     raw_factor = float(np.mean([
-        value["balanced_accuracy"]
+        value["appreciable"]["balanced_accuracy"]
         for value in raw["leave_one_observation_factor_out"].values()
     ]))
     structured_factor = float(np.mean([
-        value["balanced_accuracy"]
+        value["appreciable"]["balanced_accuracy"]
         for value in structured_variant["leave_one_observation_factor_out"].values()
     ]))
+    structured_worst_factor = min(
+        value["appreciable"]["balanced_accuracy"]
+        for value in structured_variant["leave_one_observation_factor_out"].values()
+    )
+    maximum_factor_loss = max(
+        raw["leave_one_observation_factor_out"][factor]["appreciable"][
+            "balanced_accuracy"
+        ]
+        - structured_variant["leave_one_observation_factor_out"][factor][
+            "appreciable"
+        ]["balanced_accuracy"]
+        for factor in raw["leave_one_observation_factor_out"]
+    )
+    structured_worst_view = min(
+        value["appreciable"]["accuracy"]
+        for value in structured_variant["genealogy_cv_by_observation_view"].values()
+    )
     raw_bundles = raw["natural_transfer"]["coverage"][
-        "bundle_balanced_prespecified"
+        "result_file_bundle_balanced_descriptive"
     ]["by_bundle"]
     structured_bundles = structured_variant["natural_transfer"]["coverage"][
-        "bundle_balanced_prespecified"
+        "result_file_bundle_balanced_descriptive"
     ]["by_bundle"]
     if set(raw_bundles) != set(structured_bundles):
         raise AssertionError("bridge natural bundle sets differ between representations")
@@ -1449,6 +1498,15 @@ def adjudicate_bridge(validity: dict, variants: dict) -> dict:
         "structured_factor_holdout_loss_vs_raw_at_most_3_points": bool(
             structured_factor >= raw_factor - 0.03
         ),
+        "structured_each_factor_appreciable_balanced_accuracy_at_least_0_50": bool(
+            structured_worst_factor >= 0.50
+        ),
+        "structured_each_factor_appreciable_loss_vs_raw_at_most_5_points": bool(
+            maximum_factor_loss <= 0.05
+        ),
+        "structured_each_view_appreciable_accuracy_at_least_0_70": bool(
+            structured_worst_view >= 0.70
+        ),
         "median_paired_natural_bundle_rms_z_ratio_at_most_0_80": bool(
             np.median(ratios) <= 0.80
         ),
@@ -1457,8 +1515,8 @@ def adjudicate_bridge(validity: dict, variants: dict) -> dict:
         ),
     }
     return {
-        "prespecified_success_criteria": criteria,
-        "all_criteria_pass": bool(all(criteria.values())),
+        "frozen_exploratory_bridge_thresholds": criteria,
+        "all_exploratory_bridge_thresholds_pass": bool(all(criteria.values())),
         "validity_summary": {
             "overall_view_usability": validity["overall"]["usable_fraction"],
             "minimum_class_view_usability": minimum_class_coverage,
@@ -1472,9 +1530,13 @@ def adjudicate_bridge(validity: dict, variants: dict) -> dict:
             "rate_family_cv": {"raw_all": raw_rate, "structured": structured_rate},
         },
         "mean_factor_holdout_balanced_accuracy": {
+            "scope": "appreciable migration rates only",
             "raw_all": raw_factor,
             "structured": structured_factor,
+            "structured_worst_factor": structured_worst_factor,
+            "maximum_structured_loss_vs_raw": maximum_factor_loss,
         },
+        "structured_worst_view_appreciable_accuracy": structured_worst_view,
         "natural_bundle_diagnostic": {
             "structured_over_raw_rms_z": bundle_ratios,
             "median_ratio": float(np.median(ratios)),
@@ -1563,6 +1625,7 @@ def analyze_records(
             C_grid=C_grid,
             outer_splits=outer_splits,
             inner_splits=inner_splits,
+            evaluation_families=rate_families,
             compute_state=compute_state,
         )
         variants[name] = {
@@ -1575,6 +1638,7 @@ def analyze_records(
                 labels,
                 parents,
                 views,
+                rates,
                 C_grid=C_grid,
                 outer_splits=outer_splits,
                 inner_splits=inner_splits,
@@ -1586,6 +1650,7 @@ def analyze_records(
                 labels,
                 parents,
                 views,
+                rates,
                 C_grid=C_grid,
                 outer_splits=outer_splits,
                 inner_splits=inner_splits,
@@ -1608,6 +1673,9 @@ def analyze_records(
             C_grid=C_grid,
             inner_splits=inner_splits,
             seed=90_711,
+            crossfit_support_reference=variants[name]["rate_family_cv"][
+                "crossfit_support_reference"
+            ],
             compute_state=compute_state,
             verify_source_raw_head=False,
         )
@@ -1639,7 +1707,7 @@ def main() -> int:
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--simulate-only", action="store_true")
     parser.add_argument("--seeds", default="0,1")
-    parser.add_argument("--C-grid", default="0.01,0.1,1,10")
+    parser.add_argument("--C-grid", default="0.001,0.01,0.1,1,10,100,1000")
     parser.add_argument("--outer-splits", type=int, default=4)
     parser.add_argument("--inner-splits", type=int, default=3)
     parser.add_argument(
@@ -1669,13 +1737,19 @@ def main() -> int:
     if args.outer_splits < 3 or args.inner_splits < 3:
         parser.error("outer/inner splits must be at least 3")
     seeds = tuple(int(value) for value in args.seeds.split(",") if value != "")
-    C_grid = tuple(float(value) for value in args.C_grid.split(",") if value != "")
-    if not seeds or not C_grid or any(value <= 0 for value in C_grid):
-        parser.error("seeds and positive C-grid values are required")
+    try:
+        C_grid = structured.validate_C_grid(
+            float(value) for value in args.C_grid.split(",") if value != ""
+        )
+    except ValueError as exc:
+        parser.error(str(exc))
+    if not seeds:
+        parser.error("at least one repeat seed is required")
 
     initial_gate = structured.compute_gate(args.compute_state)
     priority = structured.set_below_normal_priority()
     revision = structured.git_revision(script=Path(__file__))
+    structured.require_clean_tracked_revision(revision)
     jobs, rates = make_jobs(args.rate_families, args.seed_base)
     config = configuration(
         args.rate_families,
@@ -1712,10 +1786,13 @@ def main() -> int:
         if len(selected) != expected:
             raise RuntimeError(f"selected {len(selected)} checkpoint rows, expected {expected}")
     if args.simulate_only:
+        final_revision = structured.git_revision(script=Path(__file__))
+        structured.require_revision_unchanged(revision, final_revision)
         print(json.dumps({
             "checkpoint": str(checkpoint.resolve()),
             "selected_records": len(selected),
             "configuration_sha256": config_sha,
+            "source_commit": final_revision["commit"],
         }, indent=2))
         return 0
     if args.limit is not None:
@@ -1742,10 +1819,13 @@ def main() -> int:
         natural_paths=natural_paths,
         compute_state=args.compute_state,
     )
+    final_revision = structured.git_revision(script=Path(__file__))
+    structured.require_revision_unchanged(revision, final_revision)
     result = {
         "schema_version": SCHEMA_VERSION,
         "status": "exploratory_observation_bridge_not_paper_result",
         "git": revision,
+        "final_source_recheck": final_revision,
         "initial_compute_gate": initial_gate,
         "pre_analysis_compute_gate": final_gate,
         "runtime": structured.runtime_audit(priority),
@@ -1764,7 +1844,7 @@ def main() -> int:
             "a false-positive rate, or real-data accuracy. Natural rows remain unlabeled diagnostics."
         ),
         "next_step": (
-            "Only if every prespecified bridge criterion passes, generate a sealed bank over held-out "
+            "Only if every frozen exploratory bridge threshold passes, generate a sealed bank over held-out "
             "demography x ascertainment families, explicit nulls, and all six ordered edges."
         ),
     }
@@ -1775,7 +1855,9 @@ def main() -> int:
         "output": str(output.resolve()),
         "checkpoint": result["checkpoint"],
         "analysis_rows": analysis["modeled_rows"],
-        "all_criteria_pass": analysis["bridge_adjudication"]["all_criteria_pass"],
+        "all_exploratory_bridge_thresholds_pass": analysis["bridge_adjudication"][
+            "all_exploratory_bridge_thresholds_pass"
+        ],
     }, indent=2, allow_nan=False))
     result_lock.close()
     return 0
