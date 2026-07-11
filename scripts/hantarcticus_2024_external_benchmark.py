@@ -487,15 +487,23 @@ def _edge_summary(
         for season in SEASONS
         for run in (f"r{i:02d}" for i in range(1, 11))
     ]
-    conditional_forward = [
-        row["forward_destination_conditional_share"]
+    conditional_comparable = [
+        row
         for row in per_season
         if row["forward_destination_conditional_share"] is not None
+        and row["reciprocal_destination_conditional_share"] is not None
     ]
-    conditional_reverse = [
-        row["reciprocal_destination_conditional_share"]
+    conditional_undefined = [
+        {
+            "season": row["season"],
+            "forward_defined": row["forward_destination_conditional_share"] is not None,
+            "reciprocal_defined": (
+                row["reciprocal_destination_conditional_share"] is not None
+            ),
+        }
         for row in per_season
-        if row["reciprocal_destination_conditional_share"] is not None
+        if row["forward_destination_conditional_share"] is None
+        or row["reciprocal_destination_conditional_share"] is None
     ]
     return {
         "origin": origin,
@@ -512,10 +520,18 @@ def _edge_summary(
             > row["mean_day100_settlers_reciprocal"]
             for row in per_season
         ),
-        "all_four_seasons_forward_destination_share_exceeds_reciprocal": all(
-            row["forward_destination_conditional_share"]
-            > (row["reciprocal_destination_conditional_share"] or 0.0)
-            for row in per_season
+        "destination_conditional_comparable_seasons": len(conditional_comparable),
+        "destination_conditional_undefined_seasons": conditional_undefined,
+        "all_four_seasons_destination_conditional_comparable": (
+            len(conditional_comparable) == len(SEASONS)
+        ),
+        "all_comparable_seasons_forward_destination_share_exceeds_reciprocal": (
+            bool(conditional_comparable)
+            and all(
+                row["forward_destination_conditional_share"]
+                > row["reciprocal_destination_conditional_share"]
+                for row in conditional_comparable
+            )
         ),
         "raw_day100_settlers_across_40_runs": int(sum(run_values)),
         "raw_reciprocal_day100_settlers_across_40_runs": int(sum(reciprocal_run_values)),
@@ -525,11 +541,29 @@ def _edge_summary(
         "four_season_mean_reciprocal_day100_settlers": reverse,
         "four_season_mean_fraction_of_100_released": forward / 100.0,
         "four_season_mean_reciprocal_fraction_of_100_released": reverse / 100.0,
-        "mean_of_season_destination_conditional_shares": (
-            float(np.mean(conditional_forward)) if conditional_forward else None
+        "mean_forward_destination_conditional_share_over_comparable_seasons": (
+            float(
+                np.mean(
+                    [
+                        row["forward_destination_conditional_share"]
+                        for row in conditional_comparable
+                    ]
+                )
+            )
+            if conditional_comparable
+            else None
         ),
-        "mean_of_season_reciprocal_destination_conditional_shares": (
-            float(np.mean(conditional_reverse)) if conditional_reverse else None
+        "mean_reciprocal_destination_conditional_share_over_comparable_seasons": (
+            float(
+                np.mean(
+                    [
+                        row["reciprocal_destination_conditional_share"]
+                        for row in conditional_comparable
+                    ]
+                )
+            )
+            if conditional_comparable
+            else None
         ),
         "pooled_destination_conditional_share": (
             forward / destination_total if destination_total > 0 else None
@@ -538,9 +572,10 @@ def _edge_summary(
             reverse / reciprocal_total if reciprocal_total > 0 else None
         ),
         "normalization_guardrail": (
-            "mean settler counts divided by 100 reproduce the scale of the labelled thesis "
-            "connectivity percentages, while the prose definition implies destination-conditional "
-            "normalization; both are reported and neither is a genomic migration rate"
+            "mean settler counts divided by 100 reproduce current-paper Figure 3 and the labelled "
+            "thesis scale, while the prose definition implies destination-conditional normalization. "
+            "Conditional comparisons use only seasons where both destination denominators are "
+            "positive; undefined shares remain null. Neither representation is a genomic migration rate"
         ),
     }
 
@@ -693,8 +728,8 @@ def audit_biophysical_archive(path: Path) -> dict:
             ),
             "benchmark_policy": (
                 "report raw settlement rate, per-season and pooled destination shares separately; "
-                "candidate direction is accepted only because forward exceeds reciprocal in every "
-                "season under both representations"
+                "the source-release candidate direction must hold in all four seasons, while the "
+                "destination-conditional sensitivity is compared only where both denominators exist"
             ),
         },
     }
@@ -776,8 +811,9 @@ def run_panels(
                 "expected_gate": None,
                 "direction_basis": (
                     "an independently simulated ROMS passive-larval edge exceeds its reciprocal "
-                    "in all four seasons under both source-release and destination-conditional "
-                    "representations"
+                    "in all four seasons under the published source-release representation; the "
+                    "destination-conditional semantic sensitivity agrees in every season where both "
+                    "destination totals are nonzero and records undefined seasons as null"
                 ),
                 "evidence_tier": spec["evidence_tier"],
                 "external_edge_evidence": external_edge,

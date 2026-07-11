@@ -107,13 +107,52 @@ def test_edge_summary_keeps_source_release_and_destination_shares_separate():
     result = h2024._edge_summary(season_D, day100_runs, "DOI", "FHA")
     assert result["all_four_seasons_forward_positive"] is True
     assert result["all_four_seasons_forward_exceeds_reciprocal"] is True
+    assert result["destination_conditional_comparable_seasons"] == 4
+    assert result["destination_conditional_undefined_seasons"] == []
+    assert result["all_four_seasons_destination_conditional_comparable"] is True
     assert result[
-        "all_four_seasons_forward_destination_share_exceeds_reciprocal"
+        "all_comparable_seasons_forward_destination_share_exceeds_reciprocal"
     ] is True
     assert result["four_season_mean_fraction_of_100_released"] == 0.02
     assert result["four_season_mean_reciprocal_fraction_of_100_released"] == 0.005
-    assert result["mean_of_season_destination_conditional_shares"] == 0.5
-    assert result["mean_of_season_reciprocal_destination_conditional_shares"] == 0.25
+    assert result[
+        "mean_forward_destination_conditional_share_over_comparable_seasons"
+    ] == 0.5
+    assert result[
+        "mean_reciprocal_destination_conditional_share_over_comparable_seasons"
+    ] == 0.25
+
+
+def test_edge_summary_does_not_coerce_undefined_conditional_share_to_zero():
+    season_D = {}
+    day100_runs = {}
+    origin = h2024.MODEL_AXIS_ORDER.index("AIS")
+    destination = h2024.MODEL_AXIS_ORDER.index("HOS")
+    for season in h2024.SEASONS:
+        matrix = np.zeros((12, 12), dtype=float)
+        matrix[destination, origin] = 2.0
+        matrix[destination, destination] = 1.0
+        if season != "Eday_1780":
+            matrix[origin, destination] = 0.5
+            matrix[origin, origin] = 1.5
+        season_D[season] = matrix
+        for number in range(1, 11):
+            day100_runs[(season, f"r{number:02d}")] = matrix.copy()
+
+    result = h2024._edge_summary(season_D, day100_runs, "AIS", "HOS")
+    assert result["all_four_seasons_forward_exceeds_reciprocal"] is True
+    assert result["destination_conditional_comparable_seasons"] == 3
+    assert result["all_four_seasons_destination_conditional_comparable"] is False
+    assert result[
+        "all_comparable_seasons_forward_destination_share_exceeds_reciprocal"
+    ] is True
+    assert result["destination_conditional_undefined_seasons"] == [
+        {
+            "season": "Eday_1780",
+            "forward_defined": True,
+            "reciprocal_defined": False,
+        }
+    ]
 
 
 def test_sources_record_marks_published_implementation_and_prose_conflict():
