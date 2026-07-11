@@ -109,9 +109,10 @@ def test_direction_mapping_and_control_contract_are_frozen():
             "9577804bee2467cb4ba3070a454b570c6500353ef2346822298b97fb8383b4de"
         ),
         "MCcoal.inflow-asym.ctl": (
-            "c71d4a2a061eda75db6fc906cef247648059d3d1ccdb9d172b44d497c73744c"
+            "c71d4a2a061eda75db6fc906cef247648059d3d1ccdba9d172b44d497c73744c"
         ),
     }
+    assert all(len(value) == 64 for value in benchmark.OFFICIAL_CONTROL_SHA256.values())
     config = benchmark.configuration(benchmark.make_jobs(), {})
     assert "paper's inflow-asymmetric phi=0" in config["null_provenance"]
     assert "independently seeded" in config["stochastic_design"]
