@@ -94,6 +94,7 @@ python scripts/additional_external_benchmarks.py --help # giraffe/brook-trout tr
 python scripts/further_external_benchmarks.py --help # scrub-jay and matched Malawi positive/null audit
 python scripts/directional_external_benchmarks.py --help # Ciona direction-labelled contact-zone audit
 python scripts/dingo_weeks_2025_external_benchmark.py --help # pedigree-anchored dingo--dog transfer stress test
+python scripts/yellowstone_2019_external_benchmark.py --help # trout stocking/history and GT-vs-PL transfer stress test
 ```
 
 The external benchmark runner records its fixed sample manifests, source/training-array hashes,
@@ -105,6 +106,9 @@ The directional bundle adds a purpose-ascertained Ciona positive/control pair wi
 and hotspot sensitivity; it is a mechanistic transfer test, not held-out validation.
 The dingo runner uses a known captive backcross to anchor a dog-introgressing component while
 keeping proxy-reference, relatedness, filter-correlation, and natural-data OOD guardrails explicit.
+The Yellowstone runner freezes its target from stocking/distance metadata, audits genotype
+representation and library confounding, and treats all reference/target/filter rows as correlated
+stress tests rather than accuracy trials.
 
 ## Layout
 

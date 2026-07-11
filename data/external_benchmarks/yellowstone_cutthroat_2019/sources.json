@@ -1,0 +1,87 @@
+{
+  "schema_version": "dnnaic-yellowstone-2019-source-v1",
+  "record": "https://datadryad.org/dataset/doi:10.5061/dryad.6s7d02q",
+  "data_doi": "10.5061/dryad.6s7d02q",
+  "dataset_id": 27949,
+  "version_id": 29052,
+  "version_number": 2,
+  "last_modification_date": "2019-09-17",
+  "license": "CC0-1.0",
+  "paper": {
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6775767/",
+    "doi": "10.1111/mec.15175",
+    "corrigendum_doi": "10.1111/mec.15381",
+    "title": "Variable hybridization outcomes in trout are predicted by historical fish stocking and environmental context"
+  },
+  "files": {
+    "vcf": {
+      "key": "variants_0.6_maf0.05.recode.vcf.gz",
+      "copied_file_id": 109334,
+      "created_file_id": 109343,
+      "url": "https://datadryad.org/api/v2/files/109343/download",
+      "bytes": 47687900,
+      "md5": "ddfa5ab0307957daaea5f9ad5c4afe19",
+      "sha256": "c0341a3a9dc11206e460907bea3d618f535245c7993d9cfce39c12c2b9b8bc86"
+    },
+    "metadata": {
+      "key": "YSC_RBT_allind_barcode_key_detailed.csv",
+      "copied_file_id": 109340,
+      "created_file_id": 109349,
+      "url": "https://datadryad.org/api/v2/files/109349/download",
+      "bytes": 93423,
+      "md5": "9dde36c8b70c0544b6f93f411b1bc204",
+      "sha256": "05d71fb77dac9cf61f80a54f4ac8c8fdf79f52423a9fd1e5d9b21f299cd60f46"
+    },
+    "predictors": {
+      "key": "predictors_var_26july18.csv",
+      "copied_file_id": 109339,
+      "created_file_id": 109348,
+      "url": "https://datadryad.org/api/v2/files/109348/download",
+      "bytes": 2852,
+      "md5": "603fa826890a786bd3d3b9c968b98dc7",
+      "sha256": "a9663d2a8922e3fdace4b90598becf8991ca57a11be626bc353e87bc89d8abfb"
+    },
+    "response": {
+      "key": "response_var_18jan18.csv",
+      "copied_file_id": 109338,
+      "created_file_id": 109347,
+      "url": "https://datadryad.org/api/v2/files/109347/download",
+      "bytes": 1048,
+      "md5": "3de33d11206953a4bb7fe9cc6fe3cc1b",
+      "sha256": "01e4e84e18ae21aa88ed9c85ccd3ee2148b4e522b2170d3c110ad72433e3b9b1"
+    },
+    "converter": {
+      "key": "vcf2mpgl.pl",
+      "copied_file_id": 109336,
+      "created_file_id": 109345,
+      "url": "https://datadryad.org/api/v2/files/109345/download",
+      "bytes": 3268,
+      "md5": "b479c763ebb11e0458f7c44d7f43b96d",
+      "sha256": "f68cba59fc020cf59f97f021a7385f0cb03c0ade1c922aa3fbc95126e80fa0bc"
+    }
+  },
+  "analysis_design": {
+    "primary_P1": "SFOwlCreek: 61 isolated-reference Yellowstone cutthroat trout",
+    "primary_P2": "Trout: 58 fish from the sampled site nearest Buffalo Bill Reservoir",
+    "primary_P3": "StoryHatchery: 20 modern rainbow trout references",
+    "candidate_class": "C",
+    "direction_truth_available": false,
+    "exclusive_single_edge_truth_available": false,
+    "formal_direction_accuracy_eligible": false,
+    "gate_truth_available": false,
+    "guardrails": [
+      "Candidate C is an ecological introduction-history prior, not pedigree or exclusive-edge truth.",
+      "Both trout taxa were stocked and long-term hybridization/backcrossing makes temporal direction non-unique.",
+      "The main P1, P2, and P3 cohorts use completely disjoint sequencing-library sets.",
+      "Published site ancestry summaries reuse the same SNPs and cannot be independent labels.",
+      "The released SNPs were globally filtered at at least 60% data and MAF above 5% using all fish, including scored cohorts; later locus filters also use panel labels.",
+      "Seven representation/filter/reference/target rows are correlated sensitivities, not trials."
+    ]
+  },
+  "release_discrepancies": [
+    "Dryad version 2 lists every one of nine paths twice with identical size and MD5; importers must deduplicate by path and digest.",
+    "Per-individual Entropy q/Q values and ancestry classes are absent; only site-level response summaries are archived.",
+    "The released vcf2mpgl.pl replaces parsed PL values with 0 0 0 whenever GT is ./., discarding informative masked likelihoods.",
+    "Corrigendum DOI 10.1111/mec.15381 is confirmed, but its publisher-hosted correction content was unavailable and remains substantively unaudited."
+  ]
+}
