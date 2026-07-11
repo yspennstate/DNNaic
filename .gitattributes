@@ -9,3 +9,7 @@ results/seabass_external_benchmark_2026_07_11/*.json text eol=lf
 results/seabass_external_benchmark_2026_07_11/*.md text eol=lf
 results/tinkerbird_external_benchmark_2026_07_11/*.json text eol=lf
 results/tinkerbird_external_benchmark_2026_07_11/*.md text eol=lf
+data/external_benchmarks/tinkerbird_2024/*.tsv text eol=lf
+data/external_benchmarks/tinkerbird_2024/*.json text eol=lf
+results/tinkerbird_2024_external_benchmark_2026_07_11/*.json text eol=lf
+results/tinkerbird_2024_external_benchmark_2026_07_11/*.md text eol=lf

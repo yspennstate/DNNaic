@@ -92,5 +92,8 @@ and uncalibrated direction scores:
 - Tinkerbird heterogeneous majority-direction, admixture-enriched contact-zone stress test: Dryad
   [10.5061/dryad.jm63xsj87](https://doi.org/10.5061/dryad.jm63xsj87),
   Kirschel et al. [10.1111/mec.15691](https://doi.org/10.1111/mec.15691).
+- Tinkerbird 2024 sample-disjoint holdout and near-null contrasts: Figshare
+  [10.6084/m9.figshare.25308376.v1](https://doi.org/10.6084/m9.figshare.25308376.v1),
+  Sebastianelli et al. [10.1038/s41467-024-47305-5](https://doi.org/10.1038/s41467-024-47305-5).
 
 See `data/external_benchmarks/` for exact file hashes and author-derived sample manifests.

@@ -1,0 +1,35 @@
+{
+  "record": "https://figshare.com/articles/dataset/A_genomic_basis_of_vocal_rhythm_in_birds/25308376",
+  "data_doi": "10.6084/m9.figshare.25308376.v1",
+  "license": "CC-BY-4.0",
+  "paper_doi": "10.1038/s41467-024-47305-5",
+  "current_phylogenomics_doi": "10.1093/sysbio/syaf033",
+  "files": {
+    "vcf": {
+      "id": 44729950,
+      "key": "southern_africa_biallelic_snps_minDP4_MaxMiss20_MAF5.vcf.gz",
+      "bytes": 148766627,
+      "md5": "38294c4f2998dcf7dd62e337db5e90b3",
+      "sha256": "6438a889ad91b865237e6a4e5169bfbe61e9eea884696fa7fdcfef83d68c7c30"
+    },
+    "direction_female_metadata": {
+      "id": 44729974,
+      "key": "MS_SouthernAfrica_ddRADS_95SympF_14Mar23.xlsx",
+      "bytes": 22157,
+      "md5": "c982c71fa9ebfa9c2dedf11e0d0877db",
+      "sha256": "8e395902f7fb0c236287ddda85afc7f881cbc67421957c98a80c1eb10502d114"
+    },
+    "master_metadata": {
+      "id": 44729977,
+      "key": "MS_Tinkerbird138_Master_06Oct23.xlsx",
+      "bytes": 53230,
+      "md5": "8de687c8286e8feb387838be1ab06a52",
+      "sha256": "c96ce8162f42b28d9470f9085be3378d6e54b3111139ef99541f6dcec5385c10"
+    },
+    "supplement": {
+      "bytes": 1640095,
+      "md5": "73edee4ebcac0572fd59fe31f08a2272",
+      "sha256": "c31b65cb94729f1ceaafb28ca4f76a8b80e431136573a15f001c2a4bcb7a7f93"
+    }
+  }
+}

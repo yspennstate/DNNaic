@@ -215,3 +215,38 @@ python scripts/tinkerbird_external_benchmark.py \
   --data-root /path/to/simulation_data \
   --source-vcf /path/to/revision.recode.vcf.gz
 ```
+
+## Tinkerbird 2024 (sample-disjoint holdout and controls)
+
+Sebastianelli et al. (2024) expand the system to a 452-bird Stacks ddRAD VCF
+and infer strongly asymmetric mating/backcrossing in 95 sympatric females. The
+main text reports z=6.949 while Supplementary Table S14 reports estimate 0.582,
+SE 0.086, z=6.714, P<0.001; both source values are retained. Current evidence
+supports asymmetry, not a strictly unidirectional edge: Rancilhac et al. (2025)
+find bidirectional introgression tails.
+
+The primary P2 contains nine Mpofu chrysoconus males selected by sex, locality,
+and author taxon label and is paired with exact author `ref_extoni` (n=23) and
+`ref_pusillus` (n=8) sets. All 40 P1/P2/P3 holdout samples are disjoint from
+the 95 females used to infer the direction statistic. Candidate C remains a
+weak system-level majority label, so even this holdout is excluded from
+accuracy. A direct 14-daughter panel reproduces the author label but is
+explicitly circular. Two gate-only contrasts use geographically separated
+extoni references and daughters whose inferred parents are both near-pure
+pusillus; neither is a proven historical zero-flow null.
+
+Only `SUPER_1` through `SUPER_44` are scored. Z, W, S76/non-numbered, and
+unplaced sequence is excluded. One source-ordered SNP per Stacks RAD locus is
+the primary scope; it removes within-tag pseudoreplication but not
+chromosome-scale linkage. The all-SNP scope is explicitly a linked sensitivity
+analysis. Cross-family gate contrasts use separately ascertained loci and are
+qualitative only. Run:
+
+```bash
+python scripts/tinkerbird_2024_external_benchmark.py \
+  --data-root /path/to/simulation_data \
+  --source-vcf /path/to/southern_africa_biallelic_snps_minDP4_MaxMiss20_MAF5.vcf.gz \
+  --female-metadata /path/to/MS_SouthernAfrica_ddRADS_95SympF_14Mar23.xlsx \
+  --master-metadata /path/to/MS_Tinkerbird138_Master_06Oct23.xlsx \
+  --supplement /path/to/41467_2024_47305_MOESM1_ESM.pdf
+```
