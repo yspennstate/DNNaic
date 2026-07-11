@@ -1,0 +1,47 @@
+{
+  "record": "https://datadryad.org/dataset/doi:10.5061/dryad.jwstqjq9q",
+  "data_doi": "10.5061/dryad.jwstqjq9q",
+  "dataset_id": 78894,
+  "version_id": 156912,
+  "version_number": 4,
+  "license": "CC0-1.0",
+  "archive_download": "https://datadryad.org/api/v2/versions/156912/download",
+  "archive": {
+    "key": "doi_10_5061_dryad_jwstqjq9q__v20220102.zip",
+    "observed_bytes": 1517885,
+    "digest_policy": "not_pinned_observed_nondeterministic_generated_ZIP_wrapper",
+    "observed_cached_sha256": "7a663a52c391090199a6c20f85cd9dcd73cac97b1bb31ee4a6b98ea6373cedbe"
+  },
+  "file": {
+    "id": 1231632,
+    "key": "Hbi_Hpal_118_2993_6May19_GEO.vcf",
+    "archive_member": "Hbi_Hpal_118_2993_6May19_GEO.vcf",
+    "download": "https://datadryad.org/api/v2/files/1231632/download",
+    "bytes": 1517411,
+    "sha256": "7dbc3686e4a24ef36c2a358b55d3d95ff5f2f8d2340087099119335c9b0474a8"
+  },
+  "papers": {
+    "source_study": "10.1098/rspb.2021.2738",
+    "source_supplement": "10.6084/m9.figshare.19374861.v1",
+    "source_supplement_collection": "10.6084/m9.figshare.c.5901168.v1",
+    "newer_related_different_species_system": "10.1111/mec.17360",
+    "newer_related_dataset": "10.5061/dryad.b5mkkwhjk"
+  },
+  "supplement_file": {
+    "id": 34408773,
+    "key": "rspb20212738_si_001.docx",
+    "bytes": 31493,
+    "md5": "52c023123a8e9eeda9f7743f3b3a7466",
+    "license": "CC-BY-4.0",
+    "guardrail": "The live item's 2026 modification is metadata-only; file ID, bytes, MD5, and version remain unchanged."
+  },
+  "mapping_provenance": {
+    "status": "reconstructed_from_VCF_column_order_using_published_contiguous_site_order",
+    "ordered_sample_sha256": "1282d61affd67c5d3e891928e1780ef4a991f907d82ec4a1a4b82bfba61fa86e",
+    "known_discrepancies": [
+      "Supplementary Table S1 reports TEM SNP n=2 and total n=117, while the released VCF has three leading TEM-like samples and 118 samples total.",
+      "Main-text Table 3 site counts sum to 128 and cannot define membership in the 118-column released VCF.",
+      "The nine-row block record enumerates VCF-positive reconstructed blocks, not every collection site; the supplement omits FM and uses inconsistent site acronyms in sequence tables."
+    ]
+  }
+}

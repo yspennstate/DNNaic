@@ -289,3 +289,46 @@ python scripts/wrasse_external_benchmark.py \
   --hwe-genepop /path/to/west_genepop4357ID.txt \
   --newhybrid /path/to/newhybrid200SNPs.dat
 ```
+
+## Harpagifer (literature-dominant same-SNP sensitivity)
+
+Segovia et al. (2022) report a dominant BayesAss estimate from a northern
+Patagonia SNP cluster into a southern Patagonia cluster (18.8%, versus 2.03%
+reciprocal). With those clusters as P1/P2 and the Falklands/Malvinas M1 cluster
+as P3, this maps to candidate class A. It is not ground truth: the groups and
+label reuse the same 2,993 putatively neutral GBS SNPs, other migration edges
+were reported, and BayesAss used only 10,000 iterations with 10% burn-in. The
+paper also treats the nominal taxa as one evolutionary unit, so P3 is a
+population cluster rather than a species outgroup.
+
+No author individual crosswalk accompanies the VCF. The committed block record
+reconstructs only the VCF-positive site blocks from released column order and
+published contiguous site order: TEM--IC3 become P1 (50), PY--PW P2 (43), and
+Hookers Point P3 (25). Supplementary Table S1 totals 117 and reports TEM n=2,
+whereas the VCF has 118 columns and three leading TEM-like samples; main-text
+Table 3 totals 128. The block record is not a complete collection-site roster.
+
+Four runs are two sample scopes (all 118 and a prespecified <=25% individual
+missingness sensitivity) crossed with standard and within-population
+polymorphism filters. They are four analytic sensitivities of one comparison,
+not four validations. The missingness scope strongly reweights P1 (50 to 40)
+while retaining 42/43 P2 and all 25 P3. Standard and strict scopes retain 2,993
+and 2,977 exact shared loci, respectively.
+
+All source `CHROM` fields are the artificial value `0`; physical linkage is
+unknown. Uncertainty is therefore a naive IID-locus sensitivity only. The
+prespecified diagnostic-frequency threshold yields zero loci and remains null,
+without post-hoc threshold tuning. The Dryad ZIP wrapper is also regenerated
+with variable timestamps, so the runner downloads and pins the stable inner
+VCF endpoint rather than a ZIP digest. Run:
+
+```bash
+python scripts/harpagifer_external_benchmark.py \
+  --data-root /path/to/simulation_data \
+  --source-vcf /path/to/Hbi_Hpal_118_2993_6May19_GEO.vcf
+```
+
+Bernal-Duran et al. (2024; DOI 10.1111/mec.17360) provide a separate
+H. antarcticus system with 143 fish, 20,778 neutral SNPs, and independent ROMS
+particle-connectivity matrices. It does not validate the 2022 label, but is a
+promising independent next benchmark.

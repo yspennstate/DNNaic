@@ -1,0 +1,10 @@
+site	start_zero_based	end_exclusive	analysis_population	supplement_SNP_n	provenance_note
+TEM	0	3	NorthPatagonia	2	VCF has three leading samples although Supplementary Table S1 reports SNP n=2
+FP	3	17	NorthPatagonia	14	contiguous VCF-order reconstruction from Supplementary Table S1
+CSB	17	32	NorthPatagonia	15	contiguous VCF-order reconstruction from Supplementary Table S1
+PB	32	39	NorthPatagonia	7	contiguous VCF-order reconstruction from Supplementary Table S1
+IC3	39	50	NorthPatagonia	11	contiguous VCF-order reconstruction from Supplementary Table S1
+PY	50	65	SouthPatagonia	15	contiguous VCF-order reconstruction from Supplementary Table S1
+FPI	65	80	SouthPatagonia	15	contiguous VCF-order reconstruction from Supplementary Table S1
+PW	80	93	SouthPatagonia	13	contiguous VCF-order reconstruction from Supplementary Table S1
+HP	93	118	FalklandsMalvinas	25	Hpal-prefixed Hookers Point samples form the final VCF block (the paper's M1 cluster)

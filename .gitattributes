@@ -17,3 +17,7 @@ data/external_benchmarks/wrasse/*.tsv text eol=lf
 data/external_benchmarks/wrasse/*.json text eol=lf
 results/wrasse_external_benchmark_2026_07_11/*.json text eol=lf
 results/wrasse_external_benchmark_2026_07_11/*.md text eol=lf
+data/external_benchmarks/harpagifer/*.tsv text eol=lf
+data/external_benchmarks/harpagifer/*.json text eol=lf
+results/harpagifer_external_benchmark_2026_07_11/*.json text eol=lf
+results/harpagifer_external_benchmark_2026_07_11/*.md text eol=lf
