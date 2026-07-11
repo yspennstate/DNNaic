@@ -55,7 +55,7 @@
       "WBOC": "WOC",
       "WBWC": "WWC"
     },
-    "Q_same_SNP_removed_original_ids": [
+    "Q_same_underlying_data_DAPC_removed_original_ids": [
       "28",
       "29",
       "31"
@@ -101,7 +101,7 @@
       "title": "Oyster reef restoration - aquaculture interactions: maximizing positive synergies",
       "publication_date": "2023-09-19",
       "type": "review",
-      "interpretation": "Cites the 2017 finding but performs no genotype reanalysis; dependent synthesis only."
+      "interpretation": "Cites Thompson 2017 among studies reporting little evidence of aquaculture-line introgression but performs no genotype reanalysis; dependent synthesis only."
     },
     "search_status_as_of_2026_07_11": "Dryad/DataCite relations and exact DOI/filename searches located no later independent reanalysis or benchmark label for the released 90-by-1,200 matrix."
   }

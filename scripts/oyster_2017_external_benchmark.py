@@ -4,10 +4,11 @@
 Thompson et al. (2017) reported no detectable sustained introgression from the
 selectively bred B2 line into wild Sydney rock oysters at two Georges River
 sites.  The released workbook contains the same SNPs used to obtain that
-conclusion, and the Q-site release excludes three B2-labelled oysters after a
-same-SNP DAPC assigned them as wild-like.  The source result is therefore a
-power-limited, same-data near-null—not proof of zero migration and not a gold
-specificity label.
+conclusion. The public workbook derives from the same SNP-discovery data, but
+already omits three Q B2-labelled oysters removed after DAPC on the paper's
+1,189 neutral loci and does not identify that exact neutral subset. The source
+result is therefore a power-limited, outcome-derived candidate null—not proof
+of zero migration and not a gold specificity label.
 
 This runner uses W as the primary comparison and Q as a post-hoc-cleaned
 sensitivity.  Standard and within-population-polymorphic views share the exact
@@ -62,7 +63,7 @@ DEFAULT_RESULTS = REPO / "results" / "oyster_2017_external_benchmark_2026_07_11"
 DEFAULT_CAP = 1_200
 PANEL_RECORD = MANIFEST_DIR / "oyster_2017" / "panel_populations.tsv"
 SOURCES_RECORD = MANIFEST_DIR / "oyster_2017" / "sources.json"
-PANEL_RECORD_SHA256 = "4eaa7255f777c04be58a73a48c83c0a048314144d7df6b113d17e7194dd0669d"
+PANEL_RECORD_SHA256 = "de9190e7abb65647d92e8f9064d0c63d549c641561d85282bf95b072fcefd1b2"
 
 DRYAD_RECORD = "https://datadryad.org/dataset/doi:10.5061/dryad.32q80"
 DRYAD_ARCHIVE = "https://datadryad.org/api/v2/versions/3411/download"
@@ -800,8 +801,10 @@ def run_panels(
                 "accuracy_eligible": False,
                 "specificity_eligible": False,
                 "source_label_reuse": (
-                    "the released 1,200 SNP workbook is the same dataset used for the paper's clustering, "
-                    "introgression tests, and Q-site same-SNP DAPC exclusions"
+                    "the released 1,200-locus workbook derives from the same SNP-discovery data used by "
+                    "the paper, but already omits the three QBB2 individuals removed after DAPC and does "
+                    "not identify the paper's 1,189-neutral-locus subset; the source label/exclusion is "
+                    "outcome-derived from the same underlying data, not independent"
                 ),
                 "same_data_excluded_ids": spec["same_data_excluded_ids"],
                 "joint_ascertainment": (
@@ -990,7 +993,7 @@ def main() -> int:
         "git": git_revision(),
         "runtime": runtime_helpers.runtime_audit(),
         "guardrail": (
-            "same-SNP, power-limited near-null specificity stress test only; no panel is a proven zero, "
+            "same-release, power-limited candidate-null crossing-sensitivity stress test only; no panel is a proven zero, "
             "gold label, independent validation, accuracy trial, or specificity trial"
         ),
         "source": {
@@ -1016,7 +1019,8 @@ def main() -> int:
             "ascertainment_guardrails": (
                 "anonymous DArT genotype-by-sequencing release; 1,189 neutral plus 11 consensus selection "
                 "outliers cannot be distinguished by the generic locus labels; W/Q share joint discovery; "
-                "Q excludes three same-SNP wild-like B2-labelled oysters; physical linkage is unavailable"
+                "released QBB2 already omits three oysters removed after the paper's neutral-locus DAPC; "
+                "physical linkage is unavailable"
             ),
         },
         "published_evidence": {
@@ -1024,12 +1028,14 @@ def main() -> int:
                 "strong wild-versus-B2 partitioning and no detected sustained introgression at either site"
             ),
             "detection_limit": (
-                "site sample sizes of 9-12 and same-data preprocessing can miss low or episodic gene flow; "
-                "the paper's finding does not establish migration rate zero"
+                "site sample sizes of 9-12 and same-data preprocessing may miss low gene flow, occasional "
+                "hybrids, or gene flow that does not produce sustained introgression; the finding does not "
+                "establish migration rate zero"
             ),
             "Q_same_data_exclusions": (
-                "original IDs 28, 29, and 31 were removed from QBB2 after same-SNP DAPC assigned them "
-                "as wild-like; Q is outcome-conditioned and secondary"
+                "original IDs 28, 29, and 31 were omitted from released QBB2 after the paper's DAPC on "
+                "its 1,189 neutral loci assigned them to the wild/control cluster; Q is outcome-conditioned "
+                "and secondary"
             ),
             "topology_guardrail": (
                 "WC and overcatch are nearby wild microhabitat cohorts, while B2 is selected hatchery stock; "
@@ -1049,8 +1055,9 @@ def main() -> int:
                     "wild-versus-B2 diversity contrast"
                 ),
                 "review": (
-                    "Bishop et al. 2023 (10.3389/fmars.2023.1162487) is a review that repeats the source "
-                    "near-null without genotype reanalysis; it is dependent synthesis, not a truth label"
+                    "Bishop et al. 2023 (10.3389/fmars.2023.1162487) is a review that cites Thompson 2017 "
+                    "among studies reporting little evidence of aquaculture-line introgression; it performs "
+                    "no genotype reanalysis and supplies no independent truth label"
                 ),
                 "reanalysis_search_status": (
                     "Dryad/DataCite relations and exact DOI/filename searches located no later independent "

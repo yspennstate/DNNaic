@@ -387,16 +387,18 @@ python scripts/hantarcticus_2024_external_benchmark.py \
 Thompson et al. (2017; DOI 10.3354/meps12109) reported strong partitioning
 between wild and selectively bred B2 Sydney rock oysters and no detectable
 sustained introgression at two Georges River sites. This is not a gold zero-
-flow label. The conclusion, clusters, and Q-site exclusions reuse the released
-SNPs; only 9--12 individuals remain per cohort; and low gene flow, occasional
-hybridization, or gene flow not producing sustained introgression could have
-escaped detection.
+flow label. The public matrix derives from the same SNP-discovery data, but it
+already omits the three Q oysters and cannot identify the paper's exact 1,189-
+neutral-locus subset. Only 9--12 individuals remain per cohort; low gene flow,
+occasional hybridization, or gene flow not producing sustained introgression
+could have escaped detection.
 
 The primary W comparison is WWC (P1), WOC rack overcatch (P2), and WB2 selected
 stock (P3). QWC/QOC/QB2 is secondary because three B2-labelled Q oysters
-(original IDs 28, 29, and 31) were removed after same-SNP DAPC classified them
-as wild-like. Class C (B2 P3 to overcatch P2) is only the exposure orientation
-if an event exists. Neither direction nor gate truth is available.
+(original IDs 28, 29, and 31) were omitted after the paper's DAPC on its 1,189
+neutral loci assigned them to the wild/control cluster. Class C (B2 P3 to
+overcatch P2) is only the exposure orientation if an event exists. Neither
+direction nor gate truth is available.
 
 Both sites use one exact shared locus intersection. The standard view retains
 1,101 loci; the within-population-polymorphic sensitivity retains 589. These

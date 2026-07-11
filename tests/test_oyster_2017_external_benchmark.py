@@ -20,7 +20,7 @@ def test_oyster_source_panel_and_filter_contracts_are_guarded():
     }
     assert "sha256" not in oyster.ARCHIVE
     assert oyster.PANEL_RECORD_SHA256 == (
-        "4eaa7255f777c04be58a73a48c83c0a048314144d7df6b113d17e7194dd0669d"
+        "de9190e7abb65647d92e8f9064d0c63d549c641561d85282bf95b072fcefd1b2"
     )
     assert oyster.DERIVED_SOURCE_CONTRACT == {
         "bytes": 470_039,
