@@ -178,3 +178,40 @@ python scripts/seabass_external_benchmark.py \
   --ancestry /path/to/ancestry.Q \
   --summary /path/to/mean_ancestry.csv
 ```
+
+## Tinkerbird (majority-direction, admixture-enriched stress test)
+
+Kirschel et al. infer asymmetric backcrossing between yellow-fronted
+*P. c. extoni* and red-fronted *P. p. pusillus* from autosomal,
+Z-chromosome, and mitochondrial ancestry. With legacy source-era extoni and
+pusillus reference pools as P1/P3 and their 14 admixed offspring as P2, the
+majority cross maps to candidate class C: P3 ancestry into P2. This is
+a heterogeneous majority label (9 candidate C, 3 reciprocal, 2 equal), not
+exact per-panel truth. The temporal interpretation comes from the published
+autosome/Z/mtDNA cross analysis, not from the frequency comparator.
+
+The rendered Table 2 names only 13 of the 14 birds. The Discussion separately
+identifies AR93163 as a pusillus-haplotype female with an extoni father, so the
+manifest records the 13 table rows plus that explicitly named fourteenth bird.
+It also includes all 17 source-era pusillus reference samples present in the
+VCF; six valid references omitted by the prototype are restored. Current
+metadata do not preserve exact allopatric labels for every legacy bird:
+Sebastianelli et al. (2024) classify AR93110 and AR93178 as sympatric. The
+legacy pools are therefore not presented as exact current allopatric sets.
+
+P2 was selected for intermediate ancestry from this same ddRAD dataset, and
+its direction label reuses ancestry from the same birds. P2 is also a hybrid
+pool, not a panmictic tree leaf. The result is therefore explicitly circular
+and excluded from accuracy. The source VCF encodes female Z genotypes as
+diploid, including heterozygotes, so the runner scores anchored autosomes only.
+It reports both the ordinary linked-SNP panel and a first structurally eligible
+source SNP per scaffold sensitivity, with scaffold-blocked projection and f3
+uncertainty.
+
+Run:
+
+```bash
+python scripts/tinkerbird_external_benchmark.py \
+  --data-root /path/to/simulation_data \
+  --source-vcf /path/to/revision.recode.vcf.gz
+```

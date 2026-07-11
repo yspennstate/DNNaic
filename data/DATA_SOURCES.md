@@ -67,7 +67,7 @@ Source publication: Harr et al. (2016), *Scientific Data*.
 
 ### Additional external OOD benchmarks (not paper validation)
 
-Two independently published systems are available through `scripts/external_benchmarks.py`.
+Additional independently published systems are available through the external-benchmark scripts.
 They are reported as exploratory simulation-to-data transfer diagnostics with positive and
 negative/control expectations, source hashes, fixed sample manifests, feature-shift metrics,
 and uncalibrated direction scores:
@@ -86,5 +86,11 @@ and uncalibrated direction scores:
 - Ciona direction-labelled contact-zone and site-control panels: Zenodo
   [10.5281/zenodo.5346932](https://doi.org/10.5281/zenodo.5346932),
   Le Moan et al. [10.1111/mec.16189](https://doi.org/10.1111/mec.16189).
+- European seabass direction-labelled positive and reversed contrast: Zenodo
+  [10.5281/zenodo.3989825](https://doi.org/10.5281/zenodo.3989825),
+  Robinet et al. [10.1111/mec.15611](https://doi.org/10.1111/mec.15611).
+- Tinkerbird heterogeneous majority-direction, admixture-enriched contact-zone stress test: Dryad
+  [10.5061/dryad.jm63xsj87](https://doi.org/10.5061/dryad.jm63xsj87),
+  Kirschel et al. [10.1111/mec.15691](https://doi.org/10.1111/mec.15691).
 
 See `data/external_benchmarks/` for exact file hashes and author-derived sample manifests.
