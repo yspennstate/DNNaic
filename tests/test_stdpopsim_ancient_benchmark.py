@@ -191,12 +191,17 @@ def test_every_panel_condition_runs_tiny_actual_simulation_at_catalog_times():
                 },
                 ploidy=2,
             )
-            assert [sample.num_samples * sample.ploidy for sample in samples] == [
-                200, 200, 200
-            ]
-            assert [sample.time for sample in samples] == [
-                expected_times[name] for name in panel.populations
-            ]
+            sample_contract = {
+                model.model.populations[int(sample.population)].name: {
+                    "gene_copies": sample.num_samples * sample.ploidy,
+                    "time": sample.time,
+                }
+                for sample in samples
+            }
+            assert sample_contract == {
+                name: {"gene_copies": 200, "time": expected_times[name]}
+                for name in panel.populations
+            }
             tiny_contig = stdpopsim.Contig.basic_contig(
                 length=1_000,
                 mutation_rate=float(model.mutation_rate),
