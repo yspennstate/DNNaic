@@ -9,7 +9,9 @@ from scripts import stdpopsim_independent_catalog_benchmark as benchmark
 
 
 def test_panel_mapping_and_balanced_job_manifest():
-    assert [(panel.panel_id, panel.direction_truth) for panel in benchmark.PANELS] == [
+    assert [
+        (panel.panel_id, panel.positive_direction_truth) for panel in benchmark.PANELS
+    ] == [
         ("ashk_ceu_to_waj", "C"),
         ("canfam_isw_to_glj", "B"),
     ]
@@ -25,6 +27,15 @@ def test_panel_mapping_and_balanced_job_manifest():
     assert jobs[0].engine_seed == 711_500_001
     assert jobs[60].engine_seed == 711_500_061
     assert jobs[-1].engine_seed == 711_500_120
+    assert all(job.panel_candidate_direction in {"B", "C"} for job in jobs)
+    assert all(
+        job.direction_truth == job.panel_candidate_direction
+        for job in jobs
+        if job.condition == "positive"
+    )
+    assert all(
+        job.direction_truth is None for job in jobs if job.condition == "control"
+    )
     derived = [
         seed
         for job in jobs

@@ -49,8 +49,8 @@ from scripts import structured_transfer_pilot as structured
 from dnnaic.semantics import class_for_forward_edge
 
 
-SCHEMA_VERSION = "dnnaic-stdpopsim-independent-catalog-benchmark-v1"
-CHECKPOINT_SCHEMA = "dnnaic-stdpopsim-independent-catalog-checkpoint-v1"
+SCHEMA_VERSION = "dnnaic-stdpopsim-independent-catalog-benchmark-v2"
+CHECKPOINT_SCHEMA = "dnnaic-stdpopsim-independent-catalog-checkpoint-v2"
 PINNED_STDPOPSIM_VERSION = "0.3.0"
 PINNED_MSPRIME_VERSION = "1.4.2"
 PINNED_TSKIT_VERSION = "1.0.3"
@@ -117,7 +117,7 @@ class PanelSpec:
     species_id: str
     model_id: str
     populations: tuple[str, str, str]
-    direction_truth: str
+    positive_direction_truth: str
     forward_event: str
     forward_donor: str
     forward_recipient: str
@@ -151,7 +151,7 @@ PANELS = (
         species_id="HomSap",
         model_id="AshkSub_7G19",
         populations=("J", "WAJ", "CEU"),
-        direction_truth="C",
+        positive_direction_truth="C",
         forward_event="CEU->WAJ lineage",
         forward_donor="CEU",
         forward_recipient="WAJ",
@@ -180,7 +180,7 @@ PANELS = (
         species_id="CanFam",
         model_id="EarlyWolfAdmixture_6F14",
         populations=("CRW", "ISW", "GLJ"),
-        direction_truth="B",
+        positive_direction_truth="B",
         forward_event="ISW->GLJ",
         forward_donor="ISW",
         forward_recipient="GLJ",
@@ -226,7 +226,8 @@ class CatalogJob:
     replicate_index: int
     family_id: str
     condition: str
-    direction_truth: str
+    panel_candidate_direction: str
+    direction_truth: str | None
     job_id: str
     engine_seed: int
 
@@ -283,9 +284,10 @@ def make_jobs(pairs_per_panel: int, seed_base: int) -> list[CatalogJob]:
     for panel_index, panel in enumerate(PANELS):
         audit_declared_focal_direction(panel)
         truth = derived_panel_direction(panel)
-        if truth != panel.direction_truth:
+        if truth != panel.positive_direction_truth:
             raise AssertionError(
-                f"{panel.panel_id}: semantic truth {truth} != {panel.direction_truth}"
+                f"{panel.panel_id}: semantic truth {truth} != "
+                f"{panel.positive_direction_truth}"
             )
         for replicate_index in range(pairs_per_panel):
             family_id = f"{panel.panel_id}-family-{replicate_index:04d}"
@@ -296,7 +298,8 @@ def make_jobs(pairs_per_panel: int, seed_base: int) -> list[CatalogJob]:
                     replicate_index=replicate_index,
                     family_id=family_id,
                     condition=condition,
-                    direction_truth=truth,
+                    panel_candidate_direction=truth,
+                    direction_truth=truth if condition == "positive" else None,
                     job_id=f"{family_id}__{condition}",
                     engine_seed=seed_base + offset,
                 ))
@@ -1001,6 +1004,18 @@ def analyze_records(
         )
     if len({record["job_id"] for record in records}) != len(records):
         raise RuntimeError("independent catalog analysis has duplicate jobs")
+    for record in records:
+        panel = panel_by_id(str(record["panel_id"]))
+        expected = panel.positive_direction_truth
+        if record.get("panel_candidate_direction") != expected:
+            raise RuntimeError(
+                f"{record['job_id']}: panel candidate direction changed"
+            )
+        expected_truth = expected if record["condition"] == "positive" else None
+        if record.get("direction_truth") != expected_truth:
+            raise RuntimeError(
+                f"{record['job_id']}: condition-specific direction truth changed"
+            )
     families = {}
     for record in records:
         families.setdefault(record["family_id"], set()).add(record["condition"])
@@ -1076,11 +1091,11 @@ def analyze_records(
         panel_accuracy = []
         for panel in PANELS:
             use = positive_rows & (panel_ids == panel.panel_id)
-            correct = prediction[use] == panel.direction_truth
+            correct = prediction[use] == panel.positive_direction_truth
             panel_accuracy.append(float(np.mean(correct)))
             per_panel[panel.panel_id] = {
                 "species_id": panel.species_id,
-                "truth": panel.direction_truth,
+                "truth": panel.positive_direction_truth,
                 "forward_event": panel.forward_event,
                 "interpretation": (
                     "compatibility with the declared focal direction under the retained full "
@@ -1178,7 +1193,8 @@ def analyze_records(
             "engine_derived_ancestry_seed": int(record["engine_derived_ancestry_seed"]),
             "engine_derived_mutation_seed": int(record["engine_derived_mutation_seed"]),
             "curve_sha256_float32": record["curve_sha256_float32"],
-            "direction_truth": record["direction_truth"] if is_positive else None,
+            "panel_candidate_direction": record["panel_candidate_direction"],
+            "direction_truth": record["direction_truth"],
             "included_in_direction_accuracy": is_positive,
             "raw_all_prediction": str(primary_prediction[index]),
             "raw_all_correct": (
@@ -1355,6 +1371,8 @@ def configuration(
             "C": 1.0,
             "truth_counts": {"B": pairs_per_panel, "C": pairs_per_panel},
             "controls_excluded_from_direction_accuracy": True,
+            "control_direction_truth": None,
+            "panel_candidate_direction_retained_for_controls": True,
         },
         "raw_retention": "first positive/control tree sequence for each panel (four trees)",
         "checkpoint_portability_guardrail": (

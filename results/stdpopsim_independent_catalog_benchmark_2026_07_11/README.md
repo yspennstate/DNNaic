@@ -1,5 +1,12 @@
 # Independent stdpopsim catalog benchmark
 
+> **Provisional v1 artifact:** the prediction ledger correctly excludes controls
+> from direction accuracy, but the lower-level v1 job/simulation ledgers retain
+> the panel's counterfactual candidate class under the ambiguous name
+> `direction_truth`. Do not cite or merge this v1 bundle. A v2 rerun separates
+> `panel_candidate_direction` from condition-specific truth and sets control
+> truth to null throughout.
+
 This frozen external simulation bank evaluates two demographic systems that were
 not used to construct DNNaic's canonical training bank. It contains 30 focal-edge
 positive realizations and 30 focal-absent controls for each system (120 records,
