@@ -45,6 +45,7 @@ if str(REPO) not in sys.path:
 
 from scripts import stdpopsim_neanderthal_benchmark as stdbench
 from scripts import structured_transfer_pilot as structured
+from dnnaic.semantics import class_for_forward_edge
 
 
 SCHEMA_VERSION = "dnnaic-stdpopsim-ancient-focal-benchmark-v1"
@@ -53,6 +54,28 @@ PINNED_STDPOPSIM_VERSION = "0.3.0"
 PINNED_MSPRIME_VERSION = "1.4.2"
 PINNED_TSKIT_VERSION = "1.0.3"
 HOMSAP_MODEL_SOURCE_SHA256 = "ca1adb03f251b7fc293323ef9fe4e77ec9e705a9ad38c21382946bed7c791e1c"
+CANONICAL_ARRAY_CONTRACTS = {
+    "X.npy": {
+        "bytes": 141_926_528,
+        "sha256": "8a0a54b8d827301d47235ee196026687522180a9bcce07f2c52936e9d9bb56f5",
+    },
+    "design.npy": {
+        "bytes": 25_344_128,
+        "sha256": "beb06a522b59e10f311e5a130190159679b9c10595e30260e63c2f20a9c4500e",
+    },
+    "direction.npy": {
+        "bytes": 2_534_528,
+        "sha256": "a956a5bb90e147e3c0a4bf8527e0f8a3c8bd6d522fbc57f5e7a34742fdad7632",
+    },
+    "groups.npy": {
+        "bytes": 76_032_128,
+        "sha256": "e1a7c621e915615a178d44b4ce59c77da2d9c1f7549019acab587fe17da71a86",
+    },
+    "magnitude.npy": {
+        "bytes": 5_068_928,
+        "sha256": "417933cdad099ae4468253588ec9eb83ed323a34635c2e4dd0144cf13b59ee3c",
+    },
+}
 SPECIES_ID = "HomSap"
 CONDITIONS = ("positive", "control")
 REPRESENTATIONS = (
@@ -84,6 +107,8 @@ class PanelSpec:
     populations: tuple[str, str, str]
     direction_truth: str
     forward_event: str
+    forward_donor: str
+    forward_recipient: str
     event_type: str
     event_time: float
     derived: str | None = None
@@ -102,6 +127,8 @@ PANELS = (
         populations=("EHG", "WHG", "NEO"),
         direction_truth="B",
         forward_event="WHG->NEO",
+        forward_donor="WHG",
+        forward_recipient="NEO",
         event_type="Admixture",
         event_time=200.0,
         derived="NEO",
@@ -115,6 +142,8 @@ PANELS = (
         populations=("WHG", "YAM", "CHG"),
         direction_truth="C",
         forward_event="CHG->YAM",
+        forward_donor="CHG",
+        forward_recipient="YAM",
         event_type="Admixture",
         event_time=180.0,
         derived="YAM",
@@ -128,6 +157,8 @@ PANELS = (
         populations=("ANA", "NEO", "Bronze"),
         direction_truth="B",
         forward_event="NEO->Bronze",
+        forward_donor="NEO",
+        forward_recipient="Bronze",
         event_type="Admixture",
         event_time=140.0,
         derived="Bronze",
@@ -141,6 +172,8 @@ PANELS = (
         populations=("Mbuti", "Han", "Neanderthal"),
         direction_truth="C",
         forward_event="Neanderthal->Han lineage",
+        forward_donor="Neanderthal",
+        forward_recipient="Han",
         event_type="MassMigration",
         event_time=2272.0,
         source="Loschbour",
@@ -153,6 +186,8 @@ PANELS = (
         populations=("LBK", "Sardinian", "Loschbour"),
         direction_truth="C",
         forward_event="Loschbour/WHG->Sardinian",
+        forward_donor="Loschbour",
+        forward_recipient="Sardinian",
         event_type="MassMigration",
         event_time=49.2,
         source="Sardinian",
@@ -181,6 +216,18 @@ def panel_by_id(panel_id: str) -> PanelSpec:
     return matches[0]
 
 
+def derived_panel_direction(panel: PanelSpec) -> str:
+    roles = {
+        population: f"P{index}"
+        for index, population in enumerate(panel.populations, start=1)
+    }
+    if panel.forward_donor not in roles or panel.forward_recipient not in roles:
+        raise ValueError(f"{panel.panel_id}: forward edge is outside the frozen panel")
+    return class_for_forward_edge(
+        roles[panel.forward_donor], roles[panel.forward_recipient]
+    )
+
+
 def make_jobs(pairs_per_panel: int, seed_base: int) -> list[AncientJob]:
     if pairs_per_panel < 1:
         raise ValueError("pairs per panel must be positive")
@@ -190,6 +237,11 @@ def make_jobs(pairs_per_panel: int, seed_base: int) -> list[AncientJob]:
     jobs = []
     offset = 0
     for panel_index, panel in enumerate(PANELS):
+        derived_truth = derived_panel_direction(panel)
+        if derived_truth != panel.direction_truth:
+            raise AssertionError(
+                f"{panel.panel_id}: semantic truth {derived_truth} != {panel.direction_truth}"
+            )
         for replicate_index in range(pairs_per_panel):
             family_id = f"{panel.panel_id}-family-{replicate_index:04d}"
             for condition in CONDITIONS:
@@ -199,7 +251,7 @@ def make_jobs(pairs_per_panel: int, seed_base: int) -> list[AncientJob]:
                     replicate_index=replicate_index,
                     family_id=family_id,
                     condition=condition,
-                    direction_truth=panel.direction_truth,
+                    direction_truth=derived_truth,
                     job_id=f"{family_id}__{condition}",
                     engine_seed=seed_base + offset,
                 ))
@@ -407,6 +459,17 @@ def make_contig(model):
     )
     if int(contig.length) != SEQUENCE_LENGTH or int(contig.ploidy) != 2:
         raise AssertionError("ancient stdpopsim contig length/ploidy changed")
+    if not math.isclose(
+        float(contig.mutation_rate), float(model.mutation_rate), rel_tol=0, abs_tol=0
+    ):
+        raise AssertionError("ancient stdpopsim contig mutation rate changed")
+    if not math.isclose(
+        float(contig.recombination_map.mean_rate),
+        RECOMBINATION_RATE,
+        rel_tol=0,
+        abs_tol=1e-30,
+    ):
+        raise AssertionError("ancient stdpopsim contig recombination rate changed")
     return contig
 
 
@@ -782,6 +845,22 @@ def analyze_records(
     canonical_labels = np.asarray(canonical["labels"])
     canonical_rates = np.asarray(canonical["rates"], dtype=float)
     canonical_positive = np.isin(canonical_labels, ["A", "B", "C"])
+    canonical_audit = canonical["audit"]
+    if (
+        canonical_audit.get("replicates") != 3200
+        or canonical_audit.get("rows") != 633600
+        or canonical_audit.get("selected_curve_shape") != [3200, 198, 28]
+        or canonical_audit.get("array_contracts") != CANONICAL_ARRAY_CONTRACTS
+    ):
+        raise RuntimeError("canonical training array contract changed")
+    observed_class_counts = {
+        str(label): int(count)
+        for label, count in zip(*np.unique(canonical_labels, return_counts=True))
+    }
+    if observed_class_counts != {"A": 900, "B": 900, "C": 900, "D": 500}:
+        raise RuntimeError(
+            f"canonical training label counts changed: {observed_class_counts}"
+        )
     primary_rows = len(stdbench.PRIMARY_DEPTHS)
     representations = {}
     prediction_cache = {}
@@ -937,7 +1016,8 @@ def analyze_records(
             }
     return {
         "statistical_unit": "one independent 1 Mb ancestry/mutation realization",
-        "independent_focal_event_systems": len(PANELS),
+        "focal_event_panels": len(PANELS),
+        "catalog_models": len({panel.model_id for panel in PANELS}),
         "families": len(families),
         "records": len(records),
         "direction_accuracy_rows": int(positive_rows.sum()),
@@ -972,10 +1052,11 @@ def analyze_records(
         "prediction_ledger": prediction_ledger,
         "canonical_source_audit": canonical["audit"],
         "guardrail": (
-            "This bank contains two B and three C focal systems but no A system. The 30 Monte "
-            "Carlo replicates per panel do not create more than five independent demographic "
-            "event systems. Ancient sampling times and 25-50% formation ancestries or 3% pulses "
-            "are severe transfer shifts relative to continuous-migration training."
+            "This bank contains two B and three C focal panels but no A panel. The five panels "
+            "are nested within only two catalog models and share substantial histories and "
+            "parameters; 30 Monte Carlo replicates per panel do not create independent "
+            "demographic systems. Ancient sampling times and 25-50% formation ancestries or "
+            "3% pulses are severe transfer shifts relative to continuous-migration training."
         ),
     }
 
@@ -985,9 +1066,43 @@ def configuration(
     seed_base: int,
     jobs: Sequence[AncientJob],
     model_audit: dict,
+    revision: dict,
 ) -> dict:
     return {
         "schema_version": SCHEMA_VERSION,
+        "source_revision": {
+            key: revision.get(key)
+            for key in (
+                "commit",
+                "script_sha256",
+                "head_script_sha256",
+                "head_blob_oid",
+                "worktree_blob_oid",
+                "tracked_diff_sha256",
+                "tracked_dirty_at_snapshot",
+            )
+        },
+        "processing_dependencies": {
+            "numpy": np.__version__,
+            "scikit_learn": importlib_metadata.version("scikit-learn"),
+            "padze": importlib_metadata.version("padze"),
+            "stdpopsim": model_audit.get("versions", {}).get(
+                "stdpopsim", PINNED_STDPOPSIM_VERSION
+            ),
+            "msprime": model_audit.get("versions", {}).get(
+                "msprime", PINNED_MSPRIME_VERSION
+            ),
+            "tskit": model_audit.get("versions", {}).get(
+                "tskit", PINNED_TSKIT_VERSION
+            ),
+        },
+        "canonical_training_contract": {
+            "replicates": 3200,
+            "rows": 633600,
+            "curve_shape": [3200, 198, 28],
+            "label_counts": {"A": 900, "B": 900, "C": 900, "D": 500},
+            "array_contracts": CANONICAL_ARRAY_CONTRACTS,
+        },
         "pairs_per_panel": int(pairs_per_panel),
         "seed_base": int(seed_base),
         "job_manifest": [asdict(job) for job in jobs],
@@ -1063,7 +1178,13 @@ def main() -> int:
     structured.require_clean_tracked_revision(revision)
     models, model_audit = prepare_models()
     jobs = make_jobs(args.pairs_per_panel, args.seed_base)
-    config = configuration(args.pairs_per_panel, args.seed_base, jobs, model_audit)
+    config = configuration(
+        args.pairs_per_panel,
+        args.seed_base,
+        jobs,
+        model_audit,
+        revision,
+    )
     config_sha256 = hashlib.sha256(_canonical_json(config)).hexdigest()
     requested_replicates = (
         args.pairs_per_panel

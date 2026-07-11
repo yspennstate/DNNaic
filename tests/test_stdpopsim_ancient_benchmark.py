@@ -41,6 +41,9 @@ def test_panel_contract_spans_two_B_and_three_C_focal_systems():
     assert [panel.direction_truth for panel in benchmark.PANELS] == [
         "B", "C", "B", "C", "C"
     ]
+    assert [benchmark.derived_panel_direction(panel) for panel in benchmark.PANELS] == [
+        "B", "C", "B", "C", "C"
+    ]
     assert [panel.populations for panel in benchmark.PANELS] == [
         ("EHG", "WHG", "NEO"),
         ("WHG", "YAM", "CHG"),
@@ -106,11 +109,27 @@ def test_checkpoint_rejects_duplicates(tmp_path):
 
 def test_configuration_records_truth_counts_and_independent_pairing():
     jobs = benchmark.make_jobs(30, benchmark.DEFAULT_SEED_BASE)
-    config = benchmark.configuration(30, benchmark.DEFAULT_SEED_BASE, jobs, {"panels": {}})
+    revision = {
+        "commit": "a" * 40,
+        "script_sha256": "b" * 64,
+        "head_script_sha256": "b" * 64,
+        "head_blob_oid": "c" * 40,
+        "worktree_blob_oid": "c" * 40,
+        "tracked_diff_sha256": "d" * 64,
+        "tracked_dirty_at_snapshot": False,
+    }
+    config = benchmark.configuration(
+        30, benchmark.DEFAULT_SEED_BASE, jobs, {"panels": {}}, revision
+    )
     assert config["evaluation"]["truth_counts_per_representation"] == {"B": 60, "C": 90}
     assert "independent seeds" in config["pairing_guardrail"]
     assert config["raw_retention"] == (
         "first positive/control tree sequence for every panel"
+    )
+    assert config["source_revision"]["commit"] == "a" * 40
+    assert config["source_revision"]["script_sha256"] == "b" * 64
+    assert config["canonical_training_contract"]["array_contracts"] == (
+        benchmark.CANONICAL_ARRAY_CONTRACTS
     )
 
 
@@ -194,3 +213,8 @@ def test_every_panel_condition_runs_tiny_actual_simulation_at_catalog_times():
             )
             assert tree_sequence.num_samples == 600
             assert tree_sequence.num_individuals == 300
+            full_contig = benchmark.make_contig(model)
+            assert full_contig.mutation_rate == model.mutation_rate
+            assert full_contig.recombination_map.mean_rate == pytest.approx(
+                benchmark.RECOMBINATION_RATE, abs=1e-30
+            )
