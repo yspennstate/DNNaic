@@ -912,6 +912,14 @@ def analyze_records(
                 positive_prediction[positive_truth == "C"] == "C"
             ),
             "equal_panel_macro_accuracy": float(np.mean(panel_accuracy)),
+            "equal_panel_macro_constant_baselines": {
+                "always_B": 0.4,
+                "always_C": 0.6,
+                "guardrail": (
+                    "three of five focal panels have C truth, so panel-macro accuracy has a "
+                    "0.60 always-C baseline even though B/C balanced-accuracy chance is 0.50"
+                ),
+            },
             "confusion": _confusion_payload(positive_truth, positive_prediction),
             "per_panel": per_panel,
             "control_forced_call_counts_diagnostic_only": {
@@ -1137,6 +1145,11 @@ def configuration(
             },
         },
         "raw_retention": "first positive/control tree sequence for every panel",
+        "checkpoint_portability_guardrail": (
+            "model-source and retained-tree paths are absolute and strictly revalidated; the "
+            "checkpoint is bound to this Azure layout and must not be relocated without an "
+            "explicit path-rebinding audit or deterministic resimulation"
+        ),
         "pairing_guardrail": (
             "families match panel and replicate index only; conditions use independent seeds "
             "and never share a genealogy"

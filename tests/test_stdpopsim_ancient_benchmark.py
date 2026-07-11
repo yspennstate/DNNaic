@@ -131,6 +131,7 @@ def test_configuration_records_truth_counts_and_independent_pairing():
     assert config["canonical_training_contract"]["array_contracts"] == (
         benchmark.CANONICAL_ARRAY_CONTRACTS
     )
+    assert "must not be relocated" in config["checkpoint_portability_guardrail"]
 
 
 def test_pinned_source_hash_has_full_sha256_width():
