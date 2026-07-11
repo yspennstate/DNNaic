@@ -95,5 +95,8 @@ and uncalibrated direction scores:
 - Tinkerbird 2024 sample-disjoint holdout and near-null contrasts: Figshare
   [10.6084/m9.figshare.25308376.v1](https://doi.org/10.6084/m9.figshare.25308376.v1),
   Sebastianelli et al. [10.1038/s41467-024-47305-5](https://doi.org/10.1038/s41467-024-47305-5).
+- Corkwing-wrasse candidate-direction sensitivity and role-swapped comparators: Dryad
+  [10.5061/dryad.tv553](https://doi.org/10.5061/dryad.tv553),
+  Faust et al. [10.1098/rsos.171752](https://doi.org/10.1098/rsos.171752).
 
 See `data/external_benchmarks/` for exact file hashes and author-derived sample manifests.

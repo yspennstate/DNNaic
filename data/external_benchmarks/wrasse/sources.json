@@ -1,0 +1,45 @@
+{
+  "record": "https://datadryad.org/dataset/doi:10.5061/dryad.tv553",
+  "data_doi": "10.5061/dryad.tv553",
+  "license": "CC0-1.0",
+  "version_id": 21981,
+  "archive_download": "https://datadryad.org/api/v2/versions/21981/download",
+  "archive": {
+    "key": "dryad_tv553_v1.zip",
+    "bytes": 24227679,
+    "md5": "e042b4c3cbe108d2f2f743dfa640c303",
+    "sha256": "15474df5ba0808db77f403f56076a17b7c3821e31a62a9c996e0a81468bd1620"
+  },
+  "files": {
+    "vcf": {
+      "id": 75719,
+      "key": "west.filt.maf0.01.recode.vcf",
+      "bytes": 18733292,
+      "sha256": "c05741f03ecdb2403f173cf249eb910281632f65bccad27aaaaaf848ffb2e21a"
+    },
+    "metadata": {
+      "id": 75721,
+      "key": "Sampleinfo_metadata.txt",
+      "bytes": 15251,
+      "sha256": "5d7d1fba38095e4231d94c6b34b65d5ea6f392d742d3d4b660453e7b5cd769ad"
+    },
+    "hwe_genepop": {
+      "id": 75718,
+      "key": "west_genepop4357ID.txt",
+      "bytes": 5282897,
+      "sha256": "6c5e923a7c97ce4fd08d87372ca19363beefe6eb337068ed0037c9858c4b038a"
+    },
+    "newhybrid": {
+      "id": 75720,
+      "key": "newhybrid200SNPs.dat",
+      "bytes": 192097,
+      "sha256": "77c6ba3bc26a88dcee518b971bd4b96c4235911b32daa27a224c9e75d81929e5"
+    }
+  },
+  "papers": {
+    "original": "10.1098/rsos.171752",
+    "background_gene_flow": "10.1111/mec.15310",
+    "larger_confirmation": "10.1111/eva.13220",
+    "selection_update_2026": "10.1111/eva.70214"
+  }
+}

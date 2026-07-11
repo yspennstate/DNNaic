@@ -1,0 +1,7 @@
+panel	benchmark_role	P1	P2	P3	candidate_class
+candidate_SMTF	candidate_direction_sensitivity	SMAU	FKH	SMTF	C
+candidate_SMST	candidate_direction_sensitivity	SMAU	FKH	SMST	C
+candidate_SMKB	candidate_direction_sensitivity	SMAU	FKH	SMKB	C
+comparator_SMTF	role_swapped_comparator	SMID	SMAU	SMTF	.
+comparator_SMST	role_swapped_comparator	SMID	SMAU	SMST	.
+comparator_SMKB	role_swapped_comparator	SMID	SMAU	SMKB	.

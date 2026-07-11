@@ -250,3 +250,42 @@ python scripts/tinkerbird_2024_external_benchmark.py \
   --master-metadata /path/to/MS_Tinkerbird138_Master_06Oct23.xlsx \
   --supplement /path/to/41467_2024_47305_MOESM1_ESM.pdf
 ```
+
+## Corkwing wrasse (candidate-direction sensitivity and comparators)
+
+Faust et al. (2018) document transport of southern corkwing wrasse into
+Flatanger and report escapees plus hybrid descendants. Three balanced panels
+use Austevoll (P1), all 40 Flatanger fish (P2), and separate Kristiansand,
+Stromstad, or Kungsbacka donor references (P3), giving candidate class C. The
+same donors are repeated on identical loci in descriptive role-changed
+contrasts with Stavanger (P1) and Austevoll (P2). They are not matched controls
+or no-flow populations; Stavanger itself contained reported hybrids.
+
+The primary source removes both 15 author HWE exclusions and all 200 loci used
+to generate the original NewHybrids labels before any benchmark filtering.
+The all-released-locus scope retains them only as circular sensitivity. All
+240 exact VCF IDs are reconstructed mechanically from the pinned 240-row
+metadata, including 48 documented technical-replicate suffixes. Every panel
+uses all 40 fish per source population, avoiding hybrid-only cherry-picking.
+
+Each `CHROM` value is a unique 2bRAD tag and `POS` is only the within-tag
+position. There is no physical chromosome/linkage map, so uncertainty is a
+naive IID-locus sensitivity, never chromosome-block uncertainty. The recent
+anthropogenic southern-to-Flatanger event coexists with ongoing bidirectional
+contact whose older/background component is asymmetric west-to-south
+(Mattingsdal et al. 2020). A larger 2021 survey found six high-probability
+southern-origin Flatanger fish and 70 potential hybrids there, concentrated at
+the northern edge and reaching about 20% locally. A 2026 mesocosm study found
+strong selective winter mortality in hybrid offspring and suggested potential
+assortative mating. Raw class A can therefore reflect dominant western or
+range-expansion background in a mixed-history cohort; the one-edge head cannot
+isolate superimposed class C. No panel is accuracy-eligible. Run:
+
+```bash
+python scripts/wrasse_external_benchmark.py \
+  --data-root /path/to/simulation_data \
+  --source-vcf /path/to/west.filt.maf0.01.recode.vcf \
+  --metadata /path/to/Sampleinfo_metadata.txt \
+  --hwe-genepop /path/to/west_genepop4357ID.txt \
+  --newhybrid /path/to/newhybrid200SNPs.dat
+```
