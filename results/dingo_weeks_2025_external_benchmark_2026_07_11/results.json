@@ -158,7 +158,7 @@
     "training_target": "positive migration with rate >=2.5e-4 versus weak positives plus control"
   },
   "git": {
-    "commit": "7730ba1b6881bbc48e4acf28ae66ea55114d290a",
+    "commit": "ae90b6d955a81a3cdb5785a6c23c3be7a8549117",
     "dirty_at_run": false
   },
   "guardrail": "One pedigree-anchored, eight-animal dog-component stress-test cohort with proxy endpoints; the cross is not an exclusive population-level single-edge history. Four source/locus filters are correlated sensitivities. Raw severe-OOD scores are not accepted calls, probabilities, ancestry estimates, or migration rates.",
@@ -4551,7 +4551,10 @@
       "rationale": "The paper reports all 2,466 released SNPs as its Australian dataset. This scope reproduces that row set; the separate vcf_PASS_only scope retains the source FILTER tags."
     },
     "sources_record": {
-      "bytes": 3480,
+      "canonical_lf": {
+        "bytes": 3480,
+        "sha256": "30e8c5088aaaea37099d2be64b4b5868ec081b59f3372ba3ae7d7ee0ec9a16ad"
+      },
       "path": "C:\\Users\\owner\\Documents\\Codex\\2026-07-10\\DNNaic_datasets2\\data\\external_benchmarks\\dingo_weeks_2025\\sources.json",
       "record": {
         "analysis_design": {
@@ -4626,7 +4629,11 @@
         "schema_version": "dnnaic-dingo-weeks-2025-source-v1",
         "version": 1
       },
-      "sha256": "30e8c5088aaaea37099d2be64b4b5868ec081b59f3372ba3ae7d7ee0ec9a16ad"
+      "working_tree": {
+        "bytes": 3480,
+        "line_endings_normalized_for_contract": false,
+        "sha256": "30e8c5088aaaea37099d2be64b4b5868ec081b59f3372ba3ae7d7ee0ec9a16ad"
+      }
     },
     "vcf_audit": {
       "biallelic_autosomal_SNPs": true,

@@ -1,7 +1,7 @@
 # Weeks 2025 dingo--dog transfer stress test
 
 The result was generated from hash-pinned Figshare release 1 bytes at clean
-code commit `7730ba1b6881bbc48e4acf28ae66ea55114d290a`. The panel is Alpine dingo
+code commit `ae90b6d955a81a3cdb5785a6c23c3be7a8549117`. The panel is Alpine dingo
 P1 (248), eight known captive `(dingo x dog) F1 x dingo` backcrosses P2, and
 domestic dog P3 (39). The pedigree independently anchors a dog-introgressing
 component whose candidate orientation is class C (`P3 -> P2`), but it is not
@@ -26,3 +26,10 @@ three unmatched IDs, and 233 of the paper's 2,466 released VCF rows retain
 non-PASS tranche tags. These groups are excluded; both defensible VCF row scopes
 are reported. Because P2 has exactly eight diploids, `g=16` additionally makes
 every analyzed locus complete-case in P2.
+
+A detached clean checkout with CRLF working-tree conversion produced the same
+canonical semantic result SHA-256
+`cefd4cab47ec78d8fc0eedecae713c8f26ce71f3248bab1e5c2ba6fc10741f57` as the
+main LF checkout after removing absolute paths, runtime argv, and the recorded
+working-tree line-ending representation. This also exercises the canonical-LF
+source-manifest contract.

@@ -7,8 +7,8 @@ import pytest
 
 REPO = Path(__file__).resolve().parents[1]
 RESULT = REPO / "results" / "dingo_weeks_2025_external_benchmark_2026_07_11" / "results.json"
-RESULT_BYTES = 156_082
-RESULT_SHA256 = "742d4f774b0e2c57abd761dbd705cca25ee226f1d4b469f60a354bf056a7078e"
+RESULT_BYTES = 156_314
+RESULT_SHA256 = "88d0d808abd7e592e87cfee7623ec2311005c10741a5d7f885b06b1d1e09efca"
 
 EXPECTED = {
     "dingo_backcross_paper_release_all_rows_standard_contract": {
@@ -77,13 +77,18 @@ def test_dingo_result_provenance_runtime_and_outcome_are_guarded():
     result = _load()
     assert result["schema_version"] == "dnnaic-dingo-weeks-2025-external-benchmark-v1"
     assert result["git"] == {
-        "commit": "7730ba1b6881bbc48e4acf28ae66ea55114d290a",
+        "commit": "ae90b6d955a81a3cdb5785a6c23c3be7a8549117",
         "dirty_at_run": False,
     }
-    assert result["source"]["sources_record"]["bytes"] == 3_480
-    assert result["source"]["sources_record"]["sha256"] == (
-        "30e8c5088aaaea37099d2be64b4b5868ec081b59f3372ba3ae7d7ee0ec9a16ad"
-    )
+    assert result["source"]["sources_record"]["canonical_lf"] == {
+        "bytes": 3_480,
+        "sha256": "30e8c5088aaaea37099d2be64b4b5868ec081b59f3372ba3ae7d7ee0ec9a16ad",
+    }
+    assert result["source"]["sources_record"]["working_tree"] == {
+        "bytes": 3_480,
+        "line_endings_normalized_for_contract": False,
+        "sha256": "30e8c5088aaaea37099d2be64b4b5868ec081b59f3372ba3ae7d7ee0ec9a16ad",
+    }
     assert result["source"]["release_filter_normalization"]["derived_vcf"]["sha256"] == (
         "c15274389e2601ae230e3092684f65aa01d158f2b33d00ea7961f2dd345ac9c6"
     )
