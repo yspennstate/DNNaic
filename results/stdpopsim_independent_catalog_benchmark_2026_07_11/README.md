@@ -1,12 +1,5 @@
 # Independent stdpopsim catalog benchmark
 
-> **Provisional v1 artifact:** the prediction ledger correctly excludes controls
-> from direction accuracy, but the lower-level v1 job/simulation ledgers retain
-> the panel's counterfactual candidate class under the ambiguous name
-> `direction_truth`. Do not cite or merge this v1 bundle. A v2 rerun separates
-> `panel_candidate_direction` from condition-specific truth and sets control
-> truth to null throughout.
-
 This frozen external simulation bank evaluates two demographic systems that were
 not used to construct DNNaic's canonical training bank. It contains 30 focal-edge
 positive realizations and 30 focal-absent controls for each system (120 records,
@@ -20,6 +13,14 @@ panel. The frozen appreciable-migration gate separates focal-positive from
 focal-absent rows with equal-panel macro ROC AUC 0.9778 (human 0.9556, dog 1.0).
 The gate result is score discrimination only, not threshold accuracy or effect
 calibration.
+
+This is the corrected v2 bundle. In every committed semantic layer--the
+configuration job manifest, checkpoint metadata, simulation ledger, and
+prediction ledger--focal-absent controls now have `direction_truth: null`.
+Their counterfactual B/C panel candidate remains available only through the
+separate `panel_candidate_direction` field. The 60 controls are excluded from
+direction accuracy, while all 60 positives retain truth equal to their declared
+panel candidate.
 
 ## Design and accounting
 
@@ -49,18 +50,22 @@ the training range. Consequently, these are known-model transfer diagnostics,
 not evidence that DNNaic causally isolated the focal edge in arbitrary catalog
 models or calibrated a biological effect size.
 
-## Frozen provenance
+## Frozen v2 provenance
 
-- Source commit: `2dd19f1fd159e0cbedcc638cd18b651d3607e6c4`
-- Runner SHA-256: `a07525f02f49d0345d8aee0ef5f11aae9035b7351af2a8b898eb7455e9e5b6d2`
-- Configuration SHA-256: `ad17b6416a9b44b0b16e010e88d204648814b971501a2b6de92d8add6ffd3a39`
-- `results.json`: 470,531 bytes; SHA-256
-  `99a2a0cf3859f204379d1d156dd915b568bc82fd9bdccf54ff9e4b7f9a0b3d80`
-- Checkpoint: 2,473,066 bytes; SHA-256
-  `d22aa641d1aaae5b7b2b2f2d5089afca8c1cbba4c4938e686496f3c018b0257a`;
+- Source commit: `c0584877da9def78ed78669e187d1c7737f824de`
+- Runner SHA-256: `91644fc0b26514a72b2b94a00f94788be2490ff550f14881d9ba8f8ae9e2f90e`
+- Configuration SHA-256: `1c1a48dfa4d73e4360dafb74b2b504ff40b4689374a64450562a335b424452dc`
+- `results.json`: 485,914 bytes; SHA-256
+  `4ed901917a15684f384da481ea9ef54f498a6efadab35285eda780b00788b74e`
+- Checkpoint: 2,473,685 bytes; SHA-256
+  `b97439ee52f21bd2fe1d5836973c4c88aa142fd8eeb6641bbb9490d3c10c8f17`;
   120 curves with shape `120 x 198 x 28`. The checkpoint and retained audit
   trees are not committed, so this public bundle is auditable but not a
   self-contained bit-for-bit regeneration package.
+- Ordered record-curve ledger SHA-256:
+  `d247e178938100407235736e3a58c14063c62aa66fe0e1a08657590a1b289a4f`.
+- Both source snapshots report zero tracked diff bytes and the empty tracked-
+  diff SHA-256; the run directory itself was untracked output.
 - Exact runtime: Python 3.12.3, NumPy 2.5.1, scikit-learn 1.9.0, PADZE 0.1.0,
   stdpopsim 0.3.0, msprime 1.4.2, and tskit 1.0.3.
 

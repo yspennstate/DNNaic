@@ -16,13 +16,13 @@ RESULT = (
     / "results.json"
 )
 EXPECTED_RESULT_SHA256 = (
-    "99a2a0cf3859f204379d1d156dd915b568bc82fd9bdccf54ff9e4b7f9a0b3d80"
+    "4ed901917a15684f384da481ea9ef54f498a6efadab35285eda780b00788b74e"
 )
 
 
 def load_result() -> dict:
     raw = RESULT.read_bytes()
-    assert len(raw) == 470_531
+    assert len(raw) == 485_914
     assert hashlib.sha256(raw).hexdigest() == EXPECTED_RESULT_SHA256
     return json.loads(raw)
 
@@ -30,29 +30,78 @@ def load_result() -> dict:
 def test_frozen_result_provenance_and_checkpoint_contract():
     result = load_result()
     assert result["schema_version"] == (
-        "dnnaic-stdpopsim-independent-catalog-benchmark-v1"
+        "dnnaic-stdpopsim-independent-catalog-benchmark-v2"
     )
     assert result["status"] == (
         "known_truth_two_species_focal_ablation_synthetic_transfer"
     )
     for revision in (result["git"], result["final_source_recheck"]):
-        assert revision["commit"] == "2dd19f1fd159e0cbedcc638cd18b651d3607e6c4"
+        assert revision["commit"] == "c0584877da9def78ed78669e187d1c7737f824de"
         assert revision["script_sha256"] == (
-            "a07525f02f49d0345d8aee0ef5f11aae9035b7351af2a8b898eb7455e9e5b6d2"
+            "91644fc0b26514a72b2b94a00f94788be2490ff550f14881d9ba8f8ae9e2f90e"
         )
         assert revision["tracked_dirty_at_snapshot"] is False
         assert revision["tracked_diff_bytes"] == 0
     assert result["configuration_sha256"] == (
-        "ad17b6416a9b44b0b16e010e88d204648814b971501a2b6de92d8add6ffd3a39"
+        "1c1a48dfa4d73e4360dafb74b2b504ff40b4689374a64450562a335b424452dc"
     )
     checkpoint = result["checkpoint"]
     assert checkpoint["sha256"] == (
-        "d22aa641d1aaae5b7b2b2f2d5089afca8c1cbba4c4938e686496f3c018b0257a"
+        "b97439ee52f21bd2fe1d5836973c4c88aa142fd8eeb6641bbb9490d3c10c8f17"
     )
-    assert checkpoint["bytes"] == 2_473_066
+    assert checkpoint["bytes"] == 2_473_685
+    assert checkpoint["schema_version"] == (
+        "dnnaic-stdpopsim-independent-catalog-checkpoint-v2"
+    )
+    assert checkpoint["configuration_sha256"] == result["configuration_sha256"]
+    assert checkpoint["record_curve_hash_ledger_sha256"] == (
+        "d247e178938100407235736e3a58c14063c62aa66fe0e1a08657590a1b289a4f"
+    )
     assert checkpoint["records"] == 120
     assert checkpoint["complete_positive_control_families"] == 60
     assert checkpoint["stored_curve_shape"] == [120, 198, 28]
+
+
+def test_control_truth_is_null_in_every_committed_semantic_ledger():
+    result = load_result()
+    configuration = result["configuration"]
+    assert configuration["evaluation"]["control_direction_truth"] is None
+    assert (
+        configuration["evaluation"]["controls_excluded_from_direction_accuracy"]
+        is True
+    )
+    assert (
+        configuration["evaluation"]["panel_candidate_direction_retained_for_controls"]
+        is True
+    )
+
+    ledgers = (
+        configuration["job_manifest"],
+        result["analysis"]["simulation_record_ledger"],
+        result["analysis"]["prediction_ledger"],
+    )
+    for ledger in ledgers:
+        assert len(ledger) == 120
+        controls = [row for row in ledger if row["condition"] == "control"]
+        positives = [row for row in ledger if row["condition"] == "positive"]
+        assert len(controls) == len(positives) == 60
+        assert all(row["direction_truth"] is None for row in controls)
+        assert Counter(row["panel_candidate_direction"] for row in controls) == {
+            "B": 30,
+            "C": 30,
+        }
+        assert all(
+            row["direction_truth"] == row["panel_candidate_direction"]
+            for row in positives
+        )
+
+    predictions = result["analysis"]["prediction_ledger"]
+    controls = [row for row in predictions if row["condition"] == "control"]
+    positives = [row for row in predictions if row["condition"] == "positive"]
+    assert all(row["included_in_direction_accuracy"] is False for row in controls)
+    assert all(row["raw_all_correct"] is None for row in controls)
+    assert all(row["included_in_direction_accuracy"] is True for row in positives)
+    assert all(isinstance(row["raw_all_correct"], bool) for row in positives)
 
 
 def test_result_accounting_keeps_controls_out_of_direction_accuracy():
